@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+
+# Firebase debug logs
+firebase-debug.log
+.firebase/
+
+# Environment files (API keys etc - NEVER commit these!)
+.env
+.env.local
+.env.*.local
+
+# Temp files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Extracted bill text (local test files)
+extracted_bill_text.txt
+mepco_bill_result.html
+mepco_result.html
+real_mepco_bill.html
+result_post.html
+industrial_bill.html

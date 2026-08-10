@@ -1,0 +1,2881 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tubewell Bill Management System — Shared Water Pump Billing</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #0b1329;
+      --bg-secondary: #131d38;
+      --bg-card: rgba(22, 33, 62, 0.85);
+      --bg-card-hover: rgba(30, 44, 80, 0.95);
+      --bg-glass: rgba(255, 255, 255, 0.05);
+      --border-glass: rgba(255, 255, 255, 0.12);
+      --border-focus: #3b82f6;
+
+      --accent-green: #10b981;
+      --accent-green-glow: rgba(16, 185, 129, 0.3);
+      --accent-blue: #3b82f6;
+      --accent-blue-glow: rgba(59, 130, 246, 0.3);
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-urdu: 'Noto Naskh Arabic', serif;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-card-hover: #ffffff;
+      --bg-glass: rgba(0, 0, 0, 0.04);
+      --border-glass: rgba(0, 0, 0, 0.12);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-glass);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .logo-text h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+    .logo-text p { font-size: 0.75rem; color: var(--text-secondary); }
+
+    .main-content {
+      flex: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    .nav-steps {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 0.5rem;
+      margin-bottom: 2rem;
+      gap: 0.5rem;
+    }
+
+    .step-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .step-btn.active {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    [data-theme="light"] .step-btn.active {
+      background: #ffffff;
+      color: #059669;
+    }
+
+    .step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .step-btn.active .step-number {
+      background: var(--accent-green);
+      color: #ffffff;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .card-title { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
+    .card-subtitle { font-size: 0.85rem; color: var(--text-secondary); }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-md);
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: linear-gradient(135deg, var(--accent-green), #059669); color: #ffffff; }
+    .btn-blue { background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: #ffffff; }
+    .btn-secondary { background: var(--bg-glass); border: 1px solid var(--border-glass); color: var(--text-primary); }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: var(--radius-sm); }
+    .btn-full { width: 100%; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; }
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+    }
+
+    .time-picker-12h-group {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--bg-secondary);
+      padding: 0.25rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-glass);
+    }
+    .time-picker-12h-group select {
+      border: none;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+      padding: 0.45rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .time-picker-12h-group select.ampm-select {
+      background: var(--accent-blue);
+      color: #ffffff;
+    }
+
+    .table-responsive { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-glass); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .data-table th { background: rgba(15, 23, 42, 0.8); padding: 0.85rem 1rem; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); border-bottom: 1px solid var(--border-glass); }
+    .data-table td { padding: 0.85rem 1rem; font-size: 0.95rem; border-bottom: 1px solid var(--border-glass); vertical-align: middle; }
+
+    /* Drag & Drop Upload Dropzone */
+    .dropzone-box {
+      border: 2px dashed var(--accent-blue);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background: rgba(59, 130, 246, 0.05);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dropzone-box:hover {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: var(--accent-green);
+    }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      position: relative;
+      background: var(--bg-secondary); border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg); width: 92%; max-width: 680px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 1.75rem; box-shadow: var(--shadow-lg);
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.6rem;
+      line-height: 1;
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+    }
+
+    .stat-card {
+      background: var(--bg-glass); border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .stat-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: rgba(255, 255, 255, 0.05); }
+    .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); }
+    .stat-lbl { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; }
+
+    .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.75rem; }
+    .toast { background: #1e293b; color: #ffffff; border: 1px solid var(--accent-green); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; }
+
+    .whatsapp-preview-box { background: #0d1418; color: #e9edef; font-family: monospace, var(--font-urdu); padding: 1.25rem; border-radius: var(--radius-md); border-left: 4px solid #25d366; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; max-height: 420px; overflow-y: auto; }
+
+    .hidden { display: none !important; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .flex-center { display: flex; align-items: center; justify-content: center; }
+    .gap-1 { gap: 0.5rem; } .gap-2 { gap: 1rem; }
+    .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; } .mb-2 { margin-bottom: 1rem; } .mb-3 { margin-bottom: 1.5rem; }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .nav-steps { overflow-x: auto; }
+      .main-content { padding: 1rem; }
+      .time-picker-12h-group select { padding: 0.35rem 0.3rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="app-logo">
+        <div class="logo-icon">💧</div>
+        <div class="logo-text">
+          <h1>Tubewell Bill Manager</h1>
+          <p>Shared Water Pump Billing & Time Slot System | ٹیوب ویل باری سسٹم</p>
+        </div>
+      </a>
+
+      <div class="flex-center gap-2">
+        <button id="resetSampleDataBtn" class="btn btn-secondary btn-sm">🔄 Clear & Start Fresh</button>
+        <button id="themeToggleBtn" class="btn btn-secondary btn-sm">🌙 Theme</button>
+        <button id="settingsBtn" class="btn btn-secondary btn-sm">⚙️ Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <nav class="nav-steps">
+      <button class="step-btn active" data-tab="users">
+        <span class="step-number">1</span>
+        <span>Users & Time Slots</span>
+      </button>
+      <button class="step-btn" data-tab="register">
+        <span class="step-number">2</span>
+        <span>Register & OCR</span>
+      </button>
+      <button class="step-btn" data-tab="expenses">
+        <span class="step-number">3</span>
+        <span>Bills & Expenses</span>
+      </button>
+      <button class="step-btn" data-tab="summary">
+        <span class="step-number">4</span>
+        <span>Summary & WhatsApp</span>
+      </button>
+    </nav>
+
+    <!-- Tab 1: Users & Continuous Weekly Time Slots (Bari Turns) -->
+    <section id="tab-users" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">👥 Registered Tubewell Users & Weekly Time Slot Schedule</h2>
+            <p class="card-subtitle">Continuous turn slots with 12-Hour AM/PM Time Pickers for Mobile & Desktop.</p>
+          </div>
+          <div class="flex-center gap-2">
+            <button id="addUserBtn" class="btn btn-primary">+ Add New User & Time Slot</button>
+          </div>
+        </div>
+
+        <div class="table-responsive mb-3">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User Name (English / اردو)</th>
+                <th>Start (Day & 12H Time)</th>
+                <th>End (Day & 12H Time)</th>
+                <th>Total Allocated Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- WhatsApp Friendly Schedule Sharing Card -->
+        <div class="card" style="background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(37, 211, 102, 0.3); padding: 1.25rem;">
+          <div class="flex-between mb-2">
+            <div>
+              <h3 class="card-title" style="color: #25d366; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>💬 Share Schedule on WhatsApp (شڈول واٹس ایپ پر شیئر کریں)</span>
+              </h3>
+              <p class="card-subtitle">Bilingual WhatsApp-friendly formatted schedule with English & Urdu names and days.</p>
+            </div>
+            <div class="flex-center gap-2">
+              <button id="copyScheduleWaBtn" class="btn btn-primary btn-sm" style="background: #25d366; border: none; color: #fff;">📋 Copy Schedule</button>
+              <button id="sendScheduleWaBtn" class="btn btn-blue btn-sm">🚀 Share on WhatsApp</button>
+            </div>
+          </div>
+
+          <div class="whatsapp-preview-box" id="scheduleWhatsappPreviewBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Register & Google Gemini AI Vision OCR Reader -->
+    <section id="tab-register" class="tab-content hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🤖 Google Gemini AI Vision Register Scanner</h2>
+            <p class="card-subtitle">Upload your handwritten Urdu register photo (`مشترکہ ٹربائن`). Google Gemini AI Vision will read Urdu script & numbers live.</p>
+          </div>
+          <div class="flex-center gap-2">
+            <button id="triggerUploadBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">
+              🤖 Upload Photo & Scan with AI Vision
+            </button>
+            <button id="addEntryBtn" class="btn btn-secondary">+ Manual Entry</button>
+            <button id="clearEntriesBtn" class="btn btn-danger btn-sm">Clear All Entries</button>
+          </div>
+        </div>
+
+        <!-- Hidden File Input -->
+        <input type="file" id="registerImageUpload" accept="image/*" multiple style="display: none;">
+
+        <!-- Drag & Drop Dropzone Box -->
+        <div id="dropzoneBox" class="dropzone-box mb-3">
+          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🤖</div>
+          <h3 style="font-size: 1.25rem; color: var(--text-primary); font-weight: 700;">Drag & Drop Register Photos Here for AI Vision Scan</h3>
+          <p class="card-subtitle" style="font-size: 0.95rem; margin-top: 0.25rem;">Click anywhere inside or select multiple files. Review, add or remove photos before scanning with Gemini AI Vision.</p>
+        </div>
+
+        <!-- Multi-Image Staging Gallery Card -->
+        <div id="imageGalleryCard" class="card mb-3 hidden" style="background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.3);">
+          <div class="card-header flex-between">
+            <div>
+              <h3 class="card-title" style="font-size: 1.1rem; color: var(--accent-blue); display: flex; align-items: center; gap: 0.5rem;">
+                <span>🖼️ Selected Register Photos Gallery</span>
+                <span id="stagedCountBadge" class="badge badge-info">0 Photos</span>
+              </h3>
+              <p class="card-subtitle">Review, add more pages, or delete photos before running AI Vision Extraction.</p>
+            </div>
+            <div class="flex-center gap-2">
+              <button id="addMorePhotosBtn" class="btn btn-secondary btn-sm">➕ Add More Photos</button>
+              <button id="clearGalleryBtn" class="btn btn-danger btn-sm">🗑️ Clear All</button>
+            </div>
+          </div>
+
+          <!-- Thumbnails Container Grid -->
+          <div id="stagedThumbnailsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;"></div>
+
+          <!-- Large Action Button -->
+          <button id="startAiScanBtn" class="btn btn-primary btn-full" style="padding: 0.95rem; font-size: 1.1rem; background: linear-gradient(135deg, #10b981, #059669);">
+            🤖 Scan All Selected Photos with AI Vision
+          </button>
+        </div>
+
+        <!-- AI Scanning Progress Box with Visual Progress Bar -->
+        <div id="ocrProgressBox" class="card hidden mb-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.4);">
+          <div class="flex-between mb-2">
+            <div class="flex-center gap-2">
+              <div class="logo-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);">🤖</div>
+              <div>
+                <strong id="ocrProgressText" style="color: var(--accent-green); font-size: 1.1rem; font-weight: 700;">Google Gemini AI Vision Processing Images...</strong>
+                <p class="card-subtitle" id="ocrProgressSub">Reading handwritten Urdu script & meter numbers sequentially...</p>
+              </div>
+            </div>
+            <div class="flex-center gap-2">
+              <span id="batchPercentBadge" class="badge badge-success" style="font-size: 1rem; padding: 0.4rem 0.8rem;">0%</span>
+              <div id="ocrSpinner" style="font-size: 1.8rem; animation: spin 1s linear infinite;">⏳</div>
+            </div>
+          </div>
+
+          <!-- Animated Progress Bar Track -->
+          <div style="width: 100%; height: 12px; background: rgba(0, 0, 0, 0.1); border-radius: 6px; overflow: hidden; margin-top: 0.5rem; position: relative;">
+            <div id="batchProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #3b82f6); border-radius: 6px; transition: width 0.4s ease-in-out;"></div>
+          </div>
+        </div>
+
+        <!-- Uploaded Image Preview & Raw Extracted Text Box with Page Selector -->
+        <div id="ocrPreviewCard" class="card hidden mb-3">
+          <div class="card-header flex-between mb-2">
+            <div>
+              <h3 class="card-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📷 Uploaded Register Image & AI Vision Extracted JSON</span>
+              </h3>
+              <p class="card-subtitle">Visual feedback & raw extracted output for each scanned page.</p>
+            </div>
+            <button id="closePreviewBtn" class="btn btn-secondary btn-sm">✖ Close Preview</button>
+          </div>
+
+          <!-- Page Switcher Tabs -->
+          <div id="pageSelectorTabs" class="flex-center gap-2 mb-3" style="justify-content: flex-start; flex-wrap: wrap;"></div>
+
+          <div class="grid-2 gap-2">
+            <div style="text-align: center;">
+              <img id="uploadedImageDisplay" style="max-width: 100%; max-height: 380px; border-radius: var(--radius-md); border: 1px solid var(--border-glass); object-fit: contain;">
+            </div>
+            <div>
+              <label class="form-label">Raw AI Vision Extracted Output:</label>
+              <textarea id="rawOcrTextarea" class="form-control" rows="10" style="font-family: var(--font-urdu), monospace; font-size: 0.95rem;" placeholder="AI Vision raw output will appear here..."></textarea>
+              <div class="flex-between mt-2">
+                <button id="reparseOcrBtn" class="btn btn-blue btn-sm">🔄 Reparse Text Into Rows</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Register Entries Table -->
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>User Name</th>
+                <th>Meter Readings (Start ➔ End)</th>
+                <th>Units Used</th>
+                <th>Bari Transfer To</th>
+                <th>Confidence</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="registerTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Bills & Expenses + Dynamic Live PITC Bill Viewer -->
+    <section id="tab-expenses" class="tab-content hidden">
+      <div class="grid-2 mb-3">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">⚡ WAPDA Electricity Bill</h2>
+              <p class="card-subtitle">Monthly usage bill divided proportionally by units consumed.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Billing Period / Month</label>
+            <input type="month" id="billingMonthInput" class="form-control" value="2026-08">
+          </div>
+
+          <!-- Clean Single Reference Input Box -->
+          <div class="card mb-3" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); padding: 1.25rem;">
+            <div class="flex-between mb-2">
+              <label class="form-label" style="color: var(--accent-green); margin: 0; font-size: 1.05rem; font-weight: 700;">⚡ Dynamic Live MEPCO Bill Fetcher</label>
+              <span class="badge badge-success">Live PITC Stream</span>
+            </div>
+            
+            <div class="form-group mb-2">
+              <label class="card-subtitle">Enter 14-Digit WAPDA Reference Number</label>
+              <input type="text" id="wapdaRefNoInput" class="form-control" placeholder="e.g. 29153110982900" value="" style="font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;">
+            </div>
+
+            <div class="flex-between gap-2">
+              <button id="fetchDynamicLiveBillBtn" class="btn btn-primary btn-full" style="padding: 0.85rem; font-size: 1.05rem;">
+                ⚡ Fetch & Auto-Fill Live Bill Metadata
+              </button>
+            </div>
+          </div>
+
+          <!-- Sleek Readonly Display Cards for Bill Metadata (Hidden Until Fetched) -->
+          <div id="billMetadataBox" class="card mb-3 hidden" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1.25rem;">
+            <div class="card-subtitle mb-2" style="font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem;">
+              <span>📋 Extracted Bill Details (خودکار بل تفصیلات)</span>
+              <span class="badge badge-success" style="font-size: 0.7rem;">Verified Live PITC</span>
+            </div>
+
+            <div class="grid-2 gap-1 mb-2">
+              <div style="background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">🔢 REFERENCE NUMBER (حوالہ نمبر)</div>
+                <div id="dispRefNo" style="font-size: 1.1rem; font-weight: 800; color: var(--accent-blue);">—</div>
+              </div>
+              
+              <div style="background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">👤 NAME & ADDRESS (نام و پتہ)</div>
+                <div id="dispNameAddress" style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">—</div>
+              </div>
+            </div>
+
+            <div class="grid-3 gap-1">
+              <div style="background: var(--bg-card); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">🗓️ READING DATE</div>
+                <div id="dispReadingDate" style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">—</div>
+              </div>
+              
+              <div style="background: var(--bg-card); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">🗓️ ISSUE DATE</div>
+                <div id="dispIssueDate" style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">—</div>
+              </div>
+              
+              <div style="background: var(--bg-card); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08);">
+                <div style="font-size: 0.75rem; color: var(--accent-red); font-weight: 700;">🗓️ DUE DATE (مقررہ تاریخ)</div>
+                <div id="dispDueDate" style="font-size: 1rem; font-weight: 800; color: var(--accent-red);">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Total WAPDA Bill Amount (PKR / Rs.)</label>
+            <input type="number" id="wapdaBillInput" class="form-control" placeholder="Enter actual bill amount Rs. (e.g. 336275)" value="" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-green);">
+            <p class="card-subtitle mt-1" style="font-size: 0.8rem;">Auto-populated from Live PITC MEPCO Web Bill.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">🔧 Fixed & Repair Expenses</h2>
+              <p class="card-subtitle">Motor repairs, oiling, and maintenance divided by assigned time slot hours.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Add Itemized Repair Expense</label>
+            <div class="grid-2 gap-1 mb-2">
+              <input type="text" id="fixedDescInput" class="form-control" placeholder="Expense description">
+              <input type="number" id="fixedAmountInput" class="form-control" placeholder="Amount Rs.">
+            </div>
+            <button id="addFixedExpenseBtn" class="btn btn-secondary btn-full">+ Add Fixed Expense</button>
+          </div>
+
+          <div id="fixedExpensesList" class="mt-2"></div>
+        </div>
+      </div>
+
+      <!-- Real Live PITC MEPCO Web Bill Render Container -->
+      <div id="mepcoDynamicCard" class="card hidden">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🌐 Live Official PITC MEPCO Web Bill Document</h2>
+            <p class="card-subtitle">Real HTML document fetched directly from PITC MEPCO Server for Ref: <strong id="mepcoDynamicRefText">29153110982900 R</strong></p>
+          </div>
+          <button id="closeDynamicCardBtn" class="btn btn-danger btn-sm">✖ Close View</button>
+        </div>
+
+        <div id="liveMepcoHtmlContainer" class="live-mepco-document-card"></div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Summary & WhatsApp -->
+    <section id="tab-summary" class="tab-content hidden">
+      <div class="grid-4 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--accent-blue);">⚡</div>
+          <div>
+            <div class="stat-val" id="summaryTotalUnits">0 Units</div>
+            <div class="stat-lbl">Total Electricity Consumed</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--accent-amber);">💡</div>
+          <div>
+            <div class="stat-val" id="summaryWapdaBill">Rs. 0</div>
+            <div class="stat-lbl">WAPDA Electricity Bill</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--accent-red);">🔧</div>
+          <div>
+            <div class="stat-val" id="summaryFixedExpenses">Rs. 0</div>
+            <div class="stat-lbl">Fixed / Repair Expenses</div>
+          </div>
+        </div>
+
+        <div class="stat-card" style="border-color: var(--accent-green);">
+          <div class="stat-icon" style="color: var(--accent-green);">💰</div>
+          <div>
+            <div class="stat-val" style="color: var(--accent-green);" id="summaryGrandTotal">Rs. 0</div>
+            <div class="stat-lbl">Total Collection Amount</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📋 Member Bill Breakdown Table</h2>
+            <p class="card-subtitle">Calculated according to exact proportional usage & effective time slot hours formulas.</p>
+          </div>
+          <button id="printReportBtn" class="btn btn-secondary btn-sm">🖨️ Print Report</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Member Name</th>
+                <th>Time Slot (Bari Turn)</th>
+                <th>Total Allocated Hours</th>
+                <th>Units Consumed</th>
+                <th>WAPDA Share (Rs.)</th>
+                <th>Fixed Share (Rs.)</th>
+                <th>Grand Total (Rs.)</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="userCardsContainer" class="grid-2 mb-3"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">💬 WhatsApp Bill Summary Generator</h2>
+            <p class="card-subtitle">Ready-to-send formatted text for group or individual messages.</p>
+          </div>
+          <div class="flex-center gap-2">
+            <label class="form-label" style="margin: 0;">Language:</label>
+            <select id="whatsappLangSelect" class="form-control" style="width: auto;">
+              <option value="roman">Roman Urdu (Default)</option>
+              <option value="urdu">Urdu Script (اردو)</option>
+              <option value="english">English</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="whatsapp-preview-box" id="whatsappPreviewBox"></div>
+
+        <div class="flex-between mt-3">
+          <button id="copyWhatsappBtn" class="btn btn-primary" style="padding: 0.85rem 1.5rem;">📋 Copy WhatsApp Message</button>
+          <button id="sendWhatsappBtn" class="btn btn-blue" style="padding: 0.85rem 1.5rem;">🚀 Open in WhatsApp</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- User Modal for Time Slot Management -->
+  <div id="userModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="flex-between mb-2">
+        <h3 id="userModalTitle" class="card-title">Add New Registered User & Time Slot</h3>
+        <button type="button" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <form id="userForm">
+        <input type="hidden" id="userIdInput">
+        <div class="grid-2 mb-2">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">User Name (English / Urdu)</label>
+            <input type="text" id="userNameInput" class="form-control" placeholder="e.g. Zahid Javed / زاہد جاوید" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">📱 WhatsApp Phone Number (Optional)</label>
+            <input type="text" id="userPhoneInput" class="form-control" placeholder="e.g. 03001234567">
+          </div>
+        </div>
+
+        <!-- Start Day & 12-Hour Touch Picker -->
+        <div class="grid-2 mb-2">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Start Day (شروع کا دن)</label>
+            <select id="userStartDaySelect" class="form-control" required>
+              <option value="Sunday">Sunday (اتوار)</option>
+              <option value="Monday">Monday (پیر)</option>
+              <option value="Tuesday">Tuesday (منگل)</option>
+              <option value="Wednesday">Wednesday (بدھ)</option>
+              <option value="Thursday">Thursday (جمعرات)</option>
+              <option value="Friday">Friday (جمعہ)</option>
+              <option value="Saturday">Saturday (ہفتہ)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Start Time (12-Hour AM/PM)</label>
+            <div class="time-picker-12h-group">
+              <select id="userStartHourSelect"></select>
+              <span>:</span>
+              <select id="userStartMinSelect"></select>
+              <select id="userStartAmpmSelect" class="ampm-select">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- End Day & 12-Hour Touch Picker -->
+        <div class="grid-2 mb-2">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">End Day (ختم ہونے کا دن)</label>
+            <select id="userEndDaySelect" class="form-control" required>
+              <option value="Sunday">Sunday (اتوار)</option>
+              <option value="Monday">Monday (پیر)</option>
+              <option value="Tuesday">Tuesday (منگل)</option>
+              <option value="Wednesday">Wednesday (بدھ)</option>
+              <option value="Thursday">Thursday (جمعرات)</option>
+              <option value="Friday">Friday (جمعہ)</option>
+              <option value="Saturday">Saturday (ہفتہ)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">End Time (12-Hour AM/PM)</label>
+            <div class="time-picker-12h-group">
+              <select id="userEndHourSelect"></select>
+              <span>:</span>
+              <select id="userEndMinSelect"></select>
+              <select id="userEndAmpmSelect" class="ampm-select">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Duration & Validation Status -->
+        <div class="form-group mt-2" style="background: rgba(16, 185, 129, 0.08); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(16, 185, 129, 0.3);">
+          <div class="flex-between">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase;">⏱️ TOTAL DURATION (کل دورانیہ)</div>
+              <div id="userCalculatedDurationDisplay" style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">17 Hours 00 Minutes</div>
+            </div>
+            <div id="validationBadge" class="badge badge-success">Valid Time Slot</div>
+          </div>
+        </div>
+
+        <div class="flex-between mt-3">
+          <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+          <button type="submit" id="saveUserSubmitBtn" class="btn btn-primary">Save User & Update Chain</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="entryModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="flex-between mb-2">
+        <h3 class="card-title">Register Entry</h3>
+        <button type="button" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <form id="entryForm">
+        <input type="hidden" id="entryIdInput">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" id="entryDateInput" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Original User</label>
+          <select id="entryUserSelect" class="form-control" required></select>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Start Reading</label>
+            <input type="number" id="entryStartInput" class="form-control" placeholder="12450" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Reading</label>
+            <input type="number" id="entryEndInput" class="form-control" placeholder="12495" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bari (Turn) Transferred To</label>
+          <select id="entryTransferSelect" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input type="text" id="entryNotesInput" class="form-control" placeholder="Optional notes">
+        </div>
+        <div class="flex-between mt-3">
+          <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="flex-between mb-2">
+        <h3 class="card-title">⚙️ Confidential App & Security Settings</h3>
+        <button type="button" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔑 Google Gemini API Key (For AI Vision OCR)</label>
+        <input type="password" id="geminiKeyInput" class="form-control" placeholder="AIzaSy..." style="font-family: monospace; font-size: 1rem;">
+        <div class="flex-between mt-1">
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size: 0.8rem; color: var(--accent-blue); font-weight: 700; text-decoration: none;">
+            👉 Click here to get a 100% Free Gemini API Key (aistudio.google.com)
+          </a>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.08); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.3); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
+          🔒 <strong>100% Security & Privacy Guarantee:</strong><br>
+          • Your API Key stays <strong>ONLY on your computer / device</strong> in browser storage.<br>
+          • It is <strong>NEVER sent to any third-party server or external database</strong>.<br>
+          • It is used <strong>ONLY for direct browser-to-Google AI Vision calls</strong> when you upload a photo.
+        </div>
+      </div>
+
+      <div class="form-group mb-2">
+        <label class="flex-center gap-1" style="justify-content: flex-start; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+          <input type="checkbox" id="sessionOnlyKeyCheckbox">
+          <span>🔒 In-Memory Only (Do NOT save Key to disk. Delete key when tab closes)</span>
+        </label>
+      </div>
+
+      <div class="flex-between mt-3">
+        <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+        <button id="clearKeyBtn" class="btn btn-danger btn-sm">🗑️ Remove API Key</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Embedded Engine Script -->
+  <script>
+    (function() {
+      'use strict';
+
+      const DAYS_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+      const DAY_NAMES_BILINGUAL = {
+        'Sunday': 'Sunday (اتوار)',
+        'Monday': 'Monday (پیر)',
+        'Tuesday': 'Tuesday (منگل)',
+        'Wednesday': 'Wednesday (بدھ)',
+        'Thursday': 'Thursday (جمعرات)',
+        'Friday': 'Friday (جمعہ)',
+        'Saturday': 'Saturday (ہفتہ)'
+      };
+
+      const URDU_NAME_MAP = {
+        'Zahid Javed': 'زاہد جاوید',
+        'Amanat Ali': 'امانت علی',
+        'Ramzan Anwar': 'رمضان انوار'
+      };
+
+      async function fetchProxyApi(endpoint, options = {}) {
+        const ports = [8997, 8998, 8999];
+        for (const port of ports) {
+          try {
+            const res = await fetch(`http://localhost:${port}${endpoint}`, options);
+            if (res.ok) return await res.json();
+          } catch (e) {}
+        }
+        throw new Error('Local Proxy Server not reachable on ports 8997/8998/8999');
+      }
+
+      function getBilingualUserName(name) {
+        if (!name) return '';
+        if (name.includes('/') || name.includes('(')) return name;
+        const urduName = URDU_NAME_MAP[name];
+        if (urduName) return `${name} (${urduName})`;
+        return name;
+      }
+
+      function sanitizePhoneForWa(phoneStr) {
+        if (!phoneStr) return '';
+        let clean = phoneStr.replace(/\D/g, '');
+        if (clean.startsWith('0')) {
+          clean = '92' + clean.substring(1);
+        }
+        return clean;
+      }
+
+      function parse24to12(time24) {
+        if (!time24) return { hour12: 8, minute: '00', ampm: 'AM' };
+        let [h, m] = time24.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        let hour12 = h % 12;
+        hour12 = hour12 ? hour12 : 12;
+        const minute = String(m || 0).padStart(2, '0');
+        return { hour12, minute, ampm };
+      }
+
+      function convert12to24(hour12, minute, ampm) {
+        let h = parseInt(hour12, 10);
+        if (ampm === 'PM' && h < 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
+        return `${String(h).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      }
+
+      function populate12HourOptions(hourSelect, minSelect) {
+        if (hourSelect.options.length === 0) {
+          for (let i = 1; i <= 12; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = String(i).padStart(2, '0');
+            hourSelect.appendChild(opt);
+          }
+        }
+        if (minSelect.options.length === 0) {
+          for (let m = 0; m < 60; m += 5) {
+            const opt = document.createElement('option');
+            const valStr = String(m).padStart(2, '0');
+            opt.value = valStr;
+            opt.textContent = valStr;
+            minSelect.appendChild(opt);
+          }
+        }
+      }
+
+      function create12HourPickerHTML(prefixId, current24Time) {
+        const { hour12, minute, ampm } = parse24to12(current24Time);
+
+        let hoursHtml = '';
+        for (let i = 1; i <= 12; i++) {
+          const val = String(i);
+          hoursHtml += `<option value="${val}" ${i === hour12 ? 'selected' : ''}>${String(i).padStart(2, '0')}</option>`;
+        }
+
+        let minsHtml = '';
+        for (let m = 0; m < 60; m += 5) {
+          const mStr = String(m).padStart(2, '0');
+          const isSelected = Math.abs(parseInt(minute, 10) - m) < 3;
+          minsHtml += `<option value="${mStr}" ${isSelected ? 'selected' : ''}>${mStr}</option>`;
+        }
+
+        return `
+          <div class="time-picker-12h-group">
+            <select class="${prefixId}-hour" data-prefix="${prefixId}">${hoursHtml}</select>
+            <span style="font-weight: 700; color: var(--text-secondary);">:</span>
+            <select class="${prefixId}-min" data-prefix="${prefixId}">${minsHtml}</select>
+            <select class="${prefixId}-ampm ampm-select" data-prefix="${prefixId}">
+              <option value="AM" ${ampm === 'AM' ? 'selected' : ''}>AM</option>
+              <option value="PM" ${ampm === 'PM' ? 'selected' : ''}>PM</option>
+            </select>
+          </div>
+        `;
+      }
+
+      const defaultUsers = [
+        { id: 'usr-1', name: 'Zahid Javed', phone: '03001234567', startDay: 'Sunday', startTime: '08:00', endDay: 'Monday', endTime: '01:00', totalMinutes: 1020 },
+        { id: 'usr-2', name: 'Amanat Ali', phone: '03017654321', startDay: 'Monday', startTime: '01:00', endDay: 'Monday', endTime: '13:15', totalMinutes: 735 },
+        { id: 'usr-3', name: 'Ramzan Anwar', phone: '03029876543', startDay: 'Monday', startTime: '13:15', endDay: 'Monday', endTime: '19:35', totalMinutes: 380 }
+      ];
+
+      const defaultEntries = [];
+
+      const defaultExpenses = {
+        billingMonth: '2026-08',
+        billingMonthLabel: 'August 2026',
+        wapdaBill: 0,
+        wapdaRefNo: '',
+        ruCode: 'R',
+        fixedExpenses: [
+          { id: 'fix-1', description: 'Motor Rewinding & Bearing Service', amount: 6500 },
+          { id: 'fix-2', description: 'Transformer Maintenance Fund', amount: 3500 },
+          { id: 'fix-3', description: 'Greasing & Gland Packing', amount: 1000 }
+        ]
+      };
+
+      const STORAGE_KEY = 'tubewell_bill_system_v26_secure_key';
+
+      function timeToMinutes(timeStr) {
+        if (!timeStr) return 0;
+        const [h, m] = timeStr.split(':').map(Number);
+        return (h * 60) + (m || 0);
+      }
+
+      function minutesToTimeStr(mins) {
+        let total = (mins + 1440 * 10) % 1440;
+        let h = Math.floor(total / 60);
+        let m = total % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+
+      function formatTime12h(timeStr) {
+        if (!timeStr) return '';
+        let [h, m] = timeStr.split(':').map(Number);
+        const ampm = h >= 12 ? 'pm' : 'am';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+      }
+
+      function getWeeklyMinuteOffset(dayStr, timeStr) {
+        const dayIdx = DAYS_ORDER.indexOf(dayStr);
+        const validDayIdx = dayIdx !== -1 ? dayIdx : 0;
+        return (validDayIdx * 1440) + timeToMinutes(timeStr);
+      }
+
+      function calculateSlotDurationMinutes(startDay, startTime, endDay, endTime) {
+        const startOffset = getWeeklyMinuteOffset(startDay, startTime);
+        let endOffset = getWeeklyMinuteOffset(endDay, endTime);
+
+        if (endOffset <= startOffset) {
+          endOffset += (7 * 1440);
+        }
+
+        return endOffset - startOffset;
+      }
+
+      function formatDurationText(totalMins) {
+        if (totalMins <= 0) return '0 Minutes';
+        const h = Math.floor(totalMins / 60);
+        const m = totalMins % 60;
+        if (m === 0) return `${h} Hours`;
+        return `${h} Hours ${m} minutes`;
+      }
+
+      class Store {
+        constructor() {
+          this.listeners = [];
+          this.sessionKey = '';
+          this.state = this.loadState();
+        }
+
+        getDefaultState() {
+          return {
+            users: JSON.parse(JSON.stringify(defaultUsers)),
+            entries: JSON.parse(JSON.stringify(defaultEntries)),
+            expenses: JSON.parse(JSON.stringify(defaultExpenses)),
+            geminiApiKey: '',
+            sessionOnlyKey: false,
+            activeTab: 'users',
+            theme: 'light'
+          };
+        }
+
+        loadState() {
+          try {
+            const keysToTry = [
+              STORAGE_KEY,
+              'tubewell_bill_system_v25_ai_vision_multiport',
+              'tubewell_bill_system_v24_ai_ocr_only',
+              'tubewell_bill_system_v23_dynamic_only',
+              'tubewell_bill_system_v22_clean_readonly',
+              'tubewell_bill_system_v21_12h_touch_picker',
+              'tubewell_bill_system_v20_clean_modal',
+              'tubewell_bill_system_v19_phone_number',
+              'tubewell_bill_system_v18_bilingual_wa',
+              'tubewell_bill_system_v17_bilingual_schedule'
+            ];
+
+            for (const key of keysToTry) {
+              const saved = localStorage.getItem(key);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
+                  const loadedState = {
+                    ...this.getDefaultState(),
+                    ...parsed
+                  };
+                  if (!localStorage.getItem('user_explicit_theme_set')) {
+                    loadedState.theme = 'light';
+                  }
+                  return loadedState;
+                }
+              }
+            }
+          } catch (e) {}
+          return this.getDefaultState();
+        }
+
+        saveState() {
+          try {
+            const toSave = { ...this.state };
+            if (toSave.sessionOnlyKey) {
+              toSave.geminiApiKey = '';
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+          } catch (e) {}
+          this.notify();
+        }
+
+        subscribe(listener) {
+          this.listeners.push(listener);
+        }
+
+        notify() {
+          this.listeners.forEach(l => l(this.state));
+        }
+
+        getUsers() { return this.state.users; }
+        getUserById(id) { return this.state.users.find(u => u.id === id); }
+
+        autoRechainSchedule() {
+          for (let i = 1; i < this.state.users.length; i++) {
+            const prevUser = this.state.users[i - 1];
+            const currUser = this.state.users[i];
+
+            const duration = currUser.totalMinutes || calculateSlotDurationMinutes(currUser.startDay, currUser.startTime, currUser.endDay, currUser.endTime);
+            currUser.startDay = prevUser.endDay;
+            currUser.startTime = prevUser.endTime;
+
+            const newEndOffset = (getWeeklyMinuteOffset(currUser.startDay, currUser.startTime) + duration) % (7 * 1440);
+            const endDayIdx = Math.floor(newEndOffset / 1440);
+            const endMins = newEndOffset % 1440;
+
+            currUser.endDay = DAYS_ORDER[endDayIdx];
+            currUser.endTime = minutesToTimeStr(endMins);
+            currUser.totalMinutes = duration;
+          }
+        }
+
+        ensureUserExists(name) {
+          let user = this.state.users.find(u => u.name.toLowerCase() === name.toLowerCase());
+          if (!user) {
+            const lastUser = this.state.users[this.state.users.length - 1];
+            let startDay = 'Sunday', startTime = '08:00', endDay = 'Sunday', endTime = '12:00';
+            if (lastUser) {
+              startDay = lastUser.endDay;
+              startTime = lastUser.endTime;
+              endDay = lastUser.endDay;
+              endTime = minutesToTimeStr(timeToMinutes(lastUser.endTime) + 240);
+            }
+            user = this.addUser({ name, phone: '', startDay, startTime, endDay, endTime });
+          }
+          return user;
+        }
+
+        addUser(userData) {
+          const totalMins = calculateSlotDurationMinutes(userData.startDay, userData.startTime, userData.endDay, userData.endTime);
+          const newUser = {
+            id: 'usr-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            name: userData.name.trim(),
+            phone: (userData.phone || '').trim(),
+            startDay: userData.startDay || 'Sunday',
+            startTime: userData.startTime || '08:00',
+            endDay: userData.endDay || 'Monday',
+            endTime: userData.endTime || '01:00',
+            totalMinutes: totalMins
+          };
+          this.state.users.push(newUser);
+          this.autoRechainSchedule();
+          this.saveState();
+          return newUser;
+        }
+
+        updateUser(id, updatedFields) {
+          const index = this.state.users.findIndex(u => u.id === id);
+          if (index !== -1) {
+            const current = this.state.users[index];
+            const startDay = updatedFields.startDay || current.startDay;
+            const startTime = updatedFields.startTime || current.startTime;
+            const endDay = updatedFields.endDay || current.endDay;
+            const endTime = updatedFields.endTime || current.endTime;
+            const totalMins = calculateSlotDurationMinutes(startDay, startTime, endDay, endTime);
+
+            this.state.users[index] = {
+              ...current,
+              ...updatedFields,
+              name: updatedFields.name ? updatedFields.name.trim() : current.name,
+              phone: updatedFields.phone !== undefined ? updatedFields.phone.trim() : current.phone,
+              startDay,
+              startTime,
+              endDay,
+              endTime,
+              totalMinutes: totalMins
+            };
+            this.autoRechainSchedule();
+            this.saveState();
+          }
+        }
+
+        deleteUser(id) {
+          this.state.users = this.state.users.filter(u => u.id !== id);
+          this.autoRechainSchedule();
+          this.saveState();
+        }
+
+        getEntries() { return this.state.entries; }
+
+        addEntry(entry) {
+          const newEntry = {
+            id: 'ent-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            date: entry.date || new Date().toISOString().split('T')[0],
+            userId: entry.userId || '',
+            startReading: parseFloat(entry.startReading) || 0,
+            endReading: parseFloat(entry.endReading) || 0,
+            transferToUserId: entry.transferToUserId || null,
+            confidence: entry.confidence || 'high',
+            notes: entry.notes || ''
+          };
+          this.state.entries.push(newEntry);
+          this.saveState();
+          return newEntry;
+        }
+
+        updateEntry(id, updatedFields) {
+          const index = this.state.entries.findIndex(e => e.id === id);
+          if (index !== -1) {
+            this.state.entries[index] = { ...this.state.entries[index], ...updatedFields };
+            this.saveState();
+          }
+        }
+
+        deleteEntry(id) {
+          this.state.entries = this.state.entries.filter(e => e.id !== id);
+          this.saveState();
+        }
+
+        clearAllEntries() {
+          this.state.entries = [];
+          this.saveState();
+        }
+
+        addBulkEntries(list) {
+          const formatted = list.map(e => ({
+            id: 'ent-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+            date: e.date || new Date().toISOString().split('T')[0],
+            userId: e.userId || '',
+            startReading: parseFloat(e.startReading) || 0,
+            endReading: parseFloat(e.endReading) || 0,
+            transferToUserId: e.transferToUserId || null,
+            confidence: e.confidence || 'high',
+            notes: e.notes || ''
+          }));
+          this.state.entries = [...this.state.entries, ...formatted];
+          this.saveState();
+        }
+
+        getExpenses() { return this.state.expenses; }
+
+        updateWapdaBill(amount) {
+          this.state.expenses.wapdaBill = Math.max(0, parseFloat(amount) || 0);
+          this.saveState();
+        }
+
+        updateWapdaRefDetails(refNo, ruCode = 'R') {
+          this.state.expenses.wapdaRefNo = refNo;
+          this.state.expenses.ruCode = ruCode;
+          this.saveState();
+        }
+
+        updateBillingMonth(monthStr, labelStr) {
+          this.state.expenses.billingMonth = monthStr;
+          if (labelStr) this.state.expenses.billingMonthLabel = labelStr;
+          this.saveState();
+        }
+
+        addFixedExpense(description, amount) {
+          const item = { id: 'fix-' + Date.now(), description: description.trim() || 'General Expense', amount: Math.max(0, parseFloat(amount) || 0) };
+          this.state.expenses.fixedExpenses.push(item);
+          this.saveState();
+        }
+
+        deleteFixedExpense(id) {
+          this.state.expenses.fixedExpenses = this.state.expenses.fixedExpenses.filter(f => f.id !== id);
+          this.saveState();
+        }
+
+        setActiveTab(tab) {
+          this.state.activeTab = tab;
+          this.saveState();
+        }
+
+        setTheme(theme) {
+          this.state.theme = theme;
+          try {
+            localStorage.setItem('user_explicit_theme_set', 'true');
+          } catch (e) {}
+          this.saveState();
+        }
+
+        setGeminiApiKey(key, sessionOnly = false) {
+          this.state.sessionOnlyKey = sessionOnly;
+          if (sessionOnly) {
+            this.sessionKey = key.trim();
+            this.state.geminiApiKey = '';
+          } else {
+            this.sessionKey = key.trim();
+            this.state.geminiApiKey = key.trim();
+          }
+          this.saveState();
+        }
+
+        getGeminiApiKey() {
+          return this.sessionKey || this.state.geminiApiKey || '';
+        }
+
+        resetToDefaults() {
+          this.sessionKey = '';
+          this.state = this.getDefaultState();
+          this.saveState();
+        }
+      }
+
+      const store = new Store();
+
+      function generateBilingualWhatsAppSchedule(users) {
+        let msg = `🗓️ *TUBEWELL BARI SCHEDULE / ٹیوب ویل باری شڈول* 🗓️\n====================================\n\n`;
+        msg += `📋 *WEEKLY TURN TIME SLOTS (ہفتہ وار باری باری تفصیل):*\n\n`;
+
+        users.forEach((u, idx) => {
+          const biliName = getBilingualUserName(u.name);
+          const startDayBili = DAY_NAMES_BILINGUAL[u.startDay] || u.startDay;
+          const endDayBili = DAY_NAMES_BILINGUAL[u.endDay] || u.endDay;
+
+          const mins = u.totalMinutes || calculateSlotDurationMinutes(u.startDay, u.startTime, u.endDay, u.endTime);
+          const durationStr = formatDurationText(mins);
+
+          msg += `👤 *${idx + 1}. ${biliName}*\n`;
+          msg += `   🗓️ Start (شروع): *${startDayBili}* — ${formatTime12h(u.startTime)}\n`;
+          msg += `   🏁 End (ختم): *${endDayBili}* — ${formatTime12h(u.endTime)}\n`;
+          msg += `   ⏱️ Total Duration (دورانیہ): *${durationStr}*\n\n`;
+        });
+
+        msg += `====================================\n`;
+        msg += `⚠️ *Note:* Meharbani farmakar apni bari par waqt ki pabandi karein.\n`;
+        msg += `شکرگزار: ٹیوب ویل انتظامیہ 🙏\n`;
+
+        return msg;
+      }
+
+      function calculateBilling(users, entries, expenses) {
+        const wapdaBill = Math.max(0, parseFloat(expenses.wapdaBill) || 0);
+        const fixedExpensesList = Array.isArray(expenses.fixedExpenses) ? expenses.fixedExpenses : [];
+        const totalFixedExpenses = fixedExpensesList.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+
+        let totalEffectiveHours = 0;
+        const userHoursMap = new Map();
+
+        users.forEach(user => {
+          const mins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
+          const hours = mins / 60;
+          userHoursMap.set(user.id, hours);
+          totalEffectiveHours += hours;
+        });
+
+        const userUnitsMap = new Map();
+        const userTransferredInCountMap = new Map();
+
+        users.forEach(user => {
+          userUnitsMap.set(user.id, 0);
+          userTransferredInCountMap.set(user.id, 0);
+        });
+
+        let grandTotalUnits = 0;
+
+        entries.forEach(entry => {
+          const start = parseFloat(entry.startReading) || 0;
+          const end = parseFloat(entry.endReading) || 0;
+          const units = Math.max(0, end - start);
+
+          const originalUserId = entry.userId;
+          const transferUserId = entry.transferToUserId;
+
+          let billedUserId = originalUserId;
+          if (transferUserId && users.some(u => u.id === transferUserId)) {
+            billedUserId = transferUserId;
+            if (originalUserId && originalUserId !== transferUserId) {
+              userTransferredInCountMap.set(transferUserId, (userTransferredInCountMap.get(transferUserId) || 0) + 1);
+            }
+          }
+
+          if (billedUserId && userUnitsMap.has(billedUserId)) {
+            userUnitsMap.set(billedUserId, userUnitsMap.get(billedUserId) + units);
+            grandTotalUnits += units;
+          }
+        });
+
+        const userBreakdowns = users.map(user => {
+          const units = userUnitsMap.get(user.id) || 0;
+          const hours = userHoursMap.get(user.id) || 0;
+          const transferredIn = userTransferredInCountMap.get(user.id) || 0;
+
+          const unitsPercentage = grandTotalUnits > 0 ? (units / grandTotalUnits) * 100 : 0;
+          const usageBillShare = grandTotalUnits > 0 ? (units / grandTotalUnits) * wapdaBill : 0;
+
+          const hoursPercentage = totalEffectiveHours > 0 ? (hours / totalEffectiveHours) * 100 : 0;
+          const fixedBillShare = totalEffectiveHours > 0 ? (hours / totalEffectiveHours) * totalFixedExpenses : 0;
+
+          const grandTotalBill = usageBillShare + fixedBillShare;
+          const mins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
+
+          return {
+            userId: user.id,
+            name: user.name,
+            phone: user.phone || '',
+            startDay: user.startDay,
+            startTime: user.startTime,
+            endDay: user.endDay,
+            endTime: user.endTime,
+            formattedDuration: formatDurationText(mins),
+            effectiveHours: Math.round(hours * 100) / 100,
+            hoursPercentage: Math.round(hoursPercentage * 10) / 10,
+            unitsConsumed: units,
+            unitsPercentage: Math.round(unitsPercentage * 10) / 10,
+            transferredInCount: transferredIn,
+            usageBillShare: Math.round(usageBillShare),
+            fixedBillShare: Math.round(fixedBillShare),
+            grandTotalBill: Math.round(grandTotalBill)
+          };
+        });
+
+        userBreakdowns.sort((a, b) => b.grandTotalBill - a.grandTotalBill);
+
+        return {
+          billingMonthLabel: expenses.billingMonthLabel || 'Current Month',
+          wapdaBill,
+          totalFixedExpenses,
+          grandTotalBillSystem: wapdaBill + totalFixedExpenses,
+          grandTotalUnits,
+          totalEffectiveHours: Math.round(totalEffectiveHours * 100) / 100,
+          userBreakdowns
+        };
+      }
+
+      function generateWhatsAppMessage(calculatedData, formatLang = 'roman') {
+        const { billingMonthLabel, wapdaBill, totalFixedExpenses, grandTotalBillSystem, grandTotalUnits, userBreakdowns } = calculatedData;
+        const dateHeader = billingMonthLabel || 'Current Month';
+
+        if (formatLang === 'urdu') {
+          let msg = `⚡ *ٹیوب ویل بل خلاصہ — ${dateHeader}* ⚡\n====================================\n\n`;
+          msg += `📊 *کل اخراجات:* \n• کل استعمال شدہ یونٹ: *${grandTotalUnits.toLocaleString()} یونٹ*\n• واپڈا بجلی بل: *Rs. ${wapdaBill.toLocaleString()}*\n• مرمت و دیگر اخراجات: *Rs. ${totalFixedExpenses.toLocaleString()}*\n• کل رقم: *Rs. ${grandTotalBillSystem.toLocaleString()}*\n\n`;
+          msg += `------------------------------------\n📋 *ہر ممبر کا واجب الادا بل:* \n------------------------------------\n\n`;
+          userBreakdowns.forEach((user, index) => {
+            const biliName = getBilingualUserName(user.name);
+            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
+            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+            msg += `👤 *${index + 1}. ${biliName}*\n   • باری: ${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}\n   • استعمال: ${user.unitsConsumed} یونٹ\n   • بجلی بل حصہ: Rs. ${user.usageBillShare.toLocaleString()}\n   • فکسڈ اخراجات حصہ: Rs. ${user.fixedBillShare.toLocaleString()} (${user.formattedDuration})\n   👉 *کل واجب الادا: Rs. ${user.grandTotalBill.toLocaleString()}*\n\n`;
+          });
+          msg += `------------------------------------\nشکرگزار: ٹیوب ویل انتظامیہ 🙏\n`;
+          return msg;
+        } else if (formatLang === 'english') {
+          let msg = `⚡ *TUBEWELL BILL SUMMARY — ${dateHeader.toUpperCase()}* ⚡\n====================================\n\n`;
+          msg += `📊 *GRAND TOTALS:*\n• Total Electricity Consumed: *${grandTotalUnits.toLocaleString()} Units*\n• WAPDA Electricity Bill: *Rs. ${wapdaBill.toLocaleString()}*\n• Fixed & Repair Expenses: *Rs. ${totalFixedExpenses.toLocaleString()}*\n• Total Bill Amount: *Rs. ${grandTotalBillSystem.toLocaleString()}*\n\n`;
+          msg += `------------------------------------\n📋 *INDIVIDUAL USER SHARES:*\n------------------------------------\n\n`;
+          userBreakdowns.forEach((user, index) => {
+            const biliName = getBilingualUserName(user.name);
+            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
+            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+            msg += `👤 *${index + 1}. ${biliName}*\n   • Time Slot: ${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}\n   • Units Consumed: ${user.unitsConsumed} Units (${user.unitsPercentage}%)\n   • WAPDA Share: Rs. ${user.usageBillShare.toLocaleString()}\n   • Fixed Share: Rs. ${user.fixedBillShare.toLocaleString()} (${user.formattedDuration})\n   👉 *TOTAL DUE: Rs. ${user.grandTotalBill.toLocaleString()}*\n\n`;
+          });
+          msg += `------------------------------------\nThank you! Please submit your payment promptly.\n`;
+          return msg;
+        }
+
+        let msg = `⚡ *TUBEWELL BILL SUMMARY — ${dateHeader.toUpperCase()}* ⚡\n====================================\n\n`;
+        msg += `📊 *OVERALL TOTALS (کل اخراجات):*\n• Total Electricity Units: *${grandTotalUnits.toLocaleString()} Units*\n• WAPDA Bijli Bill: *Rs. ${wapdaBill.toLocaleString()}*\n• Fixed / Repair Expenses: *Rs. ${totalFixedExpenses.toLocaleString()}*\n• Total Tubewell Bill: *Rs. ${grandTotalBillSystem.toLocaleString()}*\n\n`;
+        msg += `------------------------------------\n📋 *PER USER BILL BREAKDOWN (تمام ممبران کا بل):*\n------------------------------------\n\n`;
+        userBreakdowns.forEach((user, index) => {
+          const biliName = getBilingualUserName(user.name);
+          const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
+          const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+          msg += `👤 *${index + 1}. ${biliName}*\n   • Bari Time Slot: ${startDayBili} ${formatTime12h(user.startTime)} to ${endDayBili} ${formatTime12h(user.endTime)}\n   • Usage: ${user.unitsConsumed} Units (${user.unitsPercentage}%)\n   • WAPDA Share: Rs. ${user.usageBillShare.toLocaleString()}\n   • Fixed Share: Rs. ${user.fixedBillShare.toLocaleString()} (${user.formattedDuration})\n   👉 *TOTAL BILL: Rs. ${user.grandTotalBill.toLocaleString()}*\n`;
+          if (user.transferredInCount > 0) msg += `   ℹ️ *(Includes ${user.transferredInCount} transferred turn session(s))*\n`;
+          msg += `\n`;
+        });
+        msg += `------------------------------------\n⚠️ *Note:* Meharbani farmakar apna bill waqt par jama karwayen.\nShukriya! 🙏\n`;
+        return msg;
+      }
+
+      function generateSingleUserWhatsAppMessage(user, dateHeader) {
+        const biliName = getBilingualUserName(user.name);
+        const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
+        const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+
+        let msg = `⚡ *TUBEWELL BILL — ${biliName} (${dateHeader})* ⚡\n\n`;
+        msg += `• Time Slot: ${startDayBili} ${formatTime12h(user.startTime)} to ${endDayBili} ${formatTime12h(user.endTime)}\n`;
+        msg += `• Allocated Duration: *${user.formattedDuration}*\n`;
+        msg += `• Units Used: *${user.unitsConsumed} Units*\n`;
+        msg += `• WAPDA Electricity Share: *Rs. ${user.usageBillShare.toLocaleString()}*\n`;
+        msg += `• Fixed/Repair Expenses Share: *Rs. ${user.fixedBillShare.toLocaleString()}*\n`;
+        msg += `------------------------------------\n`;
+        msg += `💰 *TOTAL AMOUNT DUE: Rs. ${user.grandTotalBill.toLocaleString()}*\n\n`;
+        msg += `Meharbani karke bill waqt par ada karein. Shukriya!`;
+        return msg;
+      }
+
+      function parseRegisterTextIntoEntries(rawText, registeredUsers) {
+        if (!rawText || !rawText.trim()) return [];
+        let list = [];
+        const cleanStr = rawText.replace(/^```json\s*/m, '').replace(/```$/m, '').trim();
+
+        try {
+          const parsed = JSON.parse(cleanStr);
+          if (Array.isArray(parsed)) {
+            list = parsed.map(item => ({
+              date: item.date || item.Date || new Date().toISOString().split('T')[0],
+              name: item.name || item.Name || item.userName || 'Register Member',
+              startReading: parseFloat(item.startReading || item.start_reading || item.StartReading || 0),
+              endReading: parseFloat(item.endReading || item.end_reading || item.EndReading || 0),
+              transferToUserId: null,
+              confidence: 'high',
+              notes: 'Reparsed from AI JSON output'
+            }));
+          }
+        } catch (e) {}
+
+        if (list.length === 0) {
+          const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+          lines.forEach(line => {
+            const numbers = line.match(/\b\d{4,7}\b/g);
+            if (numbers && numbers.length >= 2) {
+              const startReading = parseFloat(numbers[0]);
+              const endReading = parseFloat(numbers[1]);
+
+              if (endReading >= startReading) {
+                let matchedUser = registeredUsers.find(u => line.toLowerCase().includes(u.name.toLowerCase()));
+                let extractedName = line.replace(/\b\d+\b/g, '').trim() || 'Register Member';
+
+                list.push({
+                  date: new Date().toISOString().split('T')[0],
+                  name: matchedUser ? matchedUser.name : extractedName,
+                  startReading: startReading,
+                  endReading: endReading,
+                  transferToUserId: null,
+                  confidence: matchedUser ? 'high' : 'medium',
+                  notes: `Reparsed line: "${line.substring(0, 30)}"`
+                });
+              }
+            }
+          });
+        }
+
+        const finalEntries = [];
+        list.forEach(item => {
+          if (item.startReading >= 0 && item.endReading > 0) {
+            const userObj = store.ensureUserExists(item.name);
+            finalEntries.push({
+              date: item.date || new Date().toISOString().split('T')[0],
+              userId: userObj.id,
+              startReading: item.startReading,
+              endReading: item.endReading,
+              transferToUserId: null,
+              confidence: item.confidence || 'high',
+              notes: item.notes || ''
+            });
+          }
+        });
+
+        return finalEntries;
+      }
+
+      class App {
+        constructor() {
+          this.initElements();
+          this.bindEvents();
+          this.subscribeStore();
+          this.render();
+        }
+
+        initElements() {
+          this.navBtns = document.querySelectorAll('.step-btn');
+          this.tabContents = document.querySelectorAll('.tab-content');
+
+          this.usersTableBody = document.getElementById('usersTableBody');
+          this.addUserBtn = document.getElementById('addUserBtn');
+          this.copyScheduleWaBtn = document.getElementById('copyScheduleWaBtn');
+          this.sendScheduleWaBtn = document.getElementById('sendScheduleWaBtn');
+          this.scheduleWhatsappPreviewBox = document.getElementById('scheduleWhatsappPreviewBox');
+
+          this.userModal = document.getElementById('userModal');
+          this.userForm = document.getElementById('userForm');
+          this.userModalTitle = document.getElementById('userModalTitle');
+          this.userIdInput = document.getElementById('userIdInput');
+          this.userNameInput = document.getElementById('userNameInput');
+          this.userPhoneInput = document.getElementById('userPhoneInput');
+
+          this.userStartDaySelect = document.getElementById('userStartDaySelect');
+          this.userStartHourSelect = document.getElementById('userStartHourSelect');
+          this.userStartMinSelect = document.getElementById('userStartMinSelect');
+          this.userStartAmpmSelect = document.getElementById('userStartAmpmSelect');
+
+          this.userEndDaySelect = document.getElementById('userEndDaySelect');
+          this.userEndHourSelect = document.getElementById('userEndHourSelect');
+          this.userEndMinSelect = document.getElementById('userEndMinSelect');
+          this.userEndAmpmSelect = document.getElementById('userEndAmpmSelect');
+
+          populate12HourOptions(this.userStartHourSelect, this.userStartMinSelect);
+          populate12HourOptions(this.userEndHourSelect, this.userEndMinSelect);
+
+          this.userCalculatedDurationDisplay = document.getElementById('userCalculatedDurationDisplay');
+          this.validationBadge = document.getElementById('validationBadge');
+          this.saveUserSubmitBtn = document.getElementById('saveUserSubmitBtn');
+
+          this.stagedFiles = [];
+
+          this.registerTableBody = document.getElementById('registerTableBody');
+          this.triggerUploadBtn = document.getElementById('triggerUploadBtn');
+          this.registerImageUpload = document.getElementById('registerImageUpload');
+          this.dropzoneBox = document.getElementById('dropzoneBox');
+          this.addEntryBtn = document.getElementById('addEntryBtn');
+          this.clearEntriesBtn = document.getElementById('clearEntriesBtn');
+          this.ocrProgressBox = document.getElementById('ocrProgressBox');
+          this.ocrProgressText = document.getElementById('ocrProgressText');
+          this.ocrProgressSub = document.getElementById('ocrProgressSub');
+          this.batchProgressBar = document.getElementById('batchProgressBar');
+          this.batchPercentBadge = document.getElementById('batchPercentBadge');
+          this.pageSelectorTabs = document.getElementById('pageSelectorTabs');
+          this.scannedPageResults = [];
+
+          this.imageGalleryCard = document.getElementById('imageGalleryCard');
+          this.stagedCountBadge = document.getElementById('stagedCountBadge');
+          this.stagedThumbnailsGrid = document.getElementById('stagedThumbnailsGrid');
+          this.addMorePhotosBtn = document.getElementById('addMorePhotosBtn');
+          this.clearGalleryBtn = document.getElementById('clearGalleryBtn');
+          this.startAiScanBtn = document.getElementById('startAiScanBtn');
+
+          this.ocrPreviewCard = document.getElementById('ocrPreviewCard');
+          this.uploadedImageDisplay = document.getElementById('uploadedImageDisplay');
+          this.rawOcrTextarea = document.getElementById('rawOcrTextarea');
+          this.reparseOcrBtn = document.getElementById('reparseOcrBtn');
+          this.closePreviewBtn = document.getElementById('closePreviewBtn');
+
+          this.entryModal = document.getElementById('entryModal');
+          this.entryForm = document.getElementById('entryForm');
+          this.entryIdInput = document.getElementById('entryIdInput');
+          this.entryDateInput = document.getElementById('entryDateInput');
+          this.entryUserSelect = document.getElementById('entryUserSelect');
+          this.entryStartInput = document.getElementById('entryStartInput');
+          this.entryEndInput = document.getElementById('entryEndInput');
+          this.entryTransferSelect = document.getElementById('entryTransferSelect');
+          this.entryNotesInput = document.getElementById('entryNotesInput');
+
+          this.wapdaRefNoInput = document.getElementById('wapdaRefNoInput');
+          this.fetchDynamicLiveBillBtn = document.getElementById('fetchDynamicLiveBillBtn');
+          this.mepcoDynamicCard = document.getElementById('mepcoDynamicCard');
+          this.closeDynamicCardBtn = document.getElementById('closeDynamicCardBtn');
+          this.liveMepcoHtmlContainer = document.getElementById('liveMepcoHtmlContainer');
+          this.mepcoDynamicRefText = document.getElementById('mepcoDynamicRefText');
+
+          this.billMetadataBox = document.getElementById('billMetadataBox');
+          this.dispRefNo = document.getElementById('dispRefNo');
+          this.dispNameAddress = document.getElementById('dispNameAddress');
+          this.dispReadingDate = document.getElementById('dispReadingDate');
+          this.dispIssueDate = document.getElementById('dispIssueDate');
+          this.dispDueDate = document.getElementById('dispDueDate');
+
+          this.wapdaBillInput = document.getElementById('wapdaBillInput');
+          this.billingMonthInput = document.getElementById('billingMonthInput');
+          this.fixedExpensesList = document.getElementById('fixedExpensesList');
+          this.addFixedExpenseBtn = document.getElementById('addFixedExpenseBtn');
+          this.fixedDescInput = document.getElementById('fixedDescInput');
+          this.fixedAmountInput = document.getElementById('fixedAmountInput');
+
+          this.summaryTotalUnits = document.getElementById('summaryTotalUnits');
+          this.summaryWapdaBill = document.getElementById('summaryWapdaBill');
+          this.summaryFixedExpenses = document.getElementById('summaryFixedExpenses');
+          this.summaryGrandTotal = document.getElementById('summaryGrandTotal');
+          this.summaryTableBody = document.getElementById('summaryTableBody');
+          this.userCardsContainer = document.getElementById('userCardsContainer');
+
+          this.whatsappLangSelect = document.getElementById('whatsappLangSelect');
+          this.whatsappPreviewBox = document.getElementById('whatsappPreviewBox');
+          this.copyWhatsappBtn = document.getElementById('copyWhatsappBtn');
+          this.sendWhatsappBtn = document.getElementById('sendWhatsappBtn');
+          this.printReportBtn = document.getElementById('printReportBtn');
+
+          this.resetSampleDataBtn = document.getElementById('resetSampleDataBtn');
+          this.themeToggleBtn = document.getElementById('themeToggleBtn');
+          this.settingsBtn = document.getElementById('settingsBtn');
+          this.settingsModal = document.getElementById('settingsModal');
+          this.geminiKeyInput = document.getElementById('geminiKeyInput');
+          this.sessionOnlyKeyCheckbox = document.getElementById('sessionOnlyKeyCheckbox');
+          this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
+          this.clearKeyBtn = document.getElementById('clearKeyBtn');
+          this.resetDataBtn = document.getElementById('resetDataBtn');
+        }
+
+        getModalStartTime24() {
+          return convert12to24(this.userStartHourSelect.value, this.userStartMinSelect.value, this.userStartAmpmSelect.value);
+        }
+
+        getModalEndTime24() {
+          return convert12to24(this.userEndHourSelect.value, this.userEndMinSelect.value, this.userEndAmpmSelect.value);
+        }
+
+        setModalStartTime24(time24) {
+          const { hour12, minute, ampm } = parse24to12(time24);
+          this.userStartHourSelect.value = hour12;
+          this.userStartMinSelect.value = minute;
+          this.userStartAmpmSelect.value = ampm;
+        }
+
+        setModalEndTime24(time24) {
+          const { hour12, minute, ampm } = parse24to12(time24);
+          this.userEndHourSelect.value = hour12;
+          this.userEndMinSelect.value = minute;
+          this.userEndAmpmSelect.value = ampm;
+        }
+
+        bindEvents() {
+          this.navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.setActiveTab(btn.dataset.tab);
+            });
+          });
+
+          this.addUserBtn.addEventListener('click', () => this.openUserModal());
+          this.userForm.addEventListener('submit', (e) => this.handleUserFormSubmit(e));
+
+          this.copyScheduleWaBtn.addEventListener('click', () => {
+            const txt = this.scheduleWhatsappPreviewBox.textContent;
+            navigator.clipboard.writeText(txt).then(() => {
+              this.showToast('Schedule copied to clipboard in WhatsApp format!');
+            }).catch(() => {
+              alert('Copied to clipboard');
+            });
+          });
+
+          this.sendScheduleWaBtn.addEventListener('click', () => {
+            const txt = encodeURIComponent(this.scheduleWhatsappPreviewBox.textContent);
+            window.open(`https://api.whatsapp.com/send?text=${txt}`, '_blank');
+          });
+
+          const updateModalDurationCalc = () => {
+            const sd = this.userStartDaySelect.value;
+            const st = this.getModalStartTime24();
+            const ed = this.userEndDaySelect.value;
+            const et = this.getModalEndTime24();
+
+            if (sd && st && ed && et) {
+              const mins = calculateSlotDurationMinutes(sd, st, ed, et);
+              this.userCalculatedDurationDisplay.textContent = formatDurationText(mins);
+
+              const startOffset = getWeeklyMinuteOffset(sd, st);
+              const endOffset = getWeeklyMinuteOffset(ed, et);
+
+              if (endOffset <= startOffset && (endOffset + 10080 - startOffset <= 0)) {
+                this.validationBadge.className = 'badge badge-danger';
+                this.validationBadge.textContent = '❌ End Time Must Be After Start Time';
+                this.saveUserSubmitBtn.disabled = true;
+              } else {
+                this.validationBadge.className = 'badge badge-success';
+                this.validationBadge.textContent = '✅ Valid Time Slot';
+                this.saveUserSubmitBtn.disabled = false;
+              }
+            }
+          };
+
+          ['change', 'input'].forEach(evt => {
+            this.userStartDaySelect.addEventListener(evt, updateModalDurationCalc);
+            this.userStartHourSelect.addEventListener(evt, updateModalDurationCalc);
+            this.userStartMinSelect.addEventListener(evt, updateModalDurationCalc);
+            this.userStartAmpmSelect.addEventListener(evt, updateModalDurationCalc);
+
+            this.userEndDaySelect.addEventListener(evt, updateModalDurationCalc);
+            this.userEndHourSelect.addEventListener(evt, updateModalDurationCalc);
+            this.userEndMinSelect.addEventListener(evt, updateModalDurationCalc);
+            this.userEndAmpmSelect.addEventListener(evt, updateModalDurationCalc);
+          });
+
+          this.addEntryBtn.addEventListener('click', () => this.openEntryModal());
+          this.entryForm.addEventListener('submit', (e) => this.handleEntryFormSubmit(e));
+          this.clearEntriesBtn.addEventListener('click', () => {
+            if (confirm('Clear all register entries?')) {
+              store.clearAllEntries();
+              this.showToast('All register entries cleared.');
+            }
+          });
+
+          // Upload Register Image & Call Google Gemini AI Vision Engine
+          this.triggerUploadBtn.addEventListener('click', () => this.registerImageUpload.click());
+          this.addMorePhotosBtn.addEventListener('click', () => this.registerImageUpload.click());
+          this.dropzoneBox.addEventListener('click', () => this.registerImageUpload.click());
+
+          ['dragenter', 'dragover'].forEach(eventName => {
+            this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-green)'; }, false);
+          });
+          ['dragleave', 'drop'].forEach(eventName => {
+            this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-blue)'; }, false);
+          });
+
+          this.dropzoneBox.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+              this.addFilesToStaging(files);
+            }
+          });
+
+          this.registerImageUpload.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              this.addFilesToStaging(e.target.files);
+              this.registerImageUpload.value = '';
+            }
+          });
+
+          this.clearGalleryBtn.addEventListener('click', () => {
+            this.stagedFiles = [];
+            this.renderStagedGallery();
+            this.showToast('Cleared all staged photos.');
+          });
+
+          this.startAiScanBtn.addEventListener('click', () => {
+            if (this.stagedFiles.length === 0) {
+              alert('Please select at least one register photo first.');
+              return;
+            }
+            this.processStagedAiScan();
+          });
+
+          this.closePreviewBtn.addEventListener('click', () => this.ocrPreviewCard.classList.add('hidden'));
+          this.reparseOcrBtn.addEventListener('click', () => {
+            const text = this.rawOcrTextarea.value;
+            const parsed = parseRegisterTextIntoEntries(text, store.getUsers());
+            if (parsed.length > 0) {
+              store.addBulkEntries(parsed);
+              this.showToast(`Reparsed and added ${parsed.length} entries from text!`);
+            } else {
+              alert('No valid 4-7 digit meter readings found in text. Edit or add lines in raw text box.');
+            }
+          });
+
+          this.wapdaBillInput.addEventListener('input', (e) => store.updateWapdaBill(e.target.value));
+          this.billingMonthInput.addEventListener('change', (e) => {
+            const dateVal = e.target.value;
+            if (dateVal) {
+              const [year, month] = dateVal.split('-');
+              const dateObj = new Date(year, parseInt(month) - 1, 1);
+              const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+              store.updateBillingMonth(dateVal, monthLabel);
+            }
+          });
+
+          // Fetch & Auto-Fill All Bill Metadata Fields Live (Default RU='R')
+          this.fetchDynamicLiveBillBtn.addEventListener('click', async () => {
+            const refNo = (this.wapdaRefNoInput.value || '').trim();
+
+            if (!refNo || refNo.length < 10) {
+              alert('Please enter a valid 14-Digit WAPDA Reference Number!');
+              return;
+            }
+
+            store.updateWapdaRefDetails(refNo, 'R');
+            const fullRefStr = `${refNo} R`;
+            this.mepcoDynamicRefText.textContent = fullRefStr;
+
+            this.showToast(`Connecting to PITC MEPCO Server for Ref: ${refNo}...`);
+
+            try {
+              const data = await fetchProxyApi(`/fetch_mepco?refno=${refNo}&ru=R`);
+
+              if (data && data.status === 'success' && data.fullHtml) {
+                if (data.billAmount) {
+                  store.updateWapdaBill(data.billAmount);
+                  this.wapdaBillInput.value = data.billAmount;
+                }
+
+                if (data.refno) this.dispRefNo.textContent = data.refno;
+                if (data.nameAddress) this.dispNameAddress.textContent = data.nameAddress;
+                if (data.readingDate) this.dispReadingDate.textContent = data.readingDate;
+                if (data.issueDate) this.dispIssueDate.textContent = data.issueDate;
+                if (data.dueDate) this.dispDueDate.textContent = data.dueDate;
+
+                this.billMetadataBox.classList.remove('hidden');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '850px';
+                iframe.style.border = 'none';
+                iframe.style.borderRadius = '8px';
+                iframe.style.background = '#ffffff';
+
+                this.liveMepcoHtmlContainer.innerHTML = '';
+                this.liveMepcoHtmlContainer.appendChild(iframe);
+
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open();
+                doc.write(data.fullHtml);
+                doc.close();
+
+                this.mepcoDynamicCard.classList.remove('hidden');
+                this.mepcoDynamicCard.scrollIntoView({ behavior: 'smooth' });
+
+                this.showToast(`✅ Extracted All Metadata for ${fullRefStr}! Amount: Rs. ${(data.billAmount||0).toLocaleString()}`);
+              } else {
+                throw new Error(data.message || 'Could not fetch bill from PITC');
+              }
+            } catch (err) {
+              alert(`Error fetching live bill from PITC: ${err.message}\nMake sure reference number is valid and connected.`);
+            }
+          });
+
+          this.closeDynamicCardBtn.addEventListener('click', () => {
+            this.mepcoDynamicCard.classList.add('hidden');
+          });
+
+          this.addFixedExpenseBtn.addEventListener('click', () => {
+            const desc = this.fixedDescInput.value;
+            const amt = this.fixedAmountInput.value;
+            if (desc && amt) {
+              store.addFixedExpense(desc, amt);
+              this.fixedDescInput.value = '';
+              this.fixedAmountInput.value = '';
+              this.showToast('Fixed expense added');
+            } else {
+              alert('Please enter description and amount.');
+            }
+          });
+
+          this.whatsappLangSelect.addEventListener('change', () => this.renderWhatsAppPreview());
+          this.copyWhatsappBtn.addEventListener('click', () => this.copyWhatsAppToClipboard());
+          this.sendWhatsappBtn.addEventListener('click', () => this.openWhatsAppDirect());
+          this.printReportBtn.addEventListener('click', () => window.print());
+
+          this.resetSampleDataBtn.addEventListener('click', () => {
+            store.resetToDefaults();
+            this.wapdaRefNoInput.value = '';
+            this.wapdaBillInput.value = '';
+            this.billMetadataBox.classList.add('hidden');
+            this.mepcoDynamicCard.classList.add('hidden');
+            this.showToast('Cleared all data. Ready for fresh inputs!');
+          });
+
+          this.settingsBtn.addEventListener('click', () => {
+            this.geminiKeyInput.value = store.getGeminiApiKey();
+            this.sessionOnlyKeyCheckbox.checked = store.state.sessionOnlyKey || false;
+            this.openModal(this.settingsModal);
+          });
+
+          this.saveSettingsBtn.addEventListener('click', () => {
+            const keyVal = this.geminiKeyInput.value;
+            const isSessionOnly = this.sessionOnlyKeyCheckbox.checked;
+            store.setGeminiApiKey(keyVal, isSessionOnly);
+            this.closeModal(this.settingsModal);
+            if (isSessionOnly) {
+              this.showToast('Key saved in temporary browser memory only! (Will wipe on tab close)');
+            } else {
+              this.showToast('Settings saved locally on your device!');
+            }
+          });
+
+          this.clearKeyBtn.addEventListener('click', () => {
+            store.setGeminiApiKey('', false);
+            this.geminiKeyInput.value = '';
+            this.showToast('API Key permanently removed.');
+          });
+
+          this.themeToggleBtn.addEventListener('click', () => {
+            const current = store.state.theme;
+            const next = current === 'dark' ? 'light' : 'dark';
+            store.setTheme(next);
+            this.applyTheme(next);
+          });
+
+          if (this.resetDataBtn) {
+            this.resetDataBtn.addEventListener('click', () => {
+              store.resetToDefaults();
+              this.closeModal(this.settingsModal);
+              this.showToast('Reset to defaults');
+            });
+          }
+
+          document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+              if (e.target === overlay) {
+                this.closeModal(overlay);
+              }
+            });
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                this.closeModal(modal);
+              });
+            }
+          });
+
+          document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const modal = btn.closest('.modal-overlay');
+              if (modal) this.closeModal(modal);
+            });
+          });
+        }
+
+        addFilesToStaging(fileList) {
+          const newFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+          if (newFiles.length === 0) {
+            this.showToast('⚠️ Please select valid image files!');
+            return;
+          }
+          this.stagedFiles.push(...newFiles);
+          this.renderStagedGallery();
+          this.showToast(`📸 ${newFiles.length} photo(s) added to gallery! Total: ${this.stagedFiles.length}`);
+        }
+
+        removeStagedFile(index) {
+          if (index >= 0 && index < this.stagedFiles.length) {
+            const removed = this.stagedFiles.splice(index, 1);
+            this.renderStagedGallery();
+            this.showToast(`🗑️ Removed "${removed[0]?.name || 'Photo'}"`);
+          }
+        }
+
+        renderStagedGallery() {
+          if (this.stagedFiles.length === 0) {
+            this.imageGalleryCard.classList.add('hidden');
+            return;
+          }
+
+          this.imageGalleryCard.classList.remove('hidden');
+          this.stagedCountBadge.textContent = `${this.stagedFiles.length} Photo${this.stagedFiles.length > 1 ? 's' : ''}`;
+          this.stagedThumbnailsGrid.innerHTML = '';
+
+          this.stagedFiles.forEach((file, index) => {
+            const card = document.createElement('div');
+            card.id = `thumb-card-${index}`;
+            card.style.position = 'relative';
+            card.style.background = 'var(--bg-card)';
+            card.style.border = '1px solid var(--border-glass)';
+            card.style.borderRadius = 'var(--radius-md)';
+            card.style.padding = '0.5rem';
+            card.style.textAlign = 'center';
+            card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+            card.style.transition = 'all 0.3s ease';
+
+            const statusText = file.statusText || '⏳ Pending';
+            const statusClass = file.statusClass || 'badge-secondary';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              card.innerHTML = `
+                <button class="remove-thumb-btn" data-index="${index}" title="Remove photo" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">&times;</button>
+                <img src="${e.target.result}" style="width: 100%; height: 110px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-glass); margin-bottom: 0.3rem;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem;" title="${file.name}">Page ${index + 1}</div>
+                <span id="thumb-status-${index}" class="badge ${statusClass}" style="font-size: 0.68rem; padding: 0.2rem 0.4rem;">${statusText}</span>
+              `;
+
+              const removeBtn = card.querySelector('.remove-thumb-btn');
+              if (removeBtn) {
+                removeBtn.addEventListener('click', (evt) => {
+                  evt.stopPropagation();
+                  this.removeStagedFile(index);
+                });
+              }
+            };
+            reader.readAsDataURL(file);
+            this.stagedThumbnailsGrid.appendChild(card);
+          });
+        }
+
+        async processStagedAiScan() {
+          if (this.stagedFiles.length === 0) return;
+
+          const apiKey = store.getGeminiApiKey();
+          if (!apiKey) {
+            this.ocrProgressBox.classList.add('hidden');
+            this.ocrPreviewCard.classList.remove('hidden');
+            this.rawOcrTextarea.value = `💡 AI Vision OCR requires a Google Gemini API Key!\n\nTo enable instant 100% accurate AI Vision scanning on all handwritten Urdu photos:\n1. Click ⚙️ Settings at the top right.\n2. Enter your Google Gemini API Key.\n3. Save Settings & upload your photo again!`;
+            this.showToast(`💡 Enter Gemini API Key in Settings (⚙️) for AI Vision Scan!`);
+            return;
+          }
+
+          this.ocrProgressBox.classList.remove('hidden');
+          this.ocrPreviewCard.classList.remove('hidden');
+          this.batchProgressBar.style.width = '0%';
+          this.batchPercentBadge.textContent = '0%';
+          this.scannedPageResults = [];
+
+          let totalUploadedRows = 0;
+          const filesToProcess = [...this.stagedFiles];
+          this.rawOcrTextarea.value = '';
+
+          for (let i = 0; i < filesToProcess.length; i++) {
+            const currentPct = Math.round((i / filesToProcess.length) * 100);
+            this.batchProgressBar.style.width = `${currentPct}%`;
+            this.batchPercentBadge.textContent = `${currentPct}%`;
+
+            const currentCard = document.getElementById(`thumb-card-${i}`);
+            const currentStatus = document.getElementById(`thumb-status-${i}`);
+            if (currentCard) {
+              currentCard.style.borderColor = '#3b82f6';
+              currentCard.style.boxShadow = '0 0 12px rgba(59, 130, 246, 0.6)';
+            }
+            if (currentStatus) {
+              currentStatus.className = 'badge badge-info';
+              currentStatus.textContent = '🔄 Scanning...';
+            }
+
+            if (i > 0) {
+              this.ocrProgressSub.textContent = `Pausing 1.8s between pages to prevent API rate limits...`;
+              await new Promise(r => setTimeout(r, 1800));
+            }
+
+            const file = filesToProcess[i];
+            this.ocrProgressText.textContent = `🤖 Scanning Image ${i + 1} of ${filesToProcess.length}: "${file.name}"...`;
+            this.ocrProgressSub.textContent = 'Analyzing handwritten Urdu names & 7-digit meter readings...';
+
+            const imageBase64 = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve(e.target.result);
+              reader.readAsDataURL(file);
+            });
+
+            this.uploadedImageDisplay.src = imageBase64;
+
+            try {
+              let aiRows = null;
+              let rawOutput = '';
+              let errorMessage = '';
+
+              try {
+                const aiData = await fetchProxyApi('/scan_ocr_ai', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ imageB64: imageBase64, apiKey })
+                });
+
+                if (aiData && aiData.status === 'success' && Array.isArray(aiData.rows)) {
+                  aiRows = aiData.rows;
+                  rawOutput = aiData.rawText || JSON.stringify(aiRows, null, 2);
+                } else if (aiData && aiData.message) {
+                  errorMessage = aiData.message;
+                }
+              } catch (proxyErr) {}
+
+              if (!aiRows && apiKey) {
+                const rawB64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+                const modelsToTry = ["gemini-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-pro-latest"];
+
+                for (const mName of modelsToTry) {
+                  try {
+                    const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        contents: [{
+                          parts: [
+                            { text: "Extract table rows from this handwritten Urdu/English tubewell log register image. Return ONLY a valid JSON array of objects with keys: 'date' (YYYY-MM-DD), 'name' (Urdu/English user name), 'startReading' (number), 'endReading' (number). No markdown code blocks." },
+                            { inlineData: { mimeType: file.type || "image/jpeg", data: rawB64 } }
+                          ]
+                        }]
+                      })
+                    });
+                    const gData = await gResp.json();
+                    if (gData.error) {
+                      errorMessage = gData.error.message || JSON.stringify(gData.error);
+                      if (gData.error.code === 429) {
+                        await new Promise(r => setTimeout(r, 2200));
+                      }
+                      continue;
+                    }
+                    if (gData.candidates && gData.candidates[0] && gData.candidates[0].content) {
+                      const textOut = gData.candidates[0].content.parts[0].text;
+                      rawOutput = textOut;
+                      const cleanJson = textOut.replace(/^```json\s*/m, '').replace(/```$/m, '').trim();
+                      aiRows = JSON.parse(cleanJson);
+                      break;
+                    }
+                  } catch (e) {
+                    errorMessage = e.message;
+                  }
+                }
+              }
+
+              if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {
+                const entriesToInsert = [];
+                aiRows.forEach(row => {
+                  const nameStr = row.name || row.userName || 'Register Member';
+                  const userObj = store.ensureUserExists(nameStr);
+                  entriesToInsert.push({
+                    date: row.date || new Date().toISOString().split('T')[0],
+                    userId: userObj.id,
+                    startReading: parseFloat(row.startReading) || 0,
+                    endReading: parseFloat(row.endReading) || 0,
+                    transferToUserId: null,
+                    confidence: 'high',
+                    notes: `AI Vision OCR extracted from ${file.name}`
+                  });
+                });
+
+                store.addBulkEntries(entriesToInsert);
+                totalUploadedRows += entriesToInsert.length;
+
+                this.scannedPageResults.push({
+                  pageIndex: i,
+                  fileName: file.name,
+                  imageB64: imageBase64,
+                  rowsCount: entriesToInsert.length,
+                  rawText: rawOutput || JSON.stringify(aiRows, null, 2)
+                });
+
+                if (currentCard) {
+                  currentCard.style.borderColor = '#10b981';
+                  currentCard.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.4)';
+                }
+                if (currentStatus) {
+                  currentStatus.className = 'badge badge-success';
+                  currentStatus.textContent = `✅ ${entriesToInsert.length} Rows`;
+                }
+
+                this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} of ${filesToProcess.length} ("${file.name}"): ✅ Extracted ${entriesToInsert.length} entries\n` + (rawOutput || JSON.stringify(aiRows, null, 2));
+                this.showToast(`🤖 Page ${i + 1}/${filesToProcess.length} scanned: +${entriesToInsert.length} entries`);
+              } else {
+                if (currentCard) {
+                  currentCard.style.borderColor = '#ef4444';
+                }
+                if (currentStatus) {
+                  currentStatus.className = 'badge badge-danger';
+                  currentStatus.textContent = `❌ Failed`;
+                }
+                this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} of ${filesToProcess.length} ("${file.name}"): ❌ Error: ${errorMessage || 'Could not extract rows'}`;
+              }
+            } catch (err) {
+              console.log('AI Vision upload error for page:', file.name, err);
+              if (currentStatus) {
+                currentStatus.className = 'badge badge-danger';
+                currentStatus.textContent = `❌ Error`;
+              }
+              this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} of ${filesToProcess.length} ("${file.name}"): ❌ Error: ${err.message}`;
+            }
+          }
+
+          this.batchProgressBar.style.width = '100%';
+          this.batchPercentBadge.textContent = '100%';
+          this.renderPageSelectorTabs();
+
+          this.ocrProgressBox.classList.add('hidden');
+          if (totalUploadedRows > 0) {
+            this.showToast(`🎉 Processed all ${filesToProcess.length} image(s) & added total ${totalUploadedRows} entries!`);
+          } else {
+            this.showToast(`⚠️ Could not extract rows from selected files. Check API key.`);
+          }
+        }
+
+        renderPageSelectorTabs() {
+          if (!this.scannedPageResults || this.scannedPageResults.length === 0) {
+            this.pageSelectorTabs.innerHTML = '';
+            return;
+          }
+
+          this.pageSelectorTabs.innerHTML = `<span style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin-right: 0.5rem;">Select Page View:</span>`;
+          this.scannedPageResults.forEach((res, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `btn btn-sm ${idx === 0 ? 'btn-primary' : 'btn-secondary'}`;
+            btn.textContent = `Page ${res.pageIndex + 1} (${res.rowsCount} Rows)`;
+            btn.addEventListener('click', () => {
+              this.pageSelectorTabs.querySelectorAll('button').forEach(b => {
+                b.className = 'btn btn-sm btn-secondary';
+              });
+              btn.className = 'btn btn-sm btn-primary';
+              this.uploadedImageDisplay.src = res.imageB64;
+              this.rawOcrTextarea.value = `// Page ${res.pageIndex + 1} ("${res.fileName}"): Extracted ${res.rowsCount} rows\n` + res.rawText;
+            });
+            this.pageSelectorTabs.appendChild(btn);
+          });
+        }
+
+        subscribeStore() {
+          store.subscribe(() => this.render());
+        }
+
+        applyTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          this.themeToggleBtn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        }
+
+        render() {
+          const { activeTab, theme } = store.state;
+          this.applyTheme(theme);
+
+          this.navBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === activeTab);
+          });
+
+          this.tabContents.forEach(tab => {
+            tab.classList.toggle('hidden', tab.id !== `tab-${activeTab}`);
+          });
+
+          this.renderUsersTab();
+          this.renderRegisterTab();
+          this.renderExpensesTab();
+          this.renderSummaryTab();
+        }
+
+        renderUsersTab() {
+          const users = store.getUsers();
+          this.usersTableBody.innerHTML = '';
+
+          const waScheduleText = generateBilingualWhatsAppSchedule(users);
+          this.scheduleWhatsappPreviewBox.textContent = waScheduleText;
+
+          if (users.length === 0) {
+            this.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No registered users. Click "+ Add New User & Time Slot".</td></tr>`;
+            return;
+          }
+
+          users.forEach((user, idx) => {
+            const tr = document.createElement('tr');
+            const totalMins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
+            const durationText = formatDurationText(totalMins);
+
+            const dayOptionsHtml = DAYS_ORDER.map(d => `<option value="${d}" ${d === user.startDay ? 'selected' : ''}>${DAY_NAMES_BILINGUAL[d]}</option>`).join('');
+            const endDayOptionsHtml = DAYS_ORDER.map(d => `<option value="${d}" ${d === user.endDay ? 'selected' : ''}>${DAY_NAMES_BILINGUAL[d]}</option>`).join('');
+
+            const biliName = getBilingualUserName(user.name);
+            const startPickerHtml = create12HourPickerHTML(`tbl-start-${user.id}`, user.startTime);
+            const endPickerHtml = create12HourPickerHTML(`tbl-end-${user.id}`, user.endTime);
+
+            tr.innerHTML = `
+              <td><strong>${idx + 1}</strong></td>
+              <td><div style="font-weight: 700;">${biliName}</div></td>
+              <td>
+                <div class="flex-center gap-1">
+                  <select class="form-control user-start-day-select" data-id="${user.id}" style="max-width: 140px; padding: 0.35rem 0.4rem; font-weight: 600;">
+                    ${dayOptionsHtml}
+                  </select>
+                  ${startPickerHtml}
+                </div>
+              </td>
+              <td>
+                <div class="flex-center gap-1">
+                  <select class="form-control user-end-day-select" data-id="${user.id}" style="max-width: 140px; padding: 0.35rem 0.4rem; font-weight: 600;">
+                    ${endDayOptionsHtml}
+                  </select>
+                  ${endPickerHtml}
+                </div>
+              </td>
+              <td><strong style="color: var(--accent-green);">${durationText}</strong></td>
+              <td>
+                <button class="btn btn-secondary btn-sm edit-user-btn" data-id="${user.id}">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}">🗑️</button>
+              </td>
+            `;
+            this.usersTableBody.appendChild(tr);
+          });
+
+          this.usersTableBody.querySelectorAll('.user-start-day-select').forEach(sel => {
+            sel.addEventListener('change', (e) => {
+              store.updateUser(e.target.dataset.id, { startDay: e.target.value });
+              this.showToast('Start day updated & schedule auto-aligned');
+            });
+          });
+
+          this.usersTableBody.querySelectorAll('.user-end-day-select').forEach(sel => {
+            sel.addEventListener('change', (e) => {
+              store.updateUser(e.target.dataset.id, { endDay: e.target.value });
+              this.showToast('End day updated & schedule auto-aligned');
+            });
+          });
+
+          users.forEach(u => {
+            const startPrefix = `tbl-start-${u.id}`;
+            const endPrefix = `tbl-end-${u.id}`;
+
+            const updateTableUserTime = (isEnd = false) => {
+              const prefix = isEnd ? endPrefix : startPrefix;
+              const hSel = this.usersTableBody.querySelector(`.${prefix}-hour`);
+              const mSel = this.usersTableBody.querySelector(`.${prefix}-min`);
+              const aSel = this.usersTableBody.querySelector(`.${prefix}-ampm`);
+
+              if (hSel && mSel && aSel) {
+                const time24 = convert12to24(hSel.value, mSel.value, aSel.value);
+                if (isEnd) {
+                  store.updateUser(u.id, { endTime: time24 });
+                  this.showToast('End time updated & schedule auto-aligned');
+                } else {
+                  store.updateUser(u.id, { startTime: time24 });
+                  this.showToast('Start time updated & schedule auto-aligned');
+                }
+              }
+            };
+
+            [`.${startPrefix}-hour`, `.${startPrefix}-min`, `.${startPrefix}-ampm`].forEach(cls => {
+              const el = this.usersTableBody.querySelector(cls);
+              if (el) el.addEventListener('change', () => updateTableUserTime(false));
+            });
+
+            [`.${endPrefix}-hour`, `.${endPrefix}-min`, `.${endPrefix}-ampm`].forEach(cls => {
+              const el = this.usersTableBody.querySelector(cls);
+              if (el) el.addEventListener('change', () => updateTableUserTime(true));
+            });
+          });
+
+          this.usersTableBody.querySelectorAll('.edit-user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const user = store.getUserById(btn.dataset.id);
+              if (user) this.openUserModal(user);
+            });
+          });
+
+          this.usersTableBody.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const user = store.getUserById(btn.dataset.id);
+              if (user && confirm(`Delete user "${user.name}"?`)) {
+                store.deleteUser(user.id);
+                this.showToast(`User ${user.name} deleted.`);
+              }
+            });
+          });
+        }
+
+        openUserModal(user = null) {
+          if (user) {
+            this.userModalTitle.textContent = 'Edit Registered User & Time Slot';
+            this.userIdInput.value = user.id;
+            this.userNameInput.value = user.name;
+            this.userPhoneInput.value = user.phone || '';
+            this.userStartDaySelect.value = user.startDay || 'Sunday';
+            this.setModalStartTime24(user.startTime || '08:00');
+            this.userEndDaySelect.value = user.endDay || 'Monday';
+            this.setModalEndTime24(user.endTime || '01:00');
+          } else {
+            this.userModalTitle.textContent = 'Add New Registered User & Time Slot';
+            this.userIdInput.value = '';
+            this.userNameInput.value = '';
+            this.userPhoneInput.value = '';
+
+            const users = store.getUsers();
+            if (users.length > 0) {
+              const lastUser = users[users.length - 1];
+              this.userStartDaySelect.value = lastUser.endDay;
+              this.setModalStartTime24(lastUser.endTime);
+              this.userEndDaySelect.value = lastUser.endDay;
+              this.setModalEndTime24(minutesToTimeStr(timeToMinutes(lastUser.endTime) + 360));
+            } else {
+              this.userStartDaySelect.value = 'Sunday';
+              this.setModalStartTime24('08:00');
+              this.userEndDaySelect.value = 'Monday';
+              this.setModalEndTime24('01:00');
+            }
+          }
+
+          const sd = this.userStartDaySelect.value;
+          const st = this.getModalStartTime24();
+          const ed = this.userEndDaySelect.value;
+          const et = this.getModalEndTime24();
+
+          const mins = calculateSlotDurationMinutes(sd, st, ed, et);
+          this.userCalculatedDurationDisplay.textContent = formatDurationText(mins);
+          this.validationBadge.className = 'badge badge-success';
+          this.validationBadge.textContent = '✅ Valid Time Slot';
+          this.saveUserSubmitBtn.disabled = false;
+
+          this.openModal(this.userModal);
+        }
+
+        handleUserFormSubmit(e) {
+          e.preventDefault();
+          const id = this.userIdInput.value;
+          const name = this.userNameInput.value;
+          const phone = this.userPhoneInput.value;
+          const startDay = this.userStartDaySelect.value;
+          const startTime = this.getModalStartTime24();
+          const endDay = this.userEndDaySelect.value;
+          const endTime = this.getModalEndTime24();
+
+          if (!name.trim()) return alert('Please enter user name.');
+
+          if (id) {
+            store.updateUser(id, { name, phone, startDay, startTime, endDay, endTime });
+            this.showToast(`User ${name} updated & schedule auto-aligned`);
+          } else {
+            store.addUser({ name, phone, startDay, startTime, endDay, endTime });
+            this.showToast(`User ${name} added & schedule chained`);
+          }
+          this.closeModal(this.userModal);
+        }
+
+        renderRegisterTab() {
+          const entries = store.getEntries();
+          const users = store.getUsers();
+
+          this.entryUserSelect.innerHTML = `<option value="">-- Select Registered User --</option>` +
+            users.map(u => `<option value="${u.id}">${getBilingualUserName(u.name)} (${u.startDay} ${formatTime12h(u.startTime)} ➔ ${u.endDay} ${formatTime12h(u.endTime)})</option>`).join('');
+
+          this.entryTransferSelect.innerHTML = `<option value="">None (Original User)</option>` +
+            users.map(u => `<option value="${u.id}">Transfer To: ${getBilingualUserName(u.name)}</option>`).join('');
+
+          this.registerTableBody.innerHTML = '';
+
+          if (entries.length === 0) {
+            this.registerTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding: 2rem;">No register entries yet. Upload an image to run Google Gemini AI Vision OCR.</td></tr>`;
+            return;
+          }
+
+          entries.forEach((entry, idx) => {
+            const tr = document.createElement('tr');
+            const user = store.getUserById(entry.userId);
+            const transferUser = entry.transferToUserId ? store.getUserById(entry.transferToUserId) : null;
+            const units = Math.max(0, entry.endReading - entry.startReading);
+
+            const confBadge = entry.confidence === 'high' 
+              ? `<span class="badge badge-success">High Confidence</span>`
+              : `<span class="badge badge-warning">Medium</span>`;
+
+            tr.innerHTML = `
+              <td>${idx + 1}</td>
+              <td>${entry.date}</td>
+              <td><strong>${user ? getBilingualUserName(user.name) : 'Unassigned'}</strong></td>
+              <td>${entry.startReading} ➔ ${entry.endReading}</td>
+              <td><strong style="color: var(--accent-green);">${units} Units</strong></td>
+              <td>
+                ${transferUser 
+                  ? `<span class="badge badge-warning">Transferred To: ${getBilingualUserName(transferUser.name)}</span>`
+                  : `<span style="color: var(--text-muted);">None</span>`}
+              </td>
+              <td>${confBadge}</td>
+              <td>
+                <button class="btn btn-secondary btn-sm edit-entry-btn" data-id="${entry.id}">✏️</button>
+                <button class="btn btn-danger btn-sm delete-entry-btn" data-id="${entry.id}">🗑️</button>
+              </td>
+            `;
+            this.registerTableBody.appendChild(tr);
+          });
+
+          this.registerTableBody.querySelectorAll('.edit-entry-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const entry = entries.find(e => e.id === btn.dataset.id);
+              if (entry) this.openEntryModal(entry);
+            });
+          });
+
+          this.registerTableBody.querySelectorAll('.delete-entry-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.deleteEntry(btn.dataset.id);
+              this.showToast('Entry deleted');
+            });
+          });
+        }
+
+        openEntryModal(entry = null) {
+          if (entry) {
+            this.entryIdInput.value = entry.id;
+            this.entryDateInput.value = entry.date;
+            this.entryUserSelect.value = entry.userId || '';
+            this.entryStartInput.value = entry.startReading;
+            this.entryEndInput.value = entry.endReading;
+            this.entryTransferSelect.value = entry.transferToUserId || '';
+            this.entryNotesInput.value = entry.notes || '';
+          } else {
+            this.entryIdInput.value = '';
+            this.entryDateInput.value = new Date().toISOString().split('T')[0];
+            this.entryUserSelect.value = '';
+            this.entryStartInput.value = '';
+            this.entryEndInput.value = '';
+            this.entryTransferSelect.value = '';
+            this.entryNotesInput.value = '';
+          }
+          this.openModal(this.entryModal);
+        }
+
+        handleEntryFormSubmit(e) {
+          e.preventDefault();
+          const id = this.entryIdInput.value;
+          const entryData = {
+            date: this.entryDateInput.value,
+            userId: this.entryUserSelect.value,
+            startReading: this.entryStartInput.value,
+            endReading: this.entryEndInput.value,
+            transferToUserId: this.entryTransferSelect.value || null,
+            notes: this.entryNotesInput.value,
+            confidence: 'high'
+          };
+
+          if (id) {
+            store.updateEntry(id, entryData);
+            this.showToast('Entry updated');
+          } else {
+            store.addEntry(entryData);
+            this.showToast('Entry added');
+          }
+          this.closeModal(this.entryModal);
+        }
+
+        renderExpensesTab() {
+          const expenses = store.getExpenses();
+          this.wapdaBillInput.value = expenses.wapdaBill || '';
+          if (expenses.billingMonth) this.billingMonthInput.value = expenses.billingMonth;
+          if (expenses.wapdaRefNo) this.wapdaRefNoInput.value = expenses.wapdaRefNo;
+
+          this.fixedExpensesList.innerHTML = '';
+          const list = expenses.fixedExpenses || [];
+
+          if (list.length === 0) {
+            this.fixedExpensesList.innerHTML = `<div class="text-muted text-center" style="padding: 1rem;">No fixed repair expenses.</div>`;
+            return;
+          }
+
+          list.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'flex-between mb-1';
+            div.style.padding = '0.6rem 0.8rem';
+            div.style.background = 'var(--bg-glass)';
+            div.style.borderRadius = 'var(--radius-sm)';
+            div.style.border = '1px solid var(--border-glass)';
+            div.innerHTML = `
+              <div><strong>${item.description}</strong></div>
+              <div class="flex-center gap-2">
+                <strong style="color: var(--accent-green);">Rs. ${parseFloat(item.amount).toLocaleString()}</strong>
+                <button class="btn btn-danger btn-sm delete-fixed-btn" data-id="${item.id}">🗑️</button>
+              </div>
+            `;
+            this.fixedExpensesList.appendChild(div);
+          });
+
+          this.fixedExpensesList.querySelectorAll('.delete-fixed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.deleteFixedExpense(btn.dataset.id);
+              this.showToast('Expense removed');
+            });
+          });
+        }
+
+        renderSummaryTab() {
+          const users = store.getUsers();
+          const entries = store.getEntries();
+          const expenses = store.getExpenses();
+
+          const calc = calculateBilling(users, entries, expenses);
+
+          this.summaryTotalUnits.textContent = `${calc.grandTotalUnits.toLocaleString()} Units`;
+          this.summaryWapdaBill.textContent = `Rs. ${calc.wapdaBill.toLocaleString()}`;
+          this.summaryFixedExpenses.textContent = `Rs. ${calc.totalFixedExpenses.toLocaleString()}`;
+          this.summaryGrandTotal.textContent = `Rs. ${calc.grandTotalBillSystem.toLocaleString()}`;
+
+          this.summaryTableBody.innerHTML = '';
+
+          if (calc.userBreakdowns.length === 0) {
+            this.summaryTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No registered users to display.</td></tr>`;
+            return;
+          }
+
+          calc.userBreakdowns.forEach((user, idx) => {
+            const tr = document.createElement('tr');
+            const biliName = getBilingualUserName(user.name);
+            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
+            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+
+            tr.innerHTML = `
+              <td><strong>${idx + 1}</strong></td>
+              <td><div style="font-weight: 700;">${biliName}</div></td>
+              <td><span class="badge badge-info">${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}</span></td>
+              <td><strong>${user.formattedDuration}</strong> (${user.effectiveHours} hrs)</td>
+              <td><strong>${user.unitsConsumed} Units</strong> (${user.unitsPercentage}%)</td>
+              <td>Rs. ${user.usageBillShare.toLocaleString()}</td>
+              <td>Rs. ${user.fixedBillShare.toLocaleString()}</td>
+              <td><strong style="color: var(--accent-green);">Rs. ${user.grandTotalBill.toLocaleString()}</strong></td>
+            `;
+            this.summaryTableBody.appendChild(tr);
+          });
+
+          this.userCardsContainer.innerHTML = '';
+          calc.userBreakdowns.forEach(user => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const biliName = getBilingualUserName(user.name);
+            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
+            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+            const cleanPhone = sanitizePhoneForWa(user.phone);
+
+            card.innerHTML = `
+              <div class="card-header">
+                <div>
+                  <div class="card-title">${biliName}</div>
+                  <div class="card-subtitle">
+                    Bari: ${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}
+                  </div>
+                </div>
+                <span class="badge badge-success" style="font-size: 1rem; padding: 0.4rem 0.8rem;">
+                  Rs. ${user.grandTotalBill.toLocaleString()}
+                </span>
+              </div>
+              <div class="grid-2 gap-1 mb-2" style="font-size: 0.9rem;">
+                <div>⏱️ <strong>Allocated Duration:</strong> ${user.formattedDuration}</div>
+                <div>⚡ <strong>Units Used:</strong> ${user.unitsConsumed} (${user.unitsPercentage}%)</div>
+                <div>💡 <strong>WAPDA Share:</strong> Rs. ${user.usageBillShare.toLocaleString()}</div>
+                <div>🔧 <strong>Fixed Share:</strong> Rs. ${user.fixedBillShare.toLocaleString()}</div>
+              </div>
+              <div class="flex-between">
+                <button class="btn btn-secondary btn-sm copy-single-wa" data-name="${user.name}">
+                  📋 Copy Summary Text
+                </button>
+                ${cleanPhone 
+                  ? `<button class="btn btn-primary btn-sm send-direct-wa" data-phone="${cleanPhone}" data-name="${user.name}" style="background: #25d366; border: none; color: #fff;">💬 Send via WhatsApp</button>`
+                  : `<span class="badge badge-warning">No WhatsApp Saved</span>`}
+              </div>
+            `;
+            this.userCardsContainer.appendChild(card);
+          });
+
+          this.userCardsContainer.querySelectorAll('.copy-single-wa').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const uName = btn.dataset.name;
+              const uData = calc.userBreakdowns.find(u => u.name === uName);
+              if (uData) {
+                const singleMsg = generateSingleUserWhatsAppMessage(uData, calc.billingMonthLabel);
+                navigator.clipboard.writeText(singleMsg);
+                this.showToast(`Copied WhatsApp bill for ${uName}!`);
+              }
+            });
+          });
+
+          this.userCardsContainer.querySelectorAll('.send-direct-wa').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const phoneNum = btn.dataset.phone;
+              const uName = btn.dataset.name;
+              const uData = calc.userBreakdowns.find(u => u.name === uName);
+              if (uData && phoneNum) {
+                const singleMsg = encodeURIComponent(generateSingleUserWhatsAppMessage(uData, calc.billingMonthLabel));
+                window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${singleMsg}`, '_blank');
+              }
+            });
+          });
+
+          this.renderWhatsAppPreview(calc);
+        }
+
+        renderWhatsAppPreview(calcData = null) {
+          if (!calcData) {
+            const users = store.getUsers();
+            const entries = store.getEntries();
+            const expenses = store.getExpenses();
+            calcData = calculateBilling(users, entries, expenses);
+          }
+
+          const lang = this.whatsappLangSelect.value;
+          const msg = generateWhatsAppMessage(calcData, lang);
+          this.whatsappPreviewBox.textContent = msg;
+        }
+
+        copyWhatsAppToClipboard() {
+          const text = this.whatsappPreviewBox.textContent;
+          navigator.clipboard.writeText(text).then(() => {
+            this.showToast('WhatsApp message copied to clipboard!');
+          }).catch(() => {
+            alert('Copied to clipboard');
+          });
+        }
+
+        openWhatsAppDirect() {
+          const text = encodeURIComponent(this.whatsappPreviewBox.textContent);
+          window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        openModal(modal) { modal.classList.add('active'); }
+        closeModal(modal) { modal.classList.remove('active'); }
+
+        showToast(message) {
+          const container = document.getElementById('toastContainer');
+          const toast = document.createElement('div');
+          toast.className = 'toast';
+          toast.innerHTML = `<span>✅</span> <div>${message}</div>`;
+          container.appendChild(toast);
+
+          setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s reverse forwards';
+            setTimeout(() => toast.remove(), 300);
+          }, 2800);
+        }
+      }
+
+      window.app = new App();
+    })();
+  </script>
+</body>
+</html>
