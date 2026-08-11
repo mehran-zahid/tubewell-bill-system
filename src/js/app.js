@@ -346,68 +346,130 @@ class App {
     const entries = store.getEntries();
     const users = store.getUsers();
 
-    // Populate User Dropdowns for Entry Modal
-    this.entryUserSelect.innerHTML = `<option value="">-- Select Registered User --</option>` +
-      users.map(u => `<option value="${u.id}">${u.name} (${u.code || 'No Code'})</option>`).join('');
-
-    this.entryTransferSelect.innerHTML = `<option value="">None (Original User)</option>` +
-      users.map(u => `<option value="${u.id}">Transfer To: ${u.name}</option>`).join('');
-
-    this.registerTableBody.innerHTML = '';
-
-    if (entries.length === 0) {
-      this.registerTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No register entries yet. Upload register photo or click "+ Add Entry Manually".</td></tr>`;
-      return;
+    if (this.entryUserSelect) {
+      this.entryUserSelect.innerHTML = `<option value="">-- Select Registered Member --</option>` +
+        users.map(u => `<option value="${u.id}">${u.name} (${u.code || 'No Code'})</option>`).join('');
     }
 
-    entries.forEach((entry, idx) => {
-      const tr = document.createElement('tr');
-      const user = store.getUserById(entry.userId);
-      const transferUser = entry.transferToUserId ? store.getUserById(entry.transferToUserId) : null;
-      const units = Math.max(0, entry.endReading - entry.startReading);
+    if (this.registerTableBody) {
+      this.registerTableBody.innerHTML = '';
 
-      const confBadge = entry.confidence === 'high' 
-        ? `<span class="badge badge-success">High Confidence</span>`
-        : (entry.confidence === 'medium' 
-            ? `<span class="badge badge-warning">Medium</span>`
-            : `<span class="badge badge-danger">Needs Review</span>`);
+      if (entries.length === 0) {
+        this.registerTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding: 2rem;">No register entries yet. Upload register photo or add a manual entry.</td></tr>`;
+        return;
+      }
 
-      tr.innerHTML = `
-        <td>${idx + 1}</td>
-        <td>${entry.date}</td>
-        <td>
-          <strong>${user ? user.name : (entry.rawName || 'Unassigned')}</strong>
-          ${user && user.code ? `<span class="badge badge-info">${user.code}</span>` : ''}
-        </td>
-        <td>${entry.startReading} ➔ ${entry.endReading}</td>
-        <td><strong class="text-success">${units} Units</strong></td>
-        <td>
-          ${transferUser 
-            ? `<span class="badge badge-warning">Transferred To: ${transferUser.name}</span>`
-            : `<span class="text-muted">None</span>`}
-        </td>
-        <td>${confBadge}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm edit-entry-btn" data-id="${entry.id}">✏️</button>
-          <button class="btn btn-danger btn-sm delete-entry-btn" data-id="${entry.id}">🗑️</button>
-        </td>
-      `;
-      this.registerTableBody.appendChild(tr);
-    });
+      entries.forEach((entry, idx) => {
+        const tr = document.createElement('tr');
+        const startVal = parseFloat(entry.startReading) || 0;
+        const endVal = parseFloat(entry.endReading) || 0;
+        const units = Math.max(0, endVal - startVal);
 
-    this.registerTableBody.querySelectorAll('.edit-entry-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const entry = entries.find(e => e.id === btn.dataset.id);
-        if (entry) this.openEntryModal(entry);
+        const isError = endVal > 0 && endVal < startVal;
+        let isSeqDiscrepancy = false;
+        if (idx > 0) {
+          const prev = entries[idx - 1];
+          const prevEndVal = parseFloat(prev.endReading) || 0;
+          if (prevEndVal > 0 && startVal > 0 && startVal < prevEndVal) {
+            isSeqDiscrepancy = true;
+          }
+        }
+
+        let rowClass = 'row-verified';
+        if (isError) {
+          rowClass = 'row-error';
+        } else if (!entry.isReviewed && (!entry.userId || entry.confidence === 'low' || entry.confidence === 'medium' || isSeqDiscrepancy)) {
+          rowClass = 'row-warning';
+        }
+
+        tr.className = rowClass;
+
+        const memberDropdownHtml = `
+          <select class="tbl-member-select" data-id="${entry.id}">
+            <option value="">-- Select Member / نام منتخب کریں --</option>
+            ${users.map(u => {
+              const uCode = u.userCode || u.code || '01';
+              const nameStr = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
+              const isSel = u.id === entry.userId ? 'selected' : '';
+              return `<option value="${u.id}" ${isSel}>[${uCode}] ${nameStr}</option>`;
+            }).join('')}
+          </select>
+        `;
+
+        tr.innerHTML = `
+          <td style="text-align: center;"><strong>${idx + 1}</strong></td>
+          <td>
+            <input type="date" class="tbl-date-input" data-id="${entry.id}" value="${entry.date}">
+          </td>
+          <td>${memberDropdownHtml}</td>
+          <td>
+            <input type="number" class="tbl-reading-input tbl-start-reading" data-id="${entry.id}" value="${startVal}" placeholder="Start">
+          </td>
+          <td>
+            <input type="number" class="tbl-reading-input tbl-end-reading" data-id="${entry.id}" value="${endVal}" placeholder="End">
+          </td>
+          <td>
+            <strong style="color: ${isError ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size: 1rem;">${units} Units</strong>
+          </td>
+          <td style="text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+              <button class="btn btn-secondary btn-sm edit-entry-btn" data-id="${entry.id}" title="Edit Full Entry">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm delete-entry-btn" data-id="${entry.id}" title="Delete Entry">🗑️</button>
+            </div>
+          </td>
+        `;
+
+        this.registerTableBody.appendChild(tr);
       });
-    });
 
-    this.registerTableBody.querySelectorAll('.delete-entry-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        store.deleteEntry(btn.dataset.id);
-        this.showToast('Entry deleted');
+      this.registerTableBody.querySelectorAll('.tbl-date-input').forEach(input => {
+        input.addEventListener('change', () => {
+          const id = input.dataset.id;
+          const val = input.value;
+          if (id && val) {
+            store.updateEntry(id, { date: val, isReviewed: true });
+            this.showToast('Date updated & row verified ✅');
+          }
+        });
       });
-    });
+
+      this.registerTableBody.querySelectorAll('.tbl-member-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const id = sel.dataset.id;
+          const val = sel.value;
+          store.updateEntry(id, { userId: val, isReviewed: true });
+          this.showToast('Member updated & row verified ✅');
+        });
+      });
+
+      this.registerTableBody.querySelectorAll('.tbl-start-reading, .tbl-end-reading').forEach(input => {
+        input.addEventListener('change', () => {
+          const id = input.dataset.id;
+          const row = input.closest('tr');
+          if (!id || !row) return;
+
+          const startVal = parseFloat(row.querySelector('.tbl-start-reading')?.value) || 0;
+          const endVal = parseFloat(row.querySelector('.tbl-end-reading')?.value) || 0;
+
+          store.updateEntry(id, { startReading: startVal, endReading: endVal, isReviewed: true });
+          this.showToast('Readings updated & row verified ✅');
+        });
+      });
+
+      this.registerTableBody.querySelectorAll('.edit-entry-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const entry = entries.find(e => e.id === btn.dataset.id);
+          if (entry) this.openEntryModal(entry);
+        });
+      });
+
+      this.registerTableBody.querySelectorAll('.delete-entry-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          store.deleteEntry(btn.dataset.id);
+          this.showToast('Entry deleted');
+        });
+      });
+    }
   }
 
   openEntryModal(entry = null) {
@@ -417,17 +479,27 @@ class App {
       this.entryUserSelect.value = entry.userId || '';
       this.entryStartInput.value = entry.startReading;
       this.entryEndInput.value = entry.endReading;
-      this.entryTransferSelect.value = entry.transferToUserId || '';
+      if (this.entryTransferSelect) this.entryTransferSelect.value = entry.transferToUserId || '';
       this.entryNotesInput.value = entry.notes || '';
     } else {
       this.entryIdInput.value = '';
       this.entryDateInput.value = new Date().toISOString().split('T')[0];
+
+      const entries = store.getEntries();
+      if (entries.length > 0) {
+        const lastEntry = entries[entries.length - 1];
+        this.entryStartInput.value = lastEntry.endReading;
+      } else {
+        this.entryStartInput.value = '';
+      }
+
       this.entryUserSelect.value = '';
-      this.entryStartInput.value = '';
       this.entryEndInput.value = '';
-      this.entryTransferSelect.value = '';
+      if (this.entryTransferSelect) this.entryTransferSelect.value = '';
       this.entryNotesInput.value = '';
     }
+
+    if (this.entryModalErrorBox) this.entryModalErrorBox.classList.add('hidden');
     this.openModal(this.entryModal);
   }
 

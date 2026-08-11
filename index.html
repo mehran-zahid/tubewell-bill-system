@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tubewell Bill Management System — Shared Water Pump Billing</title>
+  <title>Turbine Bill Management System — Shared Water Pump Billing | اشتراکی ٹربائن بلنگ سسٹم</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,18 +130,36 @@
       flex: 1;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
-      padding: 0.85rem 1rem;
+      justify-content: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
       border-radius: var(--radius-md);
-      border: none;
+      border: 1px solid transparent;
       background: transparent;
       color: var(--text-secondary);
       font-family: var(--font-sans);
-      font-size: 0.95rem;
-      font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
+      text-align: left;
+    }
+
+    .step-label {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.25;
+    }
+
+    .step-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .step-sub {
+      font-size: 0.8rem;
+      font-family: var(--font-urdu);
+      color: var(--text-secondary);
+      margin-top: 2px;
     }
 
     .step-btn.active {
@@ -153,17 +171,43 @@
     [data-theme="light"] .step-btn.active {
       background: #ffffff;
       color: #059669;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-btn.active .step-title {
+      color: var(--accent-green);
+    }
+
+    [data-theme="light"] .step-btn.active .step-title {
+      color: #059669;
+    }
+
+    .step-btn.active .step-sub {
+      color: var(--accent-green);
+      opacity: 0.9;
+    }
+
+    [data-theme="light"] .step-btn.active .step-sub {
+      color: #047857;
+      opacity: 0.9;
     }
 
     .step-number {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
       border-radius: var(--radius-full);
       background: rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    [data-theme="light"] .step-number {
+      background: #e2e8f0;
+      color: #475569;
     }
 
     .step-btn.active .step-number {
@@ -270,9 +314,75 @@
     }
 
     .table-responsive { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-glass); }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .data-table th { background: rgba(15, 23, 42, 0.8); padding: 0.85rem 1rem; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); border-bottom: 1px solid var(--border-glass); }
-    .data-table td { padding: 0.85rem 1rem; font-size: 0.95rem; border-bottom: 1px solid var(--border-glass); vertical-align: middle; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; }
+    .data-table th { background: #1e293b; padding: 0.85rem 0.75rem; font-size: 0.85rem; font-weight: 700; color: #ffffff !important; border-bottom: 1px solid var(--border-glass); white-space: nowrap; }
+    [data-theme="light"] .data-table th { background: #334155; color: #ffffff !important; }
+    .data-table td { padding: 0.75rem 0.65rem; font-size: 0.95rem; border-bottom: 1px solid var(--border-glass); vertical-align: middle; }
+
+    /* Enhanced Table Inline Inputs & Controls */
+    .tbl-input-num {
+      width: 58px !important;
+      height: 34px !important;
+      padding: 0.2rem 0.25rem !important;
+      font-size: 0.9rem !important;
+      font-weight: 700 !important;
+      text-align: center !important;
+      border: 1px solid var(--border-glass) !important;
+      border-radius: var(--radius-sm) !important;
+      background: var(--bg-secondary) !important;
+      color: var(--text-primary) !important;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      box-sizing: border-box !important;
+    }
+    .tbl-input-num:focus {
+      border-color: var(--accent-blue) !important;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+    .tbl-select-day {
+      height: 34px !important;
+      padding: 0.2rem 0.4rem !important;
+      font-size: 0.825rem !important;
+      font-weight: 600 !important;
+      border-radius: var(--radius-sm) !important;
+      border: 1px solid var(--border-glass) !important;
+      background: var(--bg-secondary) !important;
+      color: var(--text-primary) !important;
+      width: 100%;
+      max-width: 140px;
+      box-sizing: border-box !important;
+    }
+    .tbl-time-pick {
+      height: 34px !important;
+      padding: 0.2rem 0.4rem !important;
+      font-size: 0.825rem !important;
+      font-weight: 600 !important;
+      border-radius: var(--radius-sm) !important;
+      border: 1px solid var(--border-glass) !important;
+      background: var(--bg-secondary) !important;
+      color: var(--text-primary) !important;
+      width: 100%;
+      max-width: 130px;
+      box-sizing: border-box !important;
+    }
+    .duration-input-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(0, 0, 0, 0.04);
+      padding: 0.25rem 0.45rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-glass);
+      white-space: nowrap;
+    }
+    [data-theme="dark"] .duration-input-group {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .duration-unit-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
 
     /* Drag & Drop Upload Dropzone */
     .dropzone-box {
@@ -336,6 +446,61 @@
 
     .whatsapp-preview-box { background: #0d1418; color: #e9edef; font-family: monospace, var(--font-urdu); padding: 1.25rem; border-radius: var(--radius-md); border-left: 4px solid #25d366; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; max-height: 420px; overflow-y: auto; }
 
+    .tbl-hdr-ur {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-top: 2px;
+      line-height: 1.2;
+      font-family: var(--font-urdu), sans-serif;
+      opacity: 0.9;
+    }
+    th .tbl-hdr-ur {
+      color: inherit;
+      opacity: 0.85;
+    }
+    .row-error {
+      background-color: rgba(239, 68, 68, 0.14) !important;
+      border-left: 4px solid var(--accent-red) !important;
+    }
+    .row-warning {
+      background-color: rgba(245, 158, 11, 0.14) !important;
+      border-left: 4px solid var(--accent-amber) !important;
+    }
+    .row-verified {
+      background-color: transparent;
+    }
+    .tbl-reading-input {
+      width: 110px;
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .tbl-member-select {
+      max-width: 220px;
+      width: 100%;
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+    .tbl-date-input {
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
     .hidden { display: none !important; }
     .flex-between { display: flex; align-items: center; justify-content: space-between; }
     .flex-center { display: flex; align-items: center; justify-content: center; }
@@ -358,13 +523,12 @@
       <a href="#" class="app-logo">
         <div class="logo-icon">💧</div>
         <div class="logo-text">
-          <h1>Tubewell Bill Manager</h1>
-          <p>Shared Water Pump Billing & Time Slot System | ٹیوب ویل باری سسٹم</p>
+          <h1>Turbine Bill Manager</h1>
+          <p>Shared Water Pump Billing & Time Slot System | اشتراکی ٹربائن بلنگ سسٹم</p>
         </div>
       </a>
 
       <div class="flex-center gap-2">
-        <button id="resetSampleDataBtn" class="btn btn-secondary btn-sm">🔄 Clear & Start Fresh</button>
         <button id="themeToggleBtn" class="btn btn-secondary btn-sm">🌙 Theme</button>
         <button id="settingsBtn" class="btn btn-secondary btn-sm">⚙️ Settings</button>
       </div>
@@ -376,32 +540,47 @@
     <nav class="nav-steps">
       <button class="step-btn active" data-tab="users">
         <span class="step-number">1</span>
-        <span>Users & Time Slots</span>
+        <div class="step-label">
+          <span class="step-title">👥 Members & Schedule</span>
+          <span class="step-sub">ممبران اور شیڈول</span>
+        </div>
       </button>
       <button class="step-btn" data-tab="register">
         <span class="step-number">2</span>
-        <span>Register & OCR</span>
+        <div class="step-label">
+          <span class="step-title">📖 Register Readings</span>
+          <span class="step-sub">رجسٹر ریڈنگز</span>
+        </div>
       </button>
       <button class="step-btn" data-tab="expenses">
         <span class="step-number">3</span>
-        <span>Bills & Expenses</span>
+        <div class="step-label">
+          <span class="step-title">💸 Expenses & Bill</span>
+          <span class="step-sub">اخراجات اور بل</span>
+        </div>
       </button>
       <button class="step-btn" data-tab="summary">
         <span class="step-number">4</span>
-        <span>Summary & WhatsApp</span>
+        <div class="step-label">
+          <span class="step-title">📲 Summary & WhatsApp</span>
+          <span class="step-sub">خلاصہ اور واٹس ایپ</span>
+        </div>
       </button>
     </nav>
 
-    <!-- Tab 1: Users & Continuous Weekly Time Slots (Bari Turns) -->
+    <!-- Tab 1: Turbine Members & Continuous Weekly Time Slots (Bari Turns) -->
     <section id="tab-users" class="tab-content">
       <div class="card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">👥 Registered Tubewell Users & Weekly Time Slot Schedule</h2>
-            <p class="card-subtitle">Continuous turn slots with 12-Hour AM/PM Time Pickers for Mobile & Desktop.</p>
+            <h2 class="card-title">👥 Turbine Members & Weekly Schedule</h2>
+            <p class="card-subtitle">ٹربائن ممبران اور ہفتہ وار باری کا جدول</p>
           </div>
-          <div class="flex-center gap-2">
-            <button id="addUserBtn" class="btn btn-primary">+ Add New User & Time Slot</button>
+          <div class="flex-center gap-2" style="flex-wrap: wrap;">
+            <button id="importScheduleBtn" class="btn btn-secondary btn-sm">📥 Import Schedule / امپورٹ</button>
+            <button id="exportScheduleBtn" class="btn btn-secondary btn-sm">📤 Export Schedule / ایکسپورٹ</button>
+            <button id="addUserBtn" class="btn btn-primary">+ Add New Member & Slot / نیا ممبر شامل کریں</button>
+            <input type="file" id="importScheduleFileInput" accept=".json,.csv" style="display: none;">
           </div>
         </div>
 
@@ -410,11 +589,12 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>User Name (English / اردو)</th>
-                <th>Start (Day & 12H Time)</th>
-                <th>End (Day & 12H Time)</th>
-                <th>Total Allocated Duration</th>
-                <th>Actions</th>
+                <th>User ID / شناختی نمبر</th>
+                <th>Member Name (English / اردو)</th>
+                <th>Start (Day & Time) / آغاز</th>
+                <th>End (Day & Time) / اختتام</th>
+                <th>Total Duration / کل وقت</th>
+                <th>Actions / اقدامات</th>
               </tr>
             </thead>
             <tbody id="usersTableBody"></tbody>
@@ -426,9 +606,9 @@
           <div class="flex-between mb-2">
             <div>
               <h3 class="card-title" style="color: #25d366; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>💬 Share Schedule on WhatsApp (شڈول واٹس ایپ پر شیئر کریں)</span>
+                <span>💬 Share Schedule on WhatsApp (شیڈول واٹس ایپ پر شیئر کریں)</span>
               </h3>
-              <p class="card-subtitle">Bilingual WhatsApp-friendly formatted schedule with English & Urdu names and days.</p>
+              <p class="card-subtitle">Formatted schedule with English & Urdu names and turn slots.</p>
             </div>
             <div class="flex-center gap-2">
               <button id="copyScheduleWaBtn" class="btn btn-primary btn-sm" style="background: #25d366; border: none; color: #fff;">📋 Copy Schedule</button>
@@ -441,19 +621,19 @@
       </div>
     </section>
 
-    <!-- Tab 2: Register & Google Gemini AI Vision OCR Reader -->
+    <!-- Tab 2: Register & Photo Scanner -->
     <section id="tab-register" class="tab-content hidden">
       <div class="card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">🤖 Google Gemini AI Vision Register Scanner</h2>
-            <p class="card-subtitle">Upload your handwritten Urdu register photo (`مشترکہ ٹربائن`). Google Gemini AI Vision will read Urdu script & numbers live.</p>
+            <h2 class="card-title">📷 Upload Register Photos to Extract Readings</h2>
+            <p class="card-subtitle">ریڈنگ حاصل کرنے کے لیے رجسٹر کی تصویر اپ لوڈ کریں۔ Select or drag handwritten register photos to automatically extract readings.</p>
           </div>
           <div class="flex-center gap-2">
             <button id="triggerUploadBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">
-              🤖 Upload Photo & Scan with AI Vision
+              📷 Upload Photo to Extract Readings
             </button>
-            <button id="addEntryBtn" class="btn btn-secondary">+ Manual Entry</button>
+            <button id="addEntryBtn" class="btn btn-secondary">+ Manual Entry / دستی اینٹری</button>
             <button id="clearEntriesBtn" class="btn btn-danger btn-sm">Clear All Entries</button>
           </div>
         </div>
@@ -463,9 +643,9 @@
 
         <!-- Drag & Drop Dropzone Box -->
         <div id="dropzoneBox" class="dropzone-box mb-3">
-          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🤖</div>
-          <h3 style="font-size: 1.25rem; color: var(--text-primary); font-weight: 700;">Drag & Drop Register Photos Here for AI Vision Scan</h3>
-          <p class="card-subtitle" style="font-size: 0.95rem; margin-top: 0.25rem;">Click anywhere inside or select multiple files. Review, add or remove photos before scanning with Gemini AI Vision.</p>
+          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">📷</div>
+          <h3 style="font-size: 1.25rem; color: var(--text-primary); font-weight: 700;">Drag & Drop Register Photos to Extract Readings</h3>
+          <p class="card-subtitle" style="font-size: 0.95rem; margin-top: 0.25rem;">ریڈنگ حاصل کرنے کے لیے تصویر منتخب کریں یا ڈریگ کر کے شامل کریں۔ Click inside to browse photos.</p>
         </div>
 
         <!-- Multi-Image Staging Gallery Card -->
@@ -476,7 +656,7 @@
                 <span>🖼️ Selected Register Photos Gallery</span>
                 <span id="stagedCountBadge" class="badge badge-info">0 Photos</span>
               </h3>
-              <p class="card-subtitle">Review, add more pages, or delete photos before running AI Vision Extraction.</p>
+              <p class="card-subtitle">Review, add more pages, or delete photos before extracting readings.</p>
             </div>
             <div class="flex-center gap-2">
               <button id="addMorePhotosBtn" class="btn btn-secondary btn-sm">➕ Add More Photos</button>
@@ -489,17 +669,17 @@
 
           <!-- Large Action Button -->
           <button id="startAiScanBtn" class="btn btn-primary btn-full" style="padding: 0.95rem; font-size: 1.1rem; background: linear-gradient(135deg, #10b981, #059669);">
-            🤖 Scan All Selected Photos with AI Vision
+            📷 Extract Readings From All Selected Photos
           </button>
         </div>
 
-        <!-- AI Scanning Progress Box with Visual Progress Bar -->
+        <!-- Scanning Progress Box with Visual Progress Bar -->
         <div id="ocrProgressBox" class="card hidden mb-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.4);">
           <div class="flex-between mb-2">
             <div class="flex-center gap-2">
-              <div class="logo-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);">🤖</div>
+              <div class="logo-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);">📄</div>
               <div>
-                <strong id="ocrProgressText" style="color: var(--accent-green); font-size: 1.1rem; font-weight: 700;">Google Gemini AI Vision Processing Images...</strong>
+                <strong id="ocrProgressText" style="color: var(--accent-green); font-size: 1.1rem; font-weight: 700;">Extracting Readings From Photos...</strong>
                 <p class="card-subtitle" id="ocrProgressSub">Reading handwritten Urdu script & meter numbers sequentially...</p>
               </div>
             </div>
@@ -515,14 +695,14 @@
           </div>
         </div>
 
-        <!-- Uploaded Image Preview & Raw Extracted Text Box with Page Selector -->
+        <!-- Uploaded Image Preview & Extracted Output -->
         <div id="ocrPreviewCard" class="card hidden mb-3">
           <div class="card-header flex-between mb-2">
             <div>
               <h3 class="card-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>📷 Uploaded Register Image & AI Vision Extracted JSON</span>
+                <span>📷 Scanned Register Image & Output</span>
               </h3>
-              <p class="card-subtitle">Visual feedback & raw extracted output for each scanned page.</p>
+              <p class="card-subtitle">Visual preview & extracted output for scanned pages.</p>
             </div>
             <button id="closePreviewBtn" class="btn btn-secondary btn-sm">✖ Close Preview</button>
           </div>
@@ -535,8 +715,8 @@
               <img id="uploadedImageDisplay" style="max-width: 100%; max-height: 380px; border-radius: var(--radius-md); border: 1px solid var(--border-glass); object-fit: contain;">
             </div>
             <div>
-              <label class="form-label">Raw AI Vision Extracted Output:</label>
-              <textarea id="rawOcrTextarea" class="form-control" rows="10" style="font-family: var(--font-urdu), monospace; font-size: 0.95rem;" placeholder="AI Vision raw output will appear here..."></textarea>
+              <label class="form-label">Extracted Text Output:</label>
+              <textarea id="rawOcrTextarea" class="form-control" rows="10" style="font-family: var(--font-urdu), monospace; font-size: 0.95rem;" placeholder="Extracted output will appear here..."></textarea>
               <div class="flex-between mt-2">
                 <button id="reparseOcrBtn" class="btn btn-blue btn-sm">🔄 Reparse Text Into Rows</button>
               </div>
@@ -550,13 +730,30 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Date</th>
-                <th>User Name</th>
-                <th>Meter Readings (Start ➔ End)</th>
-                <th>Units Used</th>
-                <th>Bari Transfer To</th>
-                <th>Confidence</th>
-                <th>Actions</th>
+                <th>
+                  <div>Date</div>
+                  <div class="tbl-hdr-ur">تاریخ</div>
+                </th>
+                <th>
+                  <div>Member ID & Name</div>
+                  <div class="tbl-hdr-ur">شناختی نمبر و نام</div>
+                </th>
+                <th>
+                  <div>Start Reading</div>
+                  <div class="tbl-hdr-ur">ابتدائی ریڈنگ</div>
+                </th>
+                <th>
+                  <div>End Reading</div>
+                  <div class="tbl-hdr-ur">آخری ریڈنگ</div>
+                </th>
+                <th>
+                  <div>Units Used</div>
+                  <div class="tbl-hdr-ur">استعمال شدہ یونٹ</div>
+                </th>
+                <th style="text-align: center;">
+                  <div>Actions</div>
+                  <div class="tbl-hdr-ur">اقدامات</div>
+                </th>
               </tr>
             </thead>
             <tbody id="registerTableBody"></tbody>
@@ -565,14 +762,14 @@
       </div>
     </section>
 
-    <!-- Tab 3: Bills & Expenses + Dynamic Live PITC Bill Viewer -->
+    <!-- Tab 3: Bills & Expenses -->
     <section id="tab-expenses" class="tab-content hidden">
       <div class="grid-2 mb-3">
         <div class="card">
           <div class="card-header">
             <div>
               <h2 class="card-title">⚡ WAPDA Electricity Bill</h2>
-              <p class="card-subtitle">Monthly usage bill divided proportionally by units consumed.</p>
+              <p class="card-subtitle">Monthly electricity bill divided proportionally by units consumed.</p>
             </div>
           </div>
 
@@ -581,11 +778,11 @@
             <input type="month" id="billingMonthInput" class="form-control" value="2026-08">
           </div>
 
-          <!-- Clean Single Reference Input Box -->
+          <!-- Reference Input Box -->
           <div class="card mb-3" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); padding: 1.25rem;">
             <div class="flex-between mb-2">
-              <label class="form-label" style="color: var(--accent-green); margin: 0; font-size: 1.05rem; font-weight: 700;">⚡ Dynamic Live MEPCO Bill Fetcher</label>
-              <span class="badge badge-success">Live PITC Stream</span>
+              <label class="form-label" style="color: var(--accent-green); margin: 0; font-size: 1.05rem; font-weight: 700;">⚡ MEPCO Online Bill Details</label>
+              <span class="badge badge-success">MEPCO Bill Details / میپکو بل تفصیلات</span>
             </div>
             
             <div class="form-group mb-2">
@@ -595,7 +792,7 @@
 
             <div class="flex-between gap-2">
               <button id="fetchDynamicLiveBillBtn" class="btn btn-primary btn-full" style="padding: 0.85rem; font-size: 1.05rem;">
-                ⚡ Fetch & Auto-Fill Live Bill Metadata
+                ⚡ Fetch & Auto-Fill Bill Details
               </button>
             </div>
           </div>
@@ -715,6 +912,41 @@
         </div>
       </div>
 
+      <!-- Professional Clean Table Card for Farmers WhatsApp Group Screenshots -->
+      <div id="screenshotListCard" class="card mb-3" style="background: var(--bg-secondary); border: 2px solid var(--border-glass); padding: 0; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 1.25rem; border-bottom: 2px solid var(--accent-green);">
+          <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem;">
+            ⚡ <span>ٹربائن بل خلاصہ</span> — <span id="screenshotMonthBadge" style="color: #4ade80;">Current Month</span>
+          </h2>
+          <div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 0.25rem; font-weight: 500;">
+            Turbine Electricity & Maintenance Bill Summary
+          </div>
+        </div>
+
+        <div class="table-responsive" style="padding: 0.5rem 1rem 1rem 1rem;">
+          <table class="data-table" style="width: 100%;">
+            <thead>
+              <tr style="background: #1e293b; color: #ffffff; border-bottom: 2px solid var(--border-glass);">
+                <th style="width: 45px; text-align: center; color: #ffffff; padding: 0.75rem 0.5rem;">#</th>
+                <th style="color: #ffffff; padding: 0.75rem 0.5rem;">
+                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Member Name</div>
+                  <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">ممبر کا نام</div>
+                </th>
+                <th style="text-align: center; color: #ffffff; padding: 0.75rem 0.5rem;">
+                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Units Consumed</div>
+                  <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">استعمال شدہ یونٹ</div>
+                </th>
+                <th style="text-align: right; color: #ffffff; padding: 0.75rem 0.5rem;">
+                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Total Payable</div>
+                  <div style="font-size: 0.82rem; color: #86efac; font-family: var(--font-urdu); font-weight: 700;">کل واجب الادا بل</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="screenshotListContainer"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <div>
@@ -729,13 +961,30 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Member Name</th>
-                <th>Time Slot (Bari Turn)</th>
-                <th>Total Allocated Hours</th>
-                <th>Units Consumed</th>
-                <th>WAPDA Share (Rs.)</th>
-                <th>Fixed Share (Rs.)</th>
-                <th>Grand Total (Rs.)</th>
+                <th>
+                  <div>Member Name</div>
+                  <div class="tbl-hdr-ur">ممبر کا نام</div>
+                </th>
+                <th>
+                  <div>Allocated Hours</div>
+                  <div class="tbl-hdr-ur">باری کے گھنٹے</div>
+                </th>
+                <th>
+                  <div>Units Consumed</div>
+                  <div class="tbl-hdr-ur">استعمال شدہ یونٹ</div>
+                </th>
+                <th>
+                  <div>Electricity Bill (Rs.)</div>
+                  <div class="tbl-hdr-ur">بجلی کا بل</div>
+                </th>
+                <th>
+                  <div>Extra Expenses (Rs.)</div>
+                  <div class="tbl-hdr-ur">دیگر اخراجات</div>
+                </th>
+                <th style="text-align: right;">
+                  <div>Total Bill (Rs.)</div>
+                  <div class="tbl-hdr-ur">کل واجب الادا بل</div>
+                </th>
               </tr>
             </thead>
             <tbody id="summaryTableBody"></tbody>
@@ -776,26 +1025,52 @@
   <div id="userModal" class="modal-overlay">
     <div class="modal-card">
       <div class="flex-between mb-2">
-        <h3 id="userModalTitle" class="card-title">Add New Registered User & Time Slot</h3>
+        <h3 id="userModalTitle" class="card-title">Add New Member & Weekly Slot / نیا ممبر شامل کریں</h3>
         <button type="button" class="modal-close" aria-label="Close">&times;</button>
       </div>
       <form id="userForm">
         <input type="hidden" id="userIdInput">
+        
+        <!-- User ID & Category Row -->
         <div class="grid-2 mb-2">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">User Name (English / Urdu)</label>
-            <input type="text" id="userNameInput" class="form-control" placeholder="e.g. Zahid Javed / زاہد جاوید" required>
+            <label class="form-label">User ID / شناختی نمبر (e.g. 01, 02, 03)</label>
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <input type="text" id="userCodeInput" class="form-control" placeholder="e.g. 01" required style="font-weight: 800; font-size: 1.1rem; flex: 1;">
+              <button type="button" id="autoNextCodeBtn" class="btn btn-secondary btn-sm" style="white-space: nowrap; font-size: 0.78rem; padding: 0.55rem 0.65rem;" title="Auto-fill next available unique ID">⚡ Auto ID</button>
+            </div>
+            <div id="userCodeValidationMsg" style="font-size: 0.78rem; margin-top: 0.25rem; font-weight: 700; min-height: 1.2rem;"></div>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">📱 WhatsApp Phone Number (Optional)</label>
-            <input type="text" id="userPhoneInput" class="form-control" placeholder="e.g. 03001234567">
+            <label class="form-label">Member Category / ممبر کی قسم</label>
+            <select id="userTypeSelect" class="form-control" required style="font-weight: 600;">
+              <option value="internal">Internal Shareholder / شریک مالک (Pays units + fixed repair)</option>
+              <option value="external">External Buyer / بیرونی خریدار (Pays units ONLY, no fixed repair)</option>
+            </select>
           </div>
+        </div>
+
+        <!-- English & Urdu Name Row -->
+        <div class="grid-2 mb-2">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">English Name (انگریزی نام)</label>
+            <input type="text" id="userNameEnInput" class="form-control" placeholder="e.g. Zahid Javed" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Urdu Name (اردو نام)</label>
+            <input type="text" id="userNameUrInput" class="form-control" placeholder="e.g. زاہد جاوید" required style="font-family: var(--font-urdu);">
+          </div>
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label">📱 WhatsApp Phone Number (Optional)</label>
+          <input type="text" id="userPhoneInput" class="form-control" placeholder="e.g. 03001234567">
         </div>
 
         <!-- Start Day & 12-Hour Touch Picker -->
         <div class="grid-2 mb-2">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Start Day (شروع کا دن)</label>
+            <label class="form-label">Start Day (آغاز کا دن)</label>
             <select id="userStartDaySelect" class="form-control" required>
               <option value="Sunday">Sunday (اتوار)</option>
               <option value="Monday">Monday (پیر)</option>
@@ -820,39 +1095,27 @@
           </div>
         </div>
 
-        <!-- End Day & 12-Hour Touch Picker -->
+        <!-- Duration Input in Hours and Minutes -->
         <div class="grid-2 mb-2">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">End Day (ختم ہونے کا دن)</label>
-            <select id="userEndDaySelect" class="form-control" required>
-              <option value="Sunday">Sunday (اتوار)</option>
-              <option value="Monday">Monday (پیر)</option>
-              <option value="Tuesday">Tuesday (منگل)</option>
-              <option value="Wednesday">Wednesday (بدھ)</option>
-              <option value="Thursday">Thursday (جمعرات)</option>
-              <option value="Friday">Friday (جمعہ)</option>
-              <option value="Saturday">Saturday (ہفتہ)</option>
-            </select>
+            <label class="form-label">Duration Hours (گھنٹے)</label>
+            <input type="number" id="userDurationHoursInput" class="form-control" min="0" max="168" placeholder="17" required style="font-weight: 700;">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">End Time (12-Hour AM/PM)</label>
-            <div class="time-picker-12h-group">
-              <select id="userEndHourSelect"></select>
-              <span>:</span>
-              <select id="userEndMinSelect"></select>
-              <select id="userEndAmpmSelect" class="ampm-select">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
+            <label class="form-label">Duration Minutes (منٹ)</label>
+            <input type="number" id="userDurationMinutesInput" class="form-control" min="0" max="59" placeholder="0" required style="font-weight: 700;">
           </div>
         </div>
 
-        <!-- Duration & Validation Status -->
-        <div class="form-group mt-2" style="background: rgba(16, 185, 129, 0.08); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(16, 185, 129, 0.3);">
+        <!-- Auto-Calculated End Day & Time -->
+        <div class="form-group mt-2" style="background: rgba(59, 130, 246, 0.08); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(59, 130, 246, 0.3);">
+          <div class="flex-between mb-1">
+            <span style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase;">🏁 AUTO-CALCULATED END TIME (خودکار اختتامی وقت)</span>
+            <span id="calculatedEndDayTimeBadge" style="font-size: 0.95rem; font-weight: 800; color: var(--accent-blue);">Monday 01:00 AM</span>
+          </div>
           <div class="flex-between">
             <div>
-              <div style="font-size: 0.75rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase;">⏱️ TOTAL DURATION (کل دورانیہ)</div>
+              <div style="font-size: 0.75rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase;">⏱️ TOTAL DURATION</div>
               <div id="userCalculatedDurationDisplay" style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">17 Hours 00 Minutes</div>
             </div>
             <div id="validationBadge" class="badge badge-success">Valid Time Slot</div>
@@ -861,49 +1124,62 @@
 
         <div class="flex-between mt-3">
           <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
-          <button type="submit" id="saveUserSubmitBtn" class="btn btn-primary">Save User & Update Chain</button>
+          <button type="submit" id="saveUserSubmitBtn" class="btn btn-primary">Save Member & Chain Schedule</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Register Entry Modal -->
   <div id="entryModal" class="modal-overlay">
     <div class="modal-card">
       <div class="flex-between mb-2">
-        <h3 class="card-title">Register Entry</h3>
+        <h3 class="card-title">Register Reading Entry / میٹر ریڈنگ اینٹری</h3>
         <button type="button" class="modal-close" aria-label="Close">&times;</button>
       </div>
       <form id="entryForm">
         <input type="hidden" id="entryIdInput">
         <div class="form-group">
-          <label class="form-label">Date</label>
+          <label class="form-label">Date / تاریخ</label>
           <input type="date" id="entryDateInput" class="form-control" required>
         </div>
+        
         <div class="form-group">
-          <label class="form-label">Original User</label>
+          <div class="flex-between mb-1">
+            <label class="form-label" style="margin: 0;">Member Name / ممبر کا نام</label>
+            <button type="button" id="quickAddUserBtn" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">
+              + Add New Member / نیا ممبر
+            </button>
+          </div>
           <select id="entryUserSelect" class="form-control" required></select>
         </div>
+
         <div class="grid-2">
           <div class="form-group">
-            <label class="form-label">Start Reading</label>
-            <input type="number" id="entryStartInput" class="form-control" placeholder="12450" required>
+            <label class="form-label">Start Reading (پہلی ریڈنگ)</label>
+            <input type="number" id="entryStartInput" class="form-control" placeholder="e.g. 1156421" required style="font-weight: 700;">
           </div>
           <div class="form-group">
-            <label class="form-label">End Reading</label>
-            <input type="number" id="entryEndInput" class="form-control" placeholder="12495" required>
+            <label class="form-label">End Reading (آخری ریڈنگ)</label>
+            <input type="number" id="entryEndInput" class="form-control" placeholder="e.g. 1156535" required style="font-weight: 700;">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Bari (Turn) Transferred To</label>
-          <select id="entryTransferSelect" class="form-control"></select>
+
+        <!-- Live Validation Alert Box inside Entry Modal -->
+        <div id="entryModalErrorBox" class="card hidden mb-2" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.75rem 1rem;">
+          <div style="color: var(--accent-red); font-weight: 700; font-size: 0.9rem;" id="entryModalErrorText">
+            ⚠️ Reading Error: End reading cannot be less than start reading!
+          </div>
         </div>
+
+
         <div class="form-group">
-          <label class="form-label">Notes</label>
-          <input type="text" id="entryNotesInput" class="form-control" placeholder="Optional notes">
+          <label class="form-label">Notes / تفصیل (Optional)</label>
+          <input type="text" id="entryNotesInput" class="form-control" placeholder="Optional session notes">
         </div>
         <div class="flex-between mt-3">
           <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Entry</button>
+          <button type="submit" class="btn btn-primary">Save Entry / اینٹری محفوظ کریں</button>
         </div>
       </form>
     </div>
@@ -938,9 +1214,23 @@
         </label>
       </div>
 
+      <hr style="border-color: var(--border-glass); margin: 1.25rem 0;">
+
+      <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 1rem;" class="mb-3">
+        <h4 style="color: var(--accent-red); margin-top: 0; font-size: 0.95rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem;">
+          <span>⚠️ System Data Controls / ڈیٹا ری سیٹ</span>
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem; margin-top: 0;">
+          Reset all members, readings, and bill data to fresh state. <strong>Your saved Gemini API Key will be preserved.</strong>
+        </p>
+        <button id="resetSampleDataBtn" class="btn btn-danger btn-sm" style="width: 100%;">
+          🔄 Reset All System Data / تمام ڈیٹا ختم کریں
+        </button>
+      </div>
+
       <div class="flex-between mt-3">
         <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
-        <button id="clearKeyBtn" class="btn btn-danger btn-sm">🗑️ Remove API Key</button>
+        <button id="clearKeyBtn" class="btn btn-danger btn-sm">🗑️ Remove API Key Only</button>
       </div>
     </div>
   </div>
@@ -967,7 +1257,10 @@
       const URDU_NAME_MAP = {
         'Zahid Javed': 'زاہد جاوید',
         'Amanat Ali': 'امانت علی',
-        'Ramzan Anwar': 'رمضان انوار'
+        'Ramzan Anwar': 'رمضان انوار',
+        'Muhammad Yasin': 'محمد یاسین',
+        'Tariq Mehmood': 'طارق محمود',
+        'Chaudhry Abdul Rasheed': 'چوہدری عبدالرشید'
       };
 
       async function fetchProxyApi(endpoint, options = {}) {
@@ -978,7 +1271,35 @@
             if (res.ok) return await res.json();
           } catch (e) {}
         }
-        throw new Error('Local Proxy Server not reachable on ports 8997/8998/8999');
+
+        if (endpoint.includes('fetch_mepco')) {
+          const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+          const refNo = urlParams.get('refno');
+          if (refNo) {
+            try {
+              const targetUrl = `https://bill.pitc.com.pk/mepcobill/general?refno=${refNo}&ru=R`;
+              const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+              const res = await fetch(proxyUrl);
+              if (res.ok) {
+                const htmlText = await res.text();
+                const amountMatch = htmlText.match(/DUE\s*DATE[^\d]*([\d,]+)/i) || htmlText.match(/AMOUNT[^\d]*([\d,]+)/i);
+                const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+                return {
+                  status: 'success',
+                  bill: {
+                    referenceNo: refNo,
+                    totalAmount: amount,
+                    amountWithinDueDate: amount
+                  }
+                };
+              }
+            } catch (err) {
+              console.warn('Cloud CORS proxy fallback failed:', err);
+            }
+          }
+        }
+
+        throw new Error('Local Proxy Server not reachable. Please start local server or enter WAPDA bill amount manually.');
       }
 
       function getBilingualUserName(name) {
@@ -1064,11 +1385,7 @@
         `;
       }
 
-      const defaultUsers = [
-        { id: 'usr-1', name: 'Zahid Javed', phone: '03001234567', startDay: 'Sunday', startTime: '08:00', endDay: 'Monday', endTime: '01:00', totalMinutes: 1020 },
-        { id: 'usr-2', name: 'Amanat Ali', phone: '03017654321', startDay: 'Monday', startTime: '01:00', endDay: 'Monday', endTime: '13:15', totalMinutes: 735 },
-        { id: 'usr-3', name: 'Ramzan Anwar', phone: '03029876543', startDay: 'Monday', startTime: '13:15', endDay: 'Monday', endTime: '19:35', totalMinutes: 380 }
-      ];
+      const defaultUsers = [];
 
       const defaultEntries = [];
 
@@ -1078,14 +1395,10 @@
         wapdaBill: 0,
         wapdaRefNo: '',
         ruCode: 'R',
-        fixedExpenses: [
-          { id: 'fix-1', description: 'Motor Rewinding & Bearing Service', amount: 6500 },
-          { id: 'fix-2', description: 'Transformer Maintenance Fund', amount: 3500 },
-          { id: 'fix-3', description: 'Greasing & Gland Packing', amount: 1000 }
-        ]
+        fixedExpenses: []
       };
 
-      const STORAGE_KEY = 'tubewell_bill_system_v26_secure_key';
+      const STORAGE_KEY = 'turbine_bill_system_v36_clean_import_test';
 
       function timeToMinutes(timeStr) {
         if (!timeStr) return 0;
@@ -1100,13 +1413,23 @@
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       }
 
+      function getTimeOfDayUrdu(timeStr) {
+        if (!timeStr) return '';
+        const [h] = timeStr.split(':').map(Number);
+        if (h >= 5 && h < 12) return 'صبح';
+        if (h >= 12 && h < 16) return 'دوپہر';
+        if (h >= 16 && h < 20) return 'شام';
+        return 'رات';
+      }
+
       function formatTime12h(timeStr) {
         if (!timeStr) return '';
         let [h, m] = timeStr.split(':').map(Number);
         const ampm = h >= 12 ? 'pm' : 'am';
+        const periodUrdu = getTimeOfDayUrdu(timeStr);
         h = h % 12;
         h = h ? h : 12;
-        return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+        return `${h}:${String(m).padStart(2, '0')} ${ampm} (${periodUrdu})`;
       }
 
       function getWeeklyMinuteOffset(dayStr, timeStr) {
@@ -1210,22 +1533,54 @@
         getUsers() { return this.state.users; }
         getUserById(id) { return this.state.users.find(u => u.id === id); }
 
+        getNextUserCode() {
+          const existingCodes = new Set(
+            this.state.users.map(u => String(u.userCode || u.code || '').trim().padStart(2, '0'))
+          );
+          let num = 1;
+          while (existingCodes.has(String(num).padStart(2, '0'))) {
+            num++;
+          }
+          return String(num).padStart(2, '0');
+        }
+
+        isCodeDuplicate(code, excludeId = null) {
+          const clean = String(code || '').trim().padStart(2, '0');
+          return this.state.users.some(u => u.id !== excludeId && String(u.userCode || u.code || '').trim().padStart(2, '0') === clean);
+        }
+
         autoRechainSchedule() {
-          for (let i = 1; i < this.state.users.length; i++) {
-            const prevUser = this.state.users[i - 1];
-            const currUser = this.state.users[i];
+          if (this.state.users.length === 0) return;
+          const DAYS_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-            const duration = currUser.totalMinutes || calculateSlotDurationMinutes(currUser.startDay, currUser.startTime, currUser.endDay, currUser.endTime);
-            currUser.startDay = prevUser.endDay;
-            currUser.startTime = prevUser.endTime;
+          for (let i = 0; i < this.state.users.length; i++) {
+            const u = this.state.users[i];
+            const dur = (parseInt(u.durationHours, 10) || 0) * 60 + (parseInt(u.durationMinutes, 10) || 0);
+            const totalMins = dur > 0 ? dur : (u.totalMinutes || 600);
 
-            const newEndOffset = (getWeeklyMinuteOffset(currUser.startDay, currUser.startTime) + duration) % (7 * 1440);
-            const endDayIdx = Math.floor(newEndOffset / 1440);
-            const endMins = newEndOffset % 1440;
+            if (i === 0) {
+              const startOffset = (DAYS_ORDER.indexOf(u.startDay || 'Sunday') * 1440) + timeToMinutes(u.startTime || '08:00');
+              const endOffset = startOffset + totalMins;
+              const totalWeekly = (endOffset + (7 * 1440 * 10)) % (7 * 1440);
+              const endDayIdx = Math.floor(totalWeekly / 1440);
+              const minsInDay = totalWeekly % 1440;
+              u.endDay = DAYS_ORDER[endDayIdx];
+              u.endTime = minutesToTimeStr(minsInDay);
+              u.totalMinutes = totalMins;
+            } else {
+              const prev = this.state.users[i - 1];
+              u.startDay = prev.endDay;
+              u.startTime = prev.endTime;
 
-            currUser.endDay = DAYS_ORDER[endDayIdx];
-            currUser.endTime = minutesToTimeStr(endMins);
-            currUser.totalMinutes = duration;
+              const startOffset = (DAYS_ORDER.indexOf(u.startDay) * 1440) + timeToMinutes(u.startTime);
+              const endOffset = startOffset + totalMins;
+              const totalWeekly = (endOffset + (7 * 1440 * 10)) % (7 * 1440);
+              const endDayIdx = Math.floor(totalWeekly / 1440);
+              const minsInDay = totalWeekly % 1440;
+              u.endDay = DAYS_ORDER[endDayIdx];
+              u.endTime = minutesToTimeStr(minsInDay);
+              u.totalMinutes = totalMins;
+            }
           }
         }
 
@@ -1233,30 +1588,52 @@
           let user = this.state.users.find(u => u.name.toLowerCase() === name.toLowerCase());
           if (!user) {
             const lastUser = this.state.users[this.state.users.length - 1];
-            let startDay = 'Sunday', startTime = '08:00', endDay = 'Sunday', endTime = '12:00';
+            let startDay = 'Sunday', startTime = '08:00';
             if (lastUser) {
               startDay = lastUser.endDay;
               startTime = lastUser.endTime;
-              endDay = lastUser.endDay;
-              endTime = minutesToTimeStr(timeToMinutes(lastUser.endTime) + 240);
             }
-            user = this.addUser({ name, phone: '', startDay, startTime, endDay, endTime });
+            user = this.addUser({ nameEn: name, phone: '', startDay, startTime, durationHours: 4, durationMinutes: 0 });
           }
           return user;
         }
 
-        addUser(userData) {
-          const totalMins = calculateSlotDurationMinutes(userData.startDay, userData.startTime, userData.endDay, userData.endTime);
+        addUser(user) {
+          const userCode = String(user.userCode || user.code || this.getNextUserCode()).trim().padStart(2, '0');
+          if (this.isCodeDuplicate(userCode)) {
+            throw new Error(`User ID "${userCode}" already exists! Please use a unique User ID.`);
+          }
+
+          const nameEn = (user.nameEn || user.name || '').trim();
+          const nameUr = (user.nameUr || '').trim();
+          const fullName = nameEn && nameUr ? `${nameEn} (${nameUr})` : (nameEn || nameUr || 'Member');
+
+          const durationHours = parseInt(user.durationHours, 10) || 0;
+          const durationMinutes = parseInt(user.durationMinutes, 10) || 0;
+          let totalMinutes = (durationHours * 60) + durationMinutes;
+          if (totalMinutes <= 0 && user.totalMinutes) totalMinutes = user.totalMinutes;
+          if (totalMinutes <= 0) totalMinutes = 600;
+
           const newUser = {
             id: 'usr-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-            name: userData.name.trim(),
-            phone: (userData.phone || '').trim(),
-            startDay: userData.startDay || 'Sunday',
-            startTime: userData.startTime || '08:00',
-            endDay: userData.endDay || 'Monday',
-            endTime: userData.endTime || '01:00',
-            totalMinutes: totalMins
+            userCode: userCode,
+            code: userCode,
+            nameEn: nameEn,
+            nameUr: nameUr,
+            name: fullName,
+            fullName: fullName,
+            phone: (user.phone || '').trim(),
+            userType: user.userType || 'internal',
+            startDay: user.startDay || 'Sunday',
+            startTime: user.startTime || '08:00',
+            endDay: 'Monday',
+            endTime: '01:00',
+            durationHours: durationHours || Math.floor(totalMinutes / 60),
+            durationMinutes: durationMinutes || (totalMinutes % 60),
+            totalMinutes: totalMinutes,
+            assignedWeeklyHours: totalMinutes / 60
           };
+
           this.state.users.push(newUser);
           this.autoRechainSchedule();
           this.saveState();
@@ -1267,23 +1644,40 @@
           const index = this.state.users.findIndex(u => u.id === id);
           if (index !== -1) {
             const current = this.state.users[index];
-            const startDay = updatedFields.startDay || current.startDay;
-            const startTime = updatedFields.startTime || current.startTime;
-            const endDay = updatedFields.endDay || current.endDay;
-            const endTime = updatedFields.endTime || current.endTime;
-            const totalMins = calculateSlotDurationMinutes(startDay, startTime, endDay, endTime);
+            const userCode = updatedFields.userCode !== undefined ? String(updatedFields.userCode).trim().padStart(2, '0') : current.userCode;
+
+            if (this.isCodeDuplicate(userCode, id)) {
+              throw new Error(`User ID "${userCode}" already exists! Duplicate IDs are not allowed.`);
+            }
+
+            const nameEn = updatedFields.nameEn !== undefined ? updatedFields.nameEn.trim() : (current.nameEn || current.name || '');
+            const nameUr = updatedFields.nameUr !== undefined ? updatedFields.nameUr.trim() : (current.nameUr || '');
+            const fullName = nameEn && nameUr ? `${nameEn} (${nameUr})` : (nameEn || nameUr || current.name || 'Member');
+
+            let durationHours = updatedFields.durationHours !== undefined ? parseInt(updatedFields.durationHours, 10) || 0 : current.durationHours;
+            let durationMinutes = updatedFields.durationMinutes !== undefined ? parseInt(updatedFields.durationMinutes, 10) || 0 : current.durationMinutes;
+            let totalMinutes = (durationHours * 60) + durationMinutes;
+            if (totalMinutes <= 0 && updatedFields.totalMinutes) {
+              totalMinutes = updatedFields.totalMinutes;
+            }
+            if (totalMinutes <= 0) totalMinutes = current.totalMinutes || 600;
 
             this.state.users[index] = {
               ...current,
               ...updatedFields,
-              name: updatedFields.name ? updatedFields.name.trim() : current.name,
-              phone: updatedFields.phone !== undefined ? updatedFields.phone.trim() : current.phone,
-              startDay,
-              startTime,
-              endDay,
-              endTime,
-              totalMinutes: totalMins
+              userCode: userCode,
+              code: userCode,
+              nameEn: nameEn,
+              nameUr: nameUr,
+              name: fullName,
+              fullName: fullName,
+              userType: updatedFields.userType || current.userType || 'internal',
+              durationHours: durationHours,
+              durationMinutes: durationMinutes,
+              totalMinutes: totalMinutes,
+              assignedWeeklyHours: totalMinutes / 60
             };
+
             this.autoRechainSchedule();
             this.saveState();
           }
@@ -1427,9 +1821,9 @@
           const durationStr = formatDurationText(mins);
 
           msg += `👤 *${idx + 1}. ${biliName}*\n`;
-          msg += `   🗓️ Start (شروع): *${startDayBili}* — ${formatTime12h(u.startTime)}\n`;
-          msg += `   🏁 End (ختم): *${endDayBili}* — ${formatTime12h(u.endTime)}\n`;
-          msg += `   ⏱️ Total Duration (دورانیہ): *${durationStr}*\n\n`;
+          msg += `   🟢 چالو (Start): *${startDayBili}* — ${formatTime12h(u.startTime)}\n`;
+          msg += `   🔴 بند (End): *${endDayBili}* — ${formatTime12h(u.endTime)}\n`;
+          msg += `   ⏱️ کل دورانیہ (Duration): *${durationStr}*\n\n`;
         });
 
         msg += `====================================\n`;
@@ -1444,14 +1838,17 @@
         const fixedExpensesList = Array.isArray(expenses.fixedExpenses) ? expenses.fixedExpenses : [];
         const totalFixedExpenses = fixedExpensesList.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
-        let totalEffectiveHours = 0;
+        let totalInternalEffectiveHours = 0;
         const userHoursMap = new Map();
 
         users.forEach(user => {
+          const isInternal = user.userType !== 'external';
           const mins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
           const hours = mins / 60;
           userHoursMap.set(user.id, hours);
-          totalEffectiveHours += hours;
+          if (isInternal) {
+            totalInternalEffectiveHours += hours;
+          }
         });
 
         const userUnitsMap = new Map();
@@ -1487,6 +1884,7 @@
         });
 
         const userBreakdowns = users.map(user => {
+          const isInternal = user.userType !== 'external';
           const units = userUnitsMap.get(user.id) || 0;
           const hours = userHoursMap.get(user.id) || 0;
           const transferredIn = userTransferredInCountMap.get(user.id) || 0;
@@ -1494,15 +1892,29 @@
           const unitsPercentage = grandTotalUnits > 0 ? (units / grandTotalUnits) * 100 : 0;
           const usageBillShare = grandTotalUnits > 0 ? (units / grandTotalUnits) * wapdaBill : 0;
 
-          const hoursPercentage = totalEffectiveHours > 0 ? (hours / totalEffectiveHours) * 100 : 0;
-          const fixedBillShare = totalEffectiveHours > 0 ? (hours / totalEffectiveHours) * totalFixedExpenses : 0;
+          let hoursPercentage = 0;
+          let fixedBillShare = 0;
+
+          if (isInternal) {
+            hoursPercentage = totalInternalEffectiveHours > 0 ? (hours / totalInternalEffectiveHours) * 100 : 0;
+            fixedBillShare = totalInternalEffectiveHours > 0 ? (hours / totalInternalEffectiveHours) * totalFixedExpenses : 0;
+          }
 
           const grandTotalBill = usageBillShare + fixedBillShare;
           const mins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
 
+          const uCode = user.userCode || user.code || '01';
+          const uNameEn = user.nameEn || user.name || '';
+          const uNameUr = user.nameUr || '';
+          let fullName = uNameEn && uNameUr ? `${uNameEn} (${uNameUr})` : (user.name || uNameEn || uNameUr || 'Member');
+
           return {
             userId: user.id,
-            name: user.name,
+            userCode: uCode,
+            nameEn: uNameEn,
+            nameUr: uNameUr,
+            fullName: fullName,
+            userType: user.userType || 'internal',
             phone: user.phone || '',
             startDay: user.startDay,
             startTime: user.startTime,
@@ -1528,77 +1940,219 @@
           totalFixedExpenses,
           grandTotalBillSystem: wapdaBill + totalFixedExpenses,
           grandTotalUnits,
-          totalEffectiveHours: Math.round(totalEffectiveHours * 100) / 100,
+          totalEffectiveHours: Math.round(totalInternalEffectiveHours * 100) / 100,
           userBreakdowns
         };
       }
 
       function generateWhatsAppMessage(calculatedData, formatLang = 'roman') {
         const { billingMonthLabel, wapdaBill, totalFixedExpenses, grandTotalBillSystem, grandTotalUnits, userBreakdowns } = calculatedData;
+        const expenses = store.getExpenses();
+        const fixedExpensesList = Array.isArray(expenses.fixedExpenses) ? expenses.fixedExpenses : [];
         const dateHeader = billingMonthLabel || 'Current Month';
 
         if (formatLang === 'urdu') {
-          let msg = `⚡ *ٹیوب ویل بل خلاصہ — ${dateHeader}* ⚡\n====================================\n\n`;
-          msg += `📊 *کل اخراجات:* \n• کل استعمال شدہ یونٹ: *${grandTotalUnits.toLocaleString()} یونٹ*\n• واپڈا بجلی بل: *Rs. ${wapdaBill.toLocaleString()}*\n• مرمت و دیگر اخراجات: *Rs. ${totalFixedExpenses.toLocaleString()}*\n• کل رقم: *Rs. ${grandTotalBillSystem.toLocaleString()}*\n\n`;
-          msg += `------------------------------------\n📋 *ہر ممبر کا واجب الادا بل:* \n------------------------------------\n\n`;
+          let msg = `⚡ *ٹربائن بل خلاصہ — ${dateHeader}* ⚡\n`;
+          msg += `====================================\n\n`;
+          msg += `📊 *کل اخراجات کا خلاصہ:* \n`;
+          msg += `• کل استعمال شدہ یونٹ: *${grandTotalUnits.toLocaleString()} یونٹ*\n`;
+          msg += `• میپکو بجلی بل: *Rs. ${Math.round(wapdaBill).toLocaleString()}*\n`;
+
+          if (fixedExpensesList.length > 0) {
+            msg += `\n🔧 *تفصیل اضافی اخراجات:*\n`;
+            fixedExpensesList.forEach(item => {
+              msg += `  • ${item.description}: Rs. ${parseFloat(item.amount || 0).toLocaleString()}\n`;
+            });
+            msg += `  • *کل اضافی اخراجات:* *Rs. ${Math.round(totalFixedExpenses).toLocaleString()}*\n`;
+          } else if (totalFixedExpenses > 0) {
+            msg += `• کل اضافی اخراجات: *Rs. ${Math.round(totalFixedExpenses).toLocaleString()}*\n`;
+          }
+
+          msg += `💰 *کل واجب الادا رقم:* *Rs. ${Math.round(grandTotalBillSystem).toLocaleString()}*\n`;
+          msg += `====================================\n\n`;
+          msg += `📋 *تمام ممبران کے واجب الادا بل:* \n\n`;
+
           userBreakdowns.forEach((user, index) => {
-            const biliName = getBilingualUserName(user.name);
-            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
-            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
-            msg += `👤 *${index + 1}. ${biliName}*\n   • باری: ${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}\n   • استعمال: ${user.unitsConsumed} یونٹ\n   • بجلی بل حصہ: Rs. ${user.usageBillShare.toLocaleString()}\n   • فکسڈ اخراجات حصہ: Rs. ${user.fixedBillShare.toLocaleString()} (${user.formattedDuration})\n   👉 *کل واجب الادا: Rs. ${user.grandTotalBill.toLocaleString()}*\n\n`;
+            const typeLabel = user.userType === 'external' ? ' (خریدار)' : '';
+            const displayName = user.nameUr || user.fullName || user.nameEn || 'ممبر';
+            msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
+            msg += `   • باری وقت: ${user.effectiveHours} گھنٹے | یونٹ: ${user.unitsConsumed} (${user.unitsPercentage}%)\n`;
+            msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            msg += `   👉 *کل واجب الادا بل: Rs. ${Math.round(user.grandTotalBill).toLocaleString()}*\n\n`;
           });
-          msg += `------------------------------------\nشکرگزار: ٹیوب ویل انتظامیہ 🙏\n`;
+
+          msg += `------------------------------------\n`;
+          msg += `⚠️ تمام ممبران سے گزارش ہے کہ اپنا بل بروقت جمع کروائیں۔\n`;
+          msg += `شکریہ! — ٹربائن انتظامیہ 🙏\n`;
           return msg;
-        } else if (formatLang === 'english') {
-          let msg = `⚡ *TUBEWELL BILL SUMMARY — ${dateHeader.toUpperCase()}* ⚡\n====================================\n\n`;
-          msg += `📊 *GRAND TOTALS:*\n• Total Electricity Consumed: *${grandTotalUnits.toLocaleString()} Units*\n• WAPDA Electricity Bill: *Rs. ${wapdaBill.toLocaleString()}*\n• Fixed & Repair Expenses: *Rs. ${totalFixedExpenses.toLocaleString()}*\n• Total Bill Amount: *Rs. ${grandTotalBillSystem.toLocaleString()}*\n\n`;
-          msg += `------------------------------------\n📋 *INDIVIDUAL USER SHARES:*\n------------------------------------\n\n`;
+        } 
+        
+        if (formatLang === 'english') {
+          let msg = `⚡ *TURBINE BILL SUMMARY — ${(dateHeader).toUpperCase()}* ⚡\n`;
+          msg += `====================================\n\n`;
+          msg += `📊 *OVERALL TOTALS:*\n`;
+          msg += `• Total Electricity Consumed: *${grandTotalUnits.toLocaleString()} Units*\n`;
+          msg += `• MEPCO Electricity Bill: *Rs. ${Math.round(wapdaBill).toLocaleString()}*\n`;
+
+          if (fixedExpensesList.length > 0) {
+            msg += `\n🔧 *Extra Maintenance Expenses Breakdown:*\n`;
+            fixedExpensesList.forEach(item => {
+              msg += `  • ${item.description}: Rs. ${parseFloat(item.amount || 0).toLocaleString()}\n`;
+            });
+            msg += `  • *Total Extra Expenses:* *Rs. ${Math.round(totalFixedExpenses).toLocaleString()}*\n`;
+          } else if (totalFixedExpenses > 0) {
+            msg += `• Total Extra Expenses: *Rs. ${Math.round(totalFixedExpenses).toLocaleString()}*\n`;
+          }
+
+          msg += `💰 *Grand Total Collection:* *Rs. ${Math.round(grandTotalBillSystem).toLocaleString()}*\n`;
+          msg += `====================================\n\n`;
+          msg += `📋 *INDIVIDUAL MEMBER SHARES:* \n\n`;
+
           userBreakdowns.forEach((user, index) => {
-            const biliName = getBilingualUserName(user.name);
-            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
-            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
-            msg += `👤 *${index + 1}. ${biliName}*\n   • Time Slot: ${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}\n   • Units Consumed: ${user.unitsConsumed} Units (${user.unitsPercentage}%)\n   • WAPDA Share: Rs. ${user.usageBillShare.toLocaleString()}\n   • Fixed Share: Rs. ${user.fixedBillShare.toLocaleString()} (${user.formattedDuration})\n   👉 *TOTAL DUE: Rs. ${user.grandTotalBill.toLocaleString()}*\n\n`;
+            const typeLabel = user.userType === 'external' ? ' (Customer)' : '';
+            const displayName = user.nameEn || user.fullName || 'Member';
+            msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
+            msg += `   • Bari Hours: ${user.effectiveHours} hrs | Units: ${user.unitsConsumed} (${user.unitsPercentage}%)\n`;
+            msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            msg += `   👉 *TOTAL DUE: Rs. ${Math.round(user.grandTotalBill).toLocaleString()}*\n\n`;
           });
-          msg += `------------------------------------\nThank you! Please submit your payment promptly.\n`;
+
+          msg += `------------------------------------\n`;
+          msg += `⚠️ Please submit your bill payment promptly.\n`;
+          msg += `Thank you! — Turbine Management 🙏\n`;
           return msg;
         }
 
-        let msg = `⚡ *TUBEWELL BILL SUMMARY — ${dateHeader.toUpperCase()}* ⚡\n====================================\n\n`;
-        msg += `📊 *OVERALL TOTALS (کل اخراجات):*\n• Total Electricity Units: *${grandTotalUnits.toLocaleString()} Units*\n• WAPDA Bijli Bill: *Rs. ${wapdaBill.toLocaleString()}*\n• Fixed / Repair Expenses: *Rs. ${totalFixedExpenses.toLocaleString()}*\n• Total Tubewell Bill: *Rs. ${grandTotalBillSystem.toLocaleString()}*\n\n`;
-        msg += `------------------------------------\n📋 *PER USER BILL BREAKDOWN (تمام ممبران کا بل):*\n------------------------------------\n\n`;
+        let msg = `⚡ *TURBINE BILL SUMMARY (ٹربائن بل خلاصہ) — ${dateHeader}* ⚡\n`;
+        msg += `====================================\n\n`;
+        msg += `📊 *OVERALL TOTALS (کل اخراجات):*\n`;
+        msg += `• Total Electricity Units: *${grandTotalUnits.toLocaleString()} Units*\n`;
+        msg += `• MEPCO Electricity Bill: *Rs. ${Math.round(wapdaBill).toLocaleString()}*\n`;
+
+        if (fixedExpensesList.length > 0) {
+          msg += `\n🔧 *Extra Expenses Breakdown (تفصیل اضافی اخراجات):*\n`;
+          fixedExpensesList.forEach(item => {
+            msg += `  • ${item.description}: Rs. ${parseFloat(item.amount || 0).toLocaleString()}\n`;
+          });
+          msg += `  • *Total Extra Expenses:* *Rs. ${Math.round(totalFixedExpenses).toLocaleString()}*\n`;
+        } else if (totalFixedExpenses > 0) {
+          msg += `• Total Extra Expenses: *Rs. ${Math.round(totalFixedExpenses).toLocaleString()}*\n`;
+        }
+
+        msg += `💰 *Grand Total Bill:* *Rs. ${Math.round(grandTotalBillSystem).toLocaleString()}*\n`;
+        msg += `====================================\n\n`;
+        msg += `📋 *PER MEMBER BILL BREAKDOWN (تمام ممبران کے بل):*\n\n`;
+
         userBreakdowns.forEach((user, index) => {
-          const biliName = getBilingualUserName(user.name);
-          const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
-          const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
-          msg += `👤 *${index + 1}. ${biliName}*\n   • Bari Time Slot: ${startDayBili} ${formatTime12h(user.startTime)} to ${endDayBili} ${formatTime12h(user.endTime)}\n   • Usage: ${user.unitsConsumed} Units (${user.unitsPercentage}%)\n   • WAPDA Share: Rs. ${user.usageBillShare.toLocaleString()}\n   • Fixed Share: Rs. ${user.fixedBillShare.toLocaleString()} (${user.formattedDuration})\n   👉 *TOTAL BILL: Rs. ${user.grandTotalBill.toLocaleString()}*\n`;
-          if (user.transferredInCount > 0) msg += `   ℹ️ *(Includes ${user.transferredInCount} transferred turn session(s))*\n`;
-          msg += `\n`;
+          const typeLabel = user.userType === 'external' ? ' (External Customer/خریدار)' : '';
+          const displayName = user.fullName || user.nameEn || user.nameUr || 'Member';
+          msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
+          msg += `   • Allocated Slot: ${user.effectiveHours} hrs | Usage: ${user.unitsConsumed} Units (${user.unitsPercentage}%)\n`;
+          msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+          msg += `   👉 *TOTAL DUE (کل واجب الادا): Rs. ${Math.round(user.grandTotalBill).toLocaleString()}*\n\n`;
         });
-        msg += `------------------------------------\n⚠️ *Note:* Meharbani farmakar apna bill waqt par jama karwayen.\nShukriya! 🙏\n`;
-        return msg;
-      }
 
-      function generateSingleUserWhatsAppMessage(user, dateHeader) {
-        const biliName = getBilingualUserName(user.name);
-        const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
-        const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
-
-        let msg = `⚡ *TUBEWELL BILL — ${biliName} (${dateHeader})* ⚡\n\n`;
-        msg += `• Time Slot: ${startDayBili} ${formatTime12h(user.startTime)} to ${endDayBili} ${formatTime12h(user.endTime)}\n`;
-        msg += `• Allocated Duration: *${user.formattedDuration}*\n`;
-        msg += `• Units Used: *${user.unitsConsumed} Units*\n`;
-        msg += `• WAPDA Electricity Share: *Rs. ${user.usageBillShare.toLocaleString()}*\n`;
-        msg += `• Fixed/Repair Expenses Share: *Rs. ${user.fixedBillShare.toLocaleString()}*\n`;
         msg += `------------------------------------\n`;
-        msg += `💰 *TOTAL AMOUNT DUE: Rs. ${user.grandTotalBill.toLocaleString()}*\n\n`;
-        msg += `Meharbani karke bill waqt par ada karein. Shukriya!`;
+        msg += `⚠️ Meharbani farmakar apna bill waqt par jama karwayen.\n`;
+        msg += `Shukriya! — Turbine Management 🙏\n`;
+
         return msg;
       }
 
-      function parseRegisterTextIntoEntries(rawText, registeredUsers) {
+      function generateSingleUserWhatsAppMessage(user, dateHeader, entries = []) {
+        const displayName = user.fullName || user.nameUr || user.nameEn || 'Member';
+        const isExternal = user.userType === 'external';
+
+        const userEntries = entries.filter(e => {
+          if (e.userId === user.userId) return true;
+          if (!e.userId && user.nameUr && (e.rawName || '').includes(user.nameUr)) return true;
+          return false;
+        });
+
+        let msg = `💧 *ٹربائن بل تفصیلات — ${displayName}* 💧\n`;
+        msg += `📅 *بلنگ مہینہ:* ${dateHeader}\n`;
+        msg += `====================================\n\n`;
+
+        msg += `🕒 *باری کا وقت (Time Slot):*\n`;
+        msg += `• 🟢 چالو: ${DAY_NAMES_BILINGUAL[user.startDay] || user.startDay} ${formatTime12h(user.startTime)}\n`;
+        msg += `• 🔴 بند: ${DAY_NAMES_BILINGUAL[user.endDay] || user.endDay} ${formatTime12h(user.endTime)}\n`;
+        msg += `• کل وقت: *${user.effectiveHours} گھنٹے*\n\n`;
+
+        if (userEntries.length > 0) {
+          msg += `📖 *میٹر ریڈنگ و یونٹ تفصیل:* \n`;
+          userEntries.forEach(e => {
+            const start = parseFloat(e.startReading) || 0;
+            const end = parseFloat(e.endReading) || 0;
+            const u = Math.max(0, end - start);
+            msg += `• *${e.date}:* 🟢 چالو ${start} — 🔴 بند ${end} = *${u} یونٹ*\n`;
+          });
+          msg += `------------------------------------\n`;
+          msg += `⚡ *کل استعمال شدہ یونٹ:* *${user.unitsConsumed} یونٹ (${user.unitsPercentage}%)*\n\n`;
+        } else {
+          msg += `⚡ *کل استعمال شدہ یونٹ:* *${user.unitsConsumed} یونٹ (${user.unitsPercentage}%)*\n\n`;
+        }
+
+        msg += `💰 *بل کی مکمل تفصیل:* \n`;
+        msg += `• بجلی بل (MEPCO Share): *Rs. ${Math.round(user.usageBillShare).toLocaleString()}/-*\n`;
+        msg += `• دیگر اخراجات (Repair Share): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-* ${isExternal ? '(مستثنیٰ)' : ''}\n`;
+        msg += `====================================\n`;
+        msg += `👉 *کل واجب الادا بل:* *Rs. ${Math.round(user.grandTotalBill).toLocaleString()}/-*\n`;
+        msg += `====================================\n\n`;
+        msg += `⚠️ *نوٹ:* مہر بانی فرما کر اپنا بل بروقت جمع کروائیں۔\n`;
+        msg += `شکریہ! — ٹربائن انتظامیہ 🙏`;
+
+        return msg;
+      }
+
+      function findGlobalUserMatch(searchStr, usersList = []) {
+        if (!searchStr) return null;
+        const allUsers = (usersList && usersList.length > 0) ? usersList : store.getUsers();
+        if (!allUsers || !allUsers.length) return null;
+
+        const sLower = searchStr.toLowerCase().trim();
+
+        // 1. Match by code (e.g. "01", "07", "08")
+        const codeMatch = allUsers.find(u => {
+          const uCode = (u.userCode || u.code || '').toString().toLowerCase();
+          return uCode && (sLower === uCode || sLower.includes(`[${uCode}]`) || sLower.includes(`code ${uCode}`));
+        });
+        if (codeMatch) return codeMatch;
+
+        // 2. Match by Urdu or English name
+        return allUsers.find(u => {
+          const nameEn = (u.nameEn || u.name || u.fullName || '').toLowerCase();
+          const nameUr = (u.nameUr || '').toLowerCase();
+          return (nameEn && (sLower.includes(nameEn) || nameEn.includes(sLower))) ||
+                 (nameUr && (sLower.includes(nameUr) || nameUr.includes(sLower)));
+        });
+      }
+
+      function parseRegisterTextIntoEntries(rawText, registeredUsers = []) {
         if (!rawText || !rawText.trim()) return [];
         let list = [];
         const cleanStr = rawText.replace(/^```json\s*/m, '').replace(/```$/m, '').trim();
+
+        const allUsers = (registeredUsers && registeredUsers.length > 0) ? registeredUsers : store.getUsers();
+
+        function findMatchingUser(searchStr) {
+          if (!searchStr || !allUsers.length) return null;
+          const sLower = searchStr.toLowerCase().trim();
+
+          // 1. Match by code (e.g. "01", "07", "08")
+          const codeMatch = allUsers.find(u => {
+            const uCode = (u.userCode || u.code || '').toString().toLowerCase();
+            return uCode && (sLower === uCode || sLower.includes(`[${uCode}]`) || sLower.includes(`code ${uCode}`));
+          });
+          if (codeMatch) return codeMatch;
+
+          // 2. Match by Urdu or English name
+          return allUsers.find(u => {
+            const nameEn = (u.nameEn || u.name || u.fullName || '').toLowerCase();
+            const nameUr = (u.nameUr || '').toLowerCase();
+            return (nameEn && (sLower.includes(nameEn) || nameEn.includes(sLower))) ||
+                   (nameUr && (sLower.includes(nameUr) || nameUr.includes(sLower)));
+          });
+        }
 
         try {
           const parsed = JSON.parse(cleanStr);
@@ -1608,9 +2162,7 @@
               name: item.name || item.Name || item.userName || 'Register Member',
               startReading: parseFloat(item.startReading || item.start_reading || item.StartReading || 0),
               endReading: parseFloat(item.endReading || item.end_reading || item.EndReading || 0),
-              transferToUserId: null,
-              confidence: 'high',
-              notes: 'Reparsed from AI JSON output'
+              notes: 'Parsed from AI JSON output'
             }));
           }
         } catch (e) {}
@@ -1624,17 +2176,14 @@
               const endReading = parseFloat(numbers[1]);
 
               if (endReading >= startReading) {
-                let matchedUser = registeredUsers.find(u => line.toLowerCase().includes(u.name.toLowerCase()));
-                let extractedName = line.replace(/\b\d+\b/g, '').trim() || 'Register Member';
+                let extractedName = line.replace(/\b\d+\b/g, '').replace(/[->➔]/g, '').trim() || 'Register Member';
 
                 list.push({
                   date: new Date().toISOString().split('T')[0],
-                  name: matchedUser ? matchedUser.name : extractedName,
+                  name: extractedName,
                   startReading: startReading,
                   endReading: endReading,
-                  transferToUserId: null,
-                  confidence: matchedUser ? 'high' : 'medium',
-                  notes: `Reparsed line: "${line.substring(0, 30)}"`
+                  notes: `Parsed line: "${line.substring(0, 30)}"`
                 });
               }
             }
@@ -1644,14 +2193,16 @@
         const finalEntries = [];
         list.forEach(item => {
           if (item.startReading >= 0 && item.endReading > 0) {
-            const userObj = store.ensureUserExists(item.name);
+            const matchedUser = findMatchingUser(item.name);
             finalEntries.push({
               date: item.date || new Date().toISOString().split('T')[0],
-              userId: userObj.id,
+              userId: matchedUser ? matchedUser.id : '',
+              rawName: item.name,
               startReading: item.startReading,
               endReading: item.endReading,
               transferToUserId: null,
-              confidence: item.confidence || 'high',
+              confidence: matchedUser ? 'high' : 'medium',
+              isReviewed: matchedUser ? true : false,
               notes: item.notes || ''
             });
           }
@@ -1674,6 +2225,10 @@
 
           this.usersTableBody = document.getElementById('usersTableBody');
           this.addUserBtn = document.getElementById('addUserBtn');
+          this.importScheduleBtn = document.getElementById('importScheduleBtn');
+          this.exportScheduleBtn = document.getElementById('exportScheduleBtn');
+          this.importScheduleFileInput = document.getElementById('importScheduleFileInput');
+
           this.copyScheduleWaBtn = document.getElementById('copyScheduleWaBtn');
           this.sendScheduleWaBtn = document.getElementById('sendScheduleWaBtn');
           this.scheduleWhatsappPreviewBox = document.getElementById('scheduleWhatsappPreviewBox');
@@ -1682,7 +2237,12 @@
           this.userForm = document.getElementById('userForm');
           this.userModalTitle = document.getElementById('userModalTitle');
           this.userIdInput = document.getElementById('userIdInput');
-          this.userNameInput = document.getElementById('userNameInput');
+          this.userCodeInput = document.getElementById('userCodeInput');
+          this.autoNextCodeBtn = document.getElementById('autoNextCodeBtn');
+          this.userCodeValidationMsg = document.getElementById('userCodeValidationMsg');
+          this.userTypeSelect = document.getElementById('userTypeSelect');
+          this.userNameEnInput = document.getElementById('userNameEnInput');
+          this.userNameUrInput = document.getElementById('userNameUrInput');
           this.userPhoneInput = document.getElementById('userPhoneInput');
 
           this.userStartDaySelect = document.getElementById('userStartDaySelect');
@@ -1690,13 +2250,11 @@
           this.userStartMinSelect = document.getElementById('userStartMinSelect');
           this.userStartAmpmSelect = document.getElementById('userStartAmpmSelect');
 
-          this.userEndDaySelect = document.getElementById('userEndDaySelect');
-          this.userEndHourSelect = document.getElementById('userEndHourSelect');
-          this.userEndMinSelect = document.getElementById('userEndMinSelect');
-          this.userEndAmpmSelect = document.getElementById('userEndAmpmSelect');
+          this.userDurationHoursInput = document.getElementById('userDurationHoursInput');
+          this.userDurationMinutesInput = document.getElementById('userDurationMinutesInput');
+          this.calculatedEndDayTimeBadge = document.getElementById('calculatedEndDayTimeBadge');
 
           populate12HourOptions(this.userStartHourSelect, this.userStartMinSelect);
-          populate12HourOptions(this.userEndHourSelect, this.userEndMinSelect);
 
           this.userCalculatedDurationDisplay = document.getElementById('userCalculatedDurationDisplay');
           this.validationBadge = document.getElementById('validationBadge');
@@ -1736,8 +2294,11 @@
           this.entryIdInput = document.getElementById('entryIdInput');
           this.entryDateInput = document.getElementById('entryDateInput');
           this.entryUserSelect = document.getElementById('entryUserSelect');
+          this.quickAddUserBtn = document.getElementById('quickAddUserBtn');
           this.entryStartInput = document.getElementById('entryStartInput');
           this.entryEndInput = document.getElementById('entryEndInput');
+          this.entryModalErrorBox = document.getElementById('entryModalErrorBox');
+          this.entryModalErrorText = document.getElementById('entryModalErrorText');
           this.entryTransferSelect = document.getElementById('entryTransferSelect');
           this.entryNotesInput = document.getElementById('entryNotesInput');
 
@@ -1790,22 +2351,11 @@
           return convert12to24(this.userStartHourSelect.value, this.userStartMinSelect.value, this.userStartAmpmSelect.value);
         }
 
-        getModalEndTime24() {
-          return convert12to24(this.userEndHourSelect.value, this.userEndMinSelect.value, this.userEndAmpmSelect.value);
-        }
-
         setModalStartTime24(time24) {
           const { hour12, minute, ampm } = parse24to12(time24);
           this.userStartHourSelect.value = hour12;
           this.userStartMinSelect.value = minute;
           this.userStartAmpmSelect.value = ampm;
-        }
-
-        setModalEndTime24(time24) {
-          const { hour12, minute, ampm } = parse24to12(time24);
-          this.userEndHourSelect.value = hour12;
-          this.userEndMinSelect.value = minute;
-          this.userEndAmpmSelect.value = ampm;
         }
 
         bindEvents() {
@@ -1816,12 +2366,41 @@
           });
 
           this.addUserBtn.addEventListener('click', () => this.openUserModal());
+          if (this.exportScheduleBtn) {
+            this.exportScheduleBtn.addEventListener('click', () => this.exportSchedule());
+          }
+          if (this.importScheduleBtn && this.importScheduleFileInput) {
+            this.importScheduleBtn.addEventListener('click', () => this.importScheduleFileInput.click());
+            this.importScheduleFileInput.addEventListener('change', (e) => this.handleScheduleImportFile(e));
+          }
+          if (this.autoNextCodeBtn) {
+            this.autoNextCodeBtn.addEventListener('click', () => {
+              if (this.userCodeInput) {
+                this.userCodeInput.value = store.getNextUserCode();
+                this.validateUserCodeInput();
+              }
+            });
+          }
+
+          if (this.userCodeInput) {
+            ['input', 'change', 'keyup'].forEach(evt => {
+              this.userCodeInput.addEventListener(evt, () => this.validateUserCodeInput());
+            });
+          }
+
           this.userForm.addEventListener('submit', (e) => this.handleUserFormSubmit(e));
+
+          if (this.quickAddUserBtn) {
+            this.quickAddUserBtn.addEventListener('click', () => {
+              this.pendingQuickUserSelect = true;
+              this.openUserModal();
+            });
+          }
 
           this.copyScheduleWaBtn.addEventListener('click', () => {
             const txt = this.scheduleWhatsappPreviewBox.textContent;
             navigator.clipboard.writeText(txt).then(() => {
-              this.showToast('Schedule copied to clipboard in WhatsApp format!');
+              this.showToast('Schedule copied to clipboard!');
             }).catch(() => {
               alert('Copied to clipboard');
             });
@@ -1832,41 +2411,49 @@
             window.open(`https://api.whatsapp.com/send?text=${txt}`, '_blank');
           });
 
-          const updateModalDurationCalc = () => {
+          const updateModalDurationAndEndTimeCalc = () => {
             const sd = this.userStartDaySelect.value;
             const st = this.getModalStartTime24();
-            const ed = this.userEndDaySelect.value;
-            const et = this.getModalEndTime24();
+            const h = parseInt(this.userDurationHoursInput.value, 10) || 0;
+            const m = parseInt(this.userDurationMinutesInput.value, 10) || 0;
+            const totalMins = (h * 60) + m;
 
-            if (sd && st && ed && et) {
-              const mins = calculateSlotDurationMinutes(sd, st, ed, et);
-              this.userCalculatedDurationDisplay.textContent = formatDurationText(mins);
-
-              const startOffset = getWeeklyMinuteOffset(sd, st);
-              const endOffset = getWeeklyMinuteOffset(ed, et);
-
-              if (endOffset <= startOffset && (endOffset + 10080 - startOffset <= 0)) {
-                this.validationBadge.className = 'badge badge-danger';
-                this.validationBadge.textContent = '❌ End Time Must Be After Start Time';
-                this.saveUserSubmitBtn.disabled = true;
-              } else {
-                this.validationBadge.className = 'badge badge-success';
-                this.validationBadge.textContent = '✅ Valid Time Slot';
-                this.saveUserSubmitBtn.disabled = false;
-              }
+            if (totalMins <= 0) {
+              this.userCalculatedDurationDisplay.textContent = '0 Minutes';
+              this.calculatedEndDayTimeBadge.textContent = 'Invalid Duration';
+              this.validationBadge.className = 'badge badge-danger';
+              this.validationBadge.textContent = '❌ Duration Must Be > 0 Mins';
+              this.saveUserSubmitBtn.disabled = true;
+              return;
             }
+
+            this.userCalculatedDurationDisplay.textContent = formatDurationText(totalMins);
+
+            const DAYS_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const startOffset = (DAYS_ORDER.indexOf(sd) * 1440) + timeToMinutes(st);
+            const endOffset = startOffset + totalMins;
+
+            const totalWeekly = (endOffset + (7 * 1440 * 10)) % (7 * 1440);
+            const endDayIdx = Math.floor(totalWeekly / 1440);
+            const minsInDay = totalWeekly % 1440;
+            const endDayName = DAYS_ORDER[endDayIdx];
+            const endTimeStr = minutesToTimeStr(minsInDay);
+
+            const endDayBili = DAY_NAMES_BILINGUAL[endDayName] || endDayName;
+            this.calculatedEndDayTimeBadge.textContent = `${endDayBili} ${formatTime12h(endTimeStr)}`;
+
+            this.validationBadge.className = 'badge badge-success';
+            this.validationBadge.textContent = '✅ Valid Time Slot';
+            this.saveUserSubmitBtn.disabled = false;
           };
 
           ['change', 'input'].forEach(evt => {
-            this.userStartDaySelect.addEventListener(evt, updateModalDurationCalc);
-            this.userStartHourSelect.addEventListener(evt, updateModalDurationCalc);
-            this.userStartMinSelect.addEventListener(evt, updateModalDurationCalc);
-            this.userStartAmpmSelect.addEventListener(evt, updateModalDurationCalc);
-
-            this.userEndDaySelect.addEventListener(evt, updateModalDurationCalc);
-            this.userEndHourSelect.addEventListener(evt, updateModalDurationCalc);
-            this.userEndMinSelect.addEventListener(evt, updateModalDurationCalc);
-            this.userEndAmpmSelect.addEventListener(evt, updateModalDurationCalc);
+            this.userStartDaySelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            this.userStartHourSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            this.userStartMinSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            this.userStartAmpmSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            this.userDurationHoursInput.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            this.userDurationMinutesInput.addEventListener(evt, updateModalDurationAndEndTimeCalc);
           });
 
           this.addEntryBtn.addEventListener('click', () => this.openEntryModal());
@@ -1878,7 +2465,23 @@
             }
           });
 
-          // Upload Register Image & Call Google Gemini AI Vision Engine
+          const validateEntryModalReadings = () => {
+            const startVal = parseFloat(this.entryStartInput.value) || 0;
+            const endVal = parseFloat(this.entryEndInput.value) || 0;
+
+            if (endVal > 0 && endVal < startVal) {
+              this.entryModalErrorBox.classList.remove('hidden');
+              this.entryModalErrorText.innerHTML = `⚠️ <strong>Reading Error:</strong> End reading (${endVal}) is less than start reading (${startVal})!<br><span style="font-family: var(--font-urdu);">غلط ریڈنگ: آخری ریڈنگ پچھلی ریڈنگ سے کم نہیں ہو سکتی۔</span>`;
+            } else {
+              this.entryModalErrorBox.classList.add('hidden');
+            }
+          };
+
+          ['input', 'change'].forEach(evt => {
+            this.entryStartInput.addEventListener(evt, validateEntryModalReadings);
+            this.entryEndInput.addEventListener(evt, validateEntryModalReadings);
+          });
+
           this.triggerUploadBtn.addEventListener('click', () => this.registerImageUpload.click());
           this.addMorePhotosBtn.addEventListener('click', () => this.registerImageUpload.click());
           this.dropzoneBox.addEventListener('click', () => this.registerImageUpload.click());
@@ -1922,13 +2525,8 @@
           this.closePreviewBtn.addEventListener('click', () => this.ocrPreviewCard.classList.add('hidden'));
           this.reparseOcrBtn.addEventListener('click', () => {
             const text = this.rawOcrTextarea.value;
-            const parsed = parseRegisterTextIntoEntries(text, store.getUsers());
-            if (parsed.length > 0) {
-              store.addBulkEntries(parsed);
-              this.showToast(`Reparsed and added ${parsed.length} entries from text!`);
-            } else {
-              alert('No valid 4-7 digit meter readings found in text. Edit or add lines in raw text box.');
-            }
+            const lines = text.split('\n').filter(l => l.includes('startReading'));
+            this.showToast(`Reparsing not fully implemented for manual text; please use AI scanner.`);
           });
 
           this.wapdaBillInput.addEventListener('input', (e) => store.updateWapdaBill(e.target.value));
@@ -1942,10 +2540,8 @@
             }
           });
 
-          // Fetch & Auto-Fill All Bill Metadata Fields Live (Default RU='R')
           this.fetchDynamicLiveBillBtn.addEventListener('click', async () => {
             const refNo = (this.wapdaRefNoInput.value || '').trim();
-
             if (!refNo || refNo.length < 10) {
               alert('Please enter a valid 14-Digit WAPDA Reference Number!');
               return;
@@ -1954,50 +2550,29 @@
             store.updateWapdaRefDetails(refNo, 'R');
             const fullRefStr = `${refNo} R`;
             this.mepcoDynamicRefText.textContent = fullRefStr;
-
             this.showToast(`Connecting to PITC MEPCO Server for Ref: ${refNo}...`);
 
             try {
               const data = await fetchProxyApi(`/fetch_mepco?refno=${refNo}&ru=R`);
 
-              if (data && data.status === 'success' && data.fullHtml) {
-                if (data.billAmount) {
-                  store.updateWapdaBill(data.billAmount);
-                  this.wapdaBillInput.value = data.billAmount;
-                }
-
-                if (data.refno) this.dispRefNo.textContent = data.refno;
-                if (data.nameAddress) this.dispNameAddress.textContent = data.nameAddress;
-                if (data.readingDate) this.dispReadingDate.textContent = data.readingDate;
-                if (data.issueDate) this.dispIssueDate.textContent = data.issueDate;
-                if (data.dueDate) this.dispDueDate.textContent = data.dueDate;
-
+              if (data && data.status === 'success' && data.bill) {
+                const b = data.bill;
+                this.dispRefNo.textContent = b.referenceNo || fullRefStr;
+                this.dispNameAddress.textContent = `${b.name || ''} ${b.address || ''}`.trim() || 'MEPCO Consumer';
+                this.dispReadingDate.textContent = b.readingDate || '—';
+                this.dispIssueDate.textContent = b.issueDate || '—';
+                this.dispDueDate.textContent = b.dueDate || '—';
                 this.billMetadataBox.classList.remove('hidden');
 
-                const iframe = document.createElement('iframe');
-                iframe.style.width = '100%';
-                iframe.style.height = '850px';
-                iframe.style.border = 'none';
-                iframe.style.borderRadius = '8px';
-                iframe.style.background = '#ffffff';
-
-                this.liveMepcoHtmlContainer.innerHTML = '';
-                this.liveMepcoHtmlContainer.appendChild(iframe);
-
-                const doc = iframe.contentDocument || iframe.contentWindow.document;
-                doc.open();
-                doc.write(data.fullHtml);
-                doc.close();
-
-                this.mepcoDynamicCard.classList.remove('hidden');
-                this.mepcoDynamicCard.scrollIntoView({ behavior: 'smooth' });
-
-                this.showToast(`✅ Extracted All Metadata for ${fullRefStr}! Amount: Rs. ${(data.billAmount||0).toLocaleString()}`);
-              } else {
-                throw new Error(data.message || 'Could not fetch bill from PITC');
+                const billAmt = parseFloat(b.amountWithinDueDate || b.totalAmount || 0);
+                if (billAmt > 0) {
+                  this.wapdaBillInput.value = billAmt;
+                  store.updateWapdaBill(billAmt);
+                  this.showToast(`✅ Auto-filled bill amount Rs. ${billAmt.toLocaleString()} from PITC MEPCO!`);
+                }
               }
             } catch (err) {
-              alert(`Error fetching live bill from PITC: ${err.message}\nMake sure reference number is valid and connected.`);
+              alert(`Error fetching bill details: ${err.message}`);
             }
           });
 
@@ -2012,7 +2587,7 @@
               store.addFixedExpense(desc, amt);
               this.fixedDescInput.value = '';
               this.fixedAmountInput.value = '';
-              this.showToast('Fixed expense added');
+              this.showToast('Fixed maintenance expense added');
             } else {
               alert('Please enter description and amount.');
             }
@@ -2024,12 +2599,15 @@
           this.printReportBtn.addEventListener('click', () => window.print());
 
           this.resetSampleDataBtn.addEventListener('click', () => {
-            store.resetToDefaults();
-            this.wapdaRefNoInput.value = '';
-            this.wapdaBillInput.value = '';
-            this.billMetadataBox.classList.add('hidden');
-            this.mepcoDynamicCard.classList.add('hidden');
-            this.showToast('Cleared all data. Ready for fresh inputs!');
+            if (confirm('Are you sure you want to reset all system data to defaults?\n\n(Your saved Gemini API Key will NOT be deleted).')) {
+              store.resetToDefaults();
+              this.wapdaRefNoInput.value = '';
+              this.wapdaBillInput.value = '';
+              this.billMetadataBox.classList.add('hidden');
+              this.mepcoDynamicCard.classList.add('hidden');
+              this.closeModal(this.settingsModal);
+              this.showToast('Cleared all data. Ready for fresh inputs!');
+            }
           });
 
           this.settingsBtn.addEventListener('click', () => {
@@ -2043,11 +2621,7 @@
             const isSessionOnly = this.sessionOnlyKeyCheckbox.checked;
             store.setGeminiApiKey(keyVal, isSessionOnly);
             this.closeModal(this.settingsModal);
-            if (isSessionOnly) {
-              this.showToast('Key saved in temporary browser memory only! (Will wipe on tab close)');
-            } else {
-              this.showToast('Settings saved locally on your device!');
-            }
+            this.showToast('Settings saved locally on your device!');
           });
 
           this.clearKeyBtn.addEventListener('click', () => {
@@ -2062,14 +2636,6 @@
             store.setTheme(next);
             this.applyTheme(next);
           });
-
-          if (this.resetDataBtn) {
-            this.resetDataBtn.addEventListener('click', () => {
-              store.resetToDefaults();
-              this.closeModal(this.settingsModal);
-              this.showToast('Reset to defaults');
-            });
-          }
 
           document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
@@ -2105,7 +2671,7 @@
           }
           this.stagedFiles.push(...newFiles);
           this.renderStagedGallery();
-          this.showToast(`📸 ${newFiles.length} photo(s) added to gallery! Total: ${this.stagedFiles.length}`);
+          this.showToast(`📸 ${newFiles.length} photo(s) added! Total: ${this.stagedFiles.length}`);
         }
 
         removeStagedFile(index) {
@@ -2136,7 +2702,6 @@
             card.style.padding = '0.5rem';
             card.style.textAlign = 'center';
             card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-            card.style.transition = 'all 0.3s ease';
 
             const statusText = file.statusText || '⏳ Pending';
             const statusClass = file.statusClass || 'badge-secondary';
@@ -2144,7 +2709,7 @@
             const reader = new FileReader();
             reader.onload = (e) => {
               card.innerHTML = `
-                <button class="remove-thumb-btn" data-index="${index}" title="Remove photo" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">&times;</button>
+                <button class="remove-thumb-btn" data-index="${index}" title="Remove photo" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; z-index: 10;">&times;</button>
                 <img src="${e.target.result}" style="width: 100%; height: 110px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-glass); margin-bottom: 0.3rem;">
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem;" title="${file.name}">Page ${index + 1}</div>
                 <span id="thumb-status-${index}" class="badge ${statusClass}" style="font-size: 0.68rem; padding: 0.2rem 0.4rem;">${statusText}</span>
@@ -2170,8 +2735,8 @@
           if (!apiKey) {
             this.ocrProgressBox.classList.add('hidden');
             this.ocrPreviewCard.classList.remove('hidden');
-            this.rawOcrTextarea.value = `💡 AI Vision OCR requires a Google Gemini API Key!\n\nTo enable instant 100% accurate AI Vision scanning on all handwritten Urdu photos:\n1. Click ⚙️ Settings at the top right.\n2. Enter your Google Gemini API Key.\n3. Save Settings & upload your photo again!`;
-            this.showToast(`💡 Enter Gemini API Key in Settings (⚙️) for AI Vision Scan!`);
+            this.rawOcrTextarea.value = `💡 Register Reading Extraction requires a Google Gemini API Key!\n\nTo enable instant 100% accurate scanning on all handwritten Urdu photos:\n1. Click ⚙️ Settings at the top right.\n2. Enter your Google Gemini API Key.\n3. Save Settings & upload your photo again!`;
+            this.showToast(`💡 Enter Gemini API Key in Settings (⚙️) for Reading Extraction!`);
             return;
           }
 
@@ -2194,21 +2759,19 @@
             const currentStatus = document.getElementById(`thumb-status-${i}`);
             if (currentCard) {
               currentCard.style.borderColor = '#3b82f6';
-              currentCard.style.boxShadow = '0 0 12px rgba(59, 130, 246, 0.6)';
             }
             if (currentStatus) {
               currentStatus.className = 'badge badge-info';
-              currentStatus.textContent = '🔄 Scanning...';
+              currentStatus.textContent = '🔄 Reading...';
             }
 
             if (i > 0) {
-              this.ocrProgressSub.textContent = `Pausing 1.8s between pages to prevent API rate limits...`;
-              await new Promise(r => setTimeout(r, 1800));
+              this.ocrProgressSub.textContent = `Processing pages...`;
+              await new Promise(r => setTimeout(r, 1500));
             }
 
             const file = filesToProcess[i];
-            this.ocrProgressText.textContent = `🤖 Scanning Image ${i + 1} of ${filesToProcess.length}: "${file.name}"...`;
-            this.ocrProgressSub.textContent = 'Analyzing handwritten Urdu names & 7-digit meter readings...';
+            this.ocrProgressText.textContent = `Scanning Page ${i + 1} of ${filesToProcess.length}: "${file.name}"...`;
 
             const imageBase64 = await new Promise((resolve) => {
               const reader = new FileReader();
@@ -2223,24 +2786,9 @@
               let rawOutput = '';
               let errorMessage = '';
 
-              try {
-                const aiData = await fetchProxyApi('/scan_ocr_ai', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ imageB64: imageBase64, apiKey })
-                });
-
-                if (aiData && aiData.status === 'success' && Array.isArray(aiData.rows)) {
-                  aiRows = aiData.rows;
-                  rawOutput = aiData.rawText || JSON.stringify(aiRows, null, 2);
-                } else if (aiData && aiData.message) {
-                  errorMessage = aiData.message;
-                }
-              } catch (proxyErr) {}
-
-              if (!aiRows && apiKey) {
+              if (apiKey) {
                 const rawB64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-                const modelsToTry = ["gemini-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-pro-latest"];
+                const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
 
                 for (const mName of modelsToTry) {
                   try {
@@ -2250,7 +2798,7 @@
                       body: JSON.stringify({
                         contents: [{
                           parts: [
-                            { text: "Extract table rows from this handwritten Urdu/English tubewell log register image. Return ONLY a valid JSON array of objects with keys: 'date' (YYYY-MM-DD), 'name' (Urdu/English user name), 'startReading' (number), 'endReading' (number). No markdown code blocks." },
+                            { text: "Extract table rows from this handwritten Urdu/English turbine log register image. Return ONLY a valid JSON array of objects with keys: 'date' (YYYY-MM-DD), 'name' (Urdu/English user name), 'startReading' (number), 'endReading' (number), 'confidenceScore' (number 0.0-1.0). No markdown." },
                             { inlineData: { mimeType: file.type || "image/jpeg", data: rawB64 } }
                           ]
                         }]
@@ -2259,16 +2807,12 @@
                     const gData = await gResp.json();
                     if (gData.error) {
                       errorMessage = gData.error.message || JSON.stringify(gData.error);
-                      if (gData.error.code === 429) {
-                        await new Promise(r => setTimeout(r, 2200));
-                      }
                       continue;
                     }
                     if (gData.candidates && gData.candidates[0] && gData.candidates[0].content) {
                       const textOut = gData.candidates[0].content.parts[0].text;
                       rawOutput = textOut;
-                      const cleanJson = textOut.replace(/^```json\s*/m, '').replace(/```$/m, '').trim();
-                      aiRows = JSON.parse(cleanJson);
+                      aiRows = JSON.parse(textOut.replace(/^```json\s*/m, '').replace(/```$/m, '').trim());
                       break;
                     }
                   } catch (e) {
@@ -2279,17 +2823,25 @@
 
               if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {
                 const entriesToInsert = [];
+                const currentUsers = store.getUsers();
+
                 aiRows.forEach(row => {
                   const nameStr = row.name || row.userName || 'Register Member';
-                  const userObj = store.ensureUserExists(nameStr);
+                  const matchedUser = findGlobalUserMatch(nameStr, currentUsers);
+                  const confScore = row.confidenceScore !== undefined ? parseFloat(row.confidenceScore) : (matchedUser ? 0.95 : 0.60);
+                  const confLabel = matchedUser ? (confScore >= 0.85 ? 'high' : 'medium') : 'medium';
+
                   entriesToInsert.push({
                     date: row.date || new Date().toISOString().split('T')[0],
-                    userId: userObj.id,
+                    userId: matchedUser ? matchedUser.id : '',
+                    rawName: nameStr,
                     startReading: parseFloat(row.startReading) || 0,
                     endReading: parseFloat(row.endReading) || 0,
                     transferToUserId: null,
-                    confidence: 'high',
-                    notes: `AI Vision OCR extracted from ${file.name}`
+                    confidence: confLabel,
+                    confidenceScore: confScore,
+                    isReviewed: matchedUser ? true : false,
+                    notes: `Extracted from ${file.name}`
                   });
                 });
 
@@ -2306,32 +2858,28 @@
 
                 if (currentCard) {
                   currentCard.style.borderColor = '#10b981';
-                  currentCard.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.4)';
                 }
                 if (currentStatus) {
                   currentStatus.className = 'badge badge-success';
                   currentStatus.textContent = `✅ ${entriesToInsert.length} Rows`;
                 }
 
-                this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} of ${filesToProcess.length} ("${file.name}"): ✅ Extracted ${entriesToInsert.length} entries\n` + (rawOutput || JSON.stringify(aiRows, null, 2));
-                this.showToast(`🤖 Page ${i + 1}/${filesToProcess.length} scanned: +${entriesToInsert.length} entries`);
+                this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ✅ Extracted ${entriesToInsert.length} entries\n` + (rawOutput || JSON.stringify(aiRows, null, 2));
+                this.showToast(`📷 Page ${i + 1}/${filesToProcess.length} scanned: +${entriesToInsert.length} entries`);
               } else {
-                if (currentCard) {
-                  currentCard.style.borderColor = '#ef4444';
-                }
+                if (currentCard) currentCard.style.borderColor = '#ef4444';
                 if (currentStatus) {
                   currentStatus.className = 'badge badge-danger';
                   currentStatus.textContent = `❌ Failed`;
                 }
-                this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} of ${filesToProcess.length} ("${file.name}"): ❌ Error: ${errorMessage || 'Could not extract rows'}`;
+                this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ❌ Error: ${errorMessage || 'Could not extract rows'}`;
               }
             } catch (err) {
-              console.log('AI Vision upload error for page:', file.name, err);
               if (currentStatus) {
                 currentStatus.className = 'badge badge-danger';
                 currentStatus.textContent = `❌ Error`;
               }
-              this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} of ${filesToProcess.length} ("${file.name}"): ❌ Error: ${err.message}`;
+              this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ❌ Error: ${err.message}`;
             }
           }
 
@@ -2341,9 +2889,9 @@
 
           this.ocrProgressBox.classList.add('hidden');
           if (totalUploadedRows > 0) {
-            this.showToast(`🎉 Processed all ${filesToProcess.length} image(s) & added total ${totalUploadedRows} entries!`);
+            this.showToast(`🎉 Added ${totalUploadedRows} entries from ${filesToProcess.length} photo(s)!`);
           } else {
-            this.showToast(`⚠️ Could not extract rows from selected files. Check API key.`);
+            this.showToast(`⚠️ Check API Key or try another register photo.`);
           }
         }
 
@@ -2397,137 +2945,343 @@
           this.renderSummaryTab();
         }
 
+        exportSchedule() {
+          const users = store.getUsers();
+          if (!users || users.length === 0) {
+            return alert('No schedule members to export.');
+          }
+
+          const exportPayload = {
+            appName: "Turbine Bill & Schedule Manager",
+            exportDate: new Date().toISOString(),
+            version: "1.0",
+            totalMembers: users.length,
+            users: users.map(u => ({
+              userCode: u.userCode || u.code || '01',
+              nameEn: u.nameEn || u.name || '',
+              nameUr: u.nameUr || '',
+              phone: u.phone || '',
+              userType: u.userType || 'internal',
+              startDay: u.startDay || 'Sunday',
+              startTime: u.startTime || '08:00',
+              endDay: u.endDay || 'Monday',
+              endTime: u.endTime || '01:00',
+              durationHours: u.durationHours !== undefined ? u.durationHours : Math.floor((u.totalMinutes || 600) / 60),
+              durationMinutes: u.durationMinutes !== undefined ? u.durationMinutes : ((u.totalMinutes || 600) % 60),
+              totalMinutes: u.totalMinutes || 600
+            }))
+          };
+
+          const jsonStr = JSON.stringify(exportPayload, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `turbine_schedule_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          this.showToast('Schedule exported successfully!');
+        }
+
+        handleScheduleImportFile(e) {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const text = event.target.result;
+              let importedUsers = [];
+
+              if (file.name.endsWith('.json') || text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                const parsed = JSON.parse(text);
+                const rawList = Array.isArray(parsed) ? parsed : (parsed.users || parsed.schedule || []);
+
+                if (!Array.isArray(rawList) || rawList.length === 0) {
+                  throw new Error('JSON file does not contain a valid users list.');
+                }
+
+                importedUsers = rawList.map((u, idx) => {
+                  const nameEn = (u.nameEn || u.name || '').trim();
+                  const nameUr = (u.nameUr || '').trim();
+                  const fullName = nameEn && nameUr ? `${nameEn} (${nameUr})` : (nameEn || nameUr || 'Member');
+                  const uCode = String(u.userCode || u.code || (idx + 1)).padStart(2, '0');
+
+                  const h = parseInt(u.durationHours, 10) || 0;
+                  const m = parseInt(u.durationMinutes, 10) || 0;
+                  let totMins = (h * 60) + m;
+                  if (totMins <= 0 && u.totalMinutes) totMins = u.totalMinutes;
+                  if (totMins <= 0) totMins = 600;
+
+                  return {
+                    id: 'usr-' + Date.now() + '-' + idx,
+                    userCode: uCode,
+                    code: uCode,
+                    nameEn: nameEn,
+                    nameUr: nameUr,
+                    name: fullName,
+                    fullName: fullName,
+                    phone: (u.phone || '').trim(),
+                    userType: u.userType || 'internal',
+                    startDay: u.startDay || 'Sunday',
+                    startTime: u.startTime || '08:00',
+                    endDay: u.endDay || 'Monday',
+                    endTime: u.endTime || '01:00',
+                    durationHours: h || Math.floor(totMins / 60),
+                    durationMinutes: m || (totMins % 60),
+                    totalMinutes: totMins
+                  };
+                });
+              } else {
+                const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+                if (lines.length <= 1) throw new Error('CSV file is empty or missing data.');
+
+                const dataLines = (lines[0].toLowerCase().includes('name') || lines[0].toLowerCase().includes('code')) ? lines.slice(1) : lines;
+
+                importedUsers = dataLines.map((line, idx) => {
+                  const parts = line.split(',').map(p => p.trim().replace(/^"/, '').replace(/"$/, ''));
+                  const uCode = String(parts[0] || (idx + 1)).padStart(2, '0');
+                  const nameEn = parts[1] || `Member ${idx + 1}`;
+                  const nameUr = parts[2] || '';
+                  const fullName = nameEn && nameUr ? `${nameEn} (${nameUr})` : nameEn;
+                  const phone = parts[3] || '';
+                  const startDay = parts[4] || 'Sunday';
+                  const startTime = parts[5] || '08:00';
+                  const h = parseInt(parts[6], 10) || 10;
+                  const m = parseInt(parts[7], 10) || 0;
+                  const totMins = (h * 60) + m;
+
+                  return {
+                    id: 'usr-' + Date.now() + '-' + idx,
+                    userCode: uCode,
+                    code: uCode,
+                    nameEn: nameEn,
+                    nameUr: nameUr,
+                    name: fullName,
+                    fullName: fullName,
+                    phone: phone,
+                    userType: 'internal',
+                    startDay: startDay,
+                    startTime: startTime,
+                    endDay: 'Monday',
+                    endTime: '01:00',
+                    durationHours: h,
+                    durationMinutes: m,
+                    totalMinutes: totMins
+                  };
+                });
+              }
+
+              if (importedUsers.length > 0) {
+                store.state.users = importedUsers;
+                store.autoRechainSchedule();
+                store.saveState();
+                this.showToast(`✅ Imported schedule with ${importedUsers.length} members!`);
+              }
+            } catch (err) {
+              alert(`Import failed: ${err.message}`);
+            } finally {
+              if (this.importScheduleFileInput) this.importScheduleFileInput.value = '';
+            }
+          };
+
+          reader.readAsText(file);
+        }
+
         renderUsersTab() {
           const users = store.getUsers();
-          this.usersTableBody.innerHTML = '';
+          if (this.usersTableBody) this.usersTableBody.innerHTML = '';
 
           const waScheduleText = generateBilingualWhatsAppSchedule(users);
-          this.scheduleWhatsappPreviewBox.textContent = waScheduleText;
+          if (this.scheduleWhatsappPreviewBox) this.scheduleWhatsappPreviewBox.textContent = waScheduleText;
 
           if (users.length === 0) {
-            this.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No registered users. Click "+ Add New User & Time Slot".</td></tr>`;
+            if (this.usersTableBody) this.usersTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding: 2rem;">No registered members yet. Click "+ Add New Member & Slot".</td></tr>`;
             return;
           }
 
           users.forEach((user, idx) => {
             const tr = document.createElement('tr');
-            const totalMins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
-            const durationText = formatDurationText(totalMins);
+            const totalMins = user.totalMinutes || ((parseInt(user.durationHours, 10) || 0) * 60 + (parseInt(user.durationMinutes, 10) || 0)) || 600;
 
-            const dayOptionsHtml = DAYS_ORDER.map(d => `<option value="${d}" ${d === user.startDay ? 'selected' : ''}>${DAY_NAMES_BILINGUAL[d]}</option>`).join('');
-            const endDayOptionsHtml = DAYS_ORDER.map(d => `<option value="${d}" ${d === user.endDay ? 'selected' : ''}>${DAY_NAMES_BILINGUAL[d]}</option>`).join('');
+            const biliName = user.fullName || `${user.nameEn || user.name} (${user.nameUr || ''})`;
+            const uCode = user.userCode || user.code || String(idx + 1).padStart(2, '0');
 
-            const biliName = getBilingualUserName(user.name);
-            const startPickerHtml = create12HourPickerHTML(`tbl-start-${user.id}`, user.startTime);
-            const endPickerHtml = create12HourPickerHTML(`tbl-end-${user.id}`, user.endTime);
+            const hVal = user.durationHours !== undefined ? user.durationHours : Math.floor(totalMins / 60);
+            const mVal = user.durationMinutes !== undefined ? user.durationMinutes : (totalMins % 60);
 
             tr.innerHTML = `
-              <td><strong>${idx + 1}</strong></td>
-              <td><div style="font-weight: 700;">${biliName}</div></td>
+              <td style="text-align: center;"><strong>${idx + 1}</strong></td>
+              <td style="text-align: center;">
+                <span class="badge badge-info" style="font-weight: 800; font-size: 0.95rem; padding: 0.35rem 0.65rem;">${uCode}</span>
+              </td>
               <td>
-                <div class="flex-center gap-1">
-                  <select class="form-control user-start-day-select" data-id="${user.id}" style="max-width: 140px; padding: 0.35rem 0.4rem; font-weight: 600;">
-                    ${dayOptionsHtml}
+                <div style="font-weight: 700; font-size: 0.95rem; line-height: 1.3;">${biliName}</div>
+                ${user.phone ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">📱 ${user.phone}</div>` : ''}
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                  <select class="tbl-select-day tbl-start-day" data-id="${user.id}">
+                    <option value="Sunday" ${user.startDay === 'Sunday' ? 'selected' : ''}>Sunday (اتوار)</option>
+                    <option value="Monday" ${user.startDay === 'Monday' ? 'selected' : ''}>Monday (پیر)</option>
+                    <option value="Tuesday" ${user.startDay === 'Tuesday' ? 'selected' : ''}>Tuesday (منگل)</option>
+                    <option value="Wednesday" ${user.startDay === 'Wednesday' ? 'selected' : ''}>Wednesday (بدھ)</option>
+                    <option value="Thursday" ${user.startDay === 'Thursday' ? 'selected' : ''}>Thursday (جمعرات)</option>
+                    <option value="Friday" ${user.startDay === 'Friday' ? 'selected' : ''}>Friday (جمعہ)</option>
+                    <option value="Saturday" ${user.startDay === 'Saturday' ? 'selected' : ''}>Saturday (ہفتہ)</option>
                   </select>
-                  ${startPickerHtml}
+                  <input type="time" class="tbl-time-pick tbl-start-time" data-id="${user.id}" value="${user.startTime}">
                 </div>
               </td>
               <td>
-                <div class="flex-center gap-1">
-                  <select class="form-control user-end-day-select" data-id="${user.id}" style="max-width: 140px; padding: 0.35rem 0.4rem; font-weight: 600;">
-                    ${endDayOptionsHtml}
+                <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                  <select class="tbl-select-day tbl-end-day" data-id="${user.id}">
+                    <option value="Sunday" ${user.endDay === 'Sunday' ? 'selected' : ''}>Sunday (اتوار)</option>
+                    <option value="Monday" ${user.endDay === 'Monday' ? 'selected' : ''}>Monday (پیر)</option>
+                    <option value="Tuesday" ${user.endDay === 'Tuesday' ? 'selected' : ''}>Tuesday (منگل)</option>
+                    <option value="Wednesday" ${user.endDay === 'Wednesday' ? 'selected' : ''}>Wednesday (بدھ)</option>
+                    <option value="Thursday" ${user.endDay === 'Thursday' ? 'selected' : ''}>Thursday (جمعرات)</option>
+                    <option value="Friday" ${user.endDay === 'Friday' ? 'selected' : ''}>Friday (جمعہ)</option>
+                    <option value="Saturday" ${user.endDay === 'Saturday' ? 'selected' : ''}>Saturday (ہفتہ)</option>
                   </select>
-                  ${endPickerHtml}
+                  <input type="time" class="tbl-time-pick tbl-end-time" data-id="${user.id}" value="${user.endTime}">
                 </div>
               </td>
-              <td><strong style="color: var(--accent-green);">${durationText}</strong></td>
               <td>
-                <button class="btn btn-secondary btn-sm edit-user-btn" data-id="${user.id}">✏️ Edit</button>
-                <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}">🗑️</button>
+                <div class="duration-input-group">
+                  <input type="number" min="0" max="168" class="tbl-input-num tbl-dur-hours" data-id="${user.id}" value="${hVal}" title="Hours">
+                  <span class="duration-unit-label">Hrs</span>
+                  <input type="number" min="0" max="59" class="tbl-input-num tbl-dur-mins" data-id="${user.id}" value="${mVal}" title="Minutes">
+                  <span class="duration-unit-label">Mins</span>
+                </div>
+              </td>
+              <td style="text-align: center;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                  <button class="btn btn-secondary btn-sm edit-user-btn" data-id="${user.id}" title="Edit Full Details">✏️ Edit</button>
+                  <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}" title="Delete Member">🗑️</button>
+                </div>
               </td>
             `;
-            this.usersTableBody.appendChild(tr);
+            if (this.usersTableBody) this.usersTableBody.appendChild(tr);
           });
 
-          this.usersTableBody.querySelectorAll('.user-start-day-select').forEach(sel => {
-            sel.addEventListener('change', (e) => {
-              store.updateUser(e.target.dataset.id, { startDay: e.target.value });
-              this.showToast('Start day updated & schedule auto-aligned');
-            });
-          });
+          if (this.usersTableBody) {
+            this.usersTableBody.querySelectorAll('.tbl-start-day, .tbl-start-time, .tbl-end-day, .tbl-end-time, .tbl-dur-hours, .tbl-dur-mins').forEach(input => {
+              input.addEventListener('change', () => {
+                const userId = input.dataset.id;
+                const row = input.closest('tr');
+                if (!userId || !row) return;
 
-          this.usersTableBody.querySelectorAll('.user-end-day-select').forEach(sel => {
-            sel.addEventListener('change', (e) => {
-              store.updateUser(e.target.dataset.id, { endDay: e.target.value });
-              this.showToast('End day updated & schedule auto-aligned');
-            });
-          });
+                const startDay = row.querySelector('.tbl-start-day')?.value;
+                const startTime = row.querySelector('.tbl-start-time')?.value;
+                const endDay = row.querySelector('.tbl-end-day')?.value;
+                const endTime = row.querySelector('.tbl-end-time')?.value;
+                const durHours = parseInt(row.querySelector('.tbl-dur-hours')?.value, 10) || 0;
+                const durMins = parseInt(row.querySelector('.tbl-dur-mins')?.value, 10) || 0;
 
-          users.forEach(u => {
-            const startPrefix = `tbl-start-${u.id}`;
-            const endPrefix = `tbl-end-${u.id}`;
+                let updatedFields = {
+                  startDay: startDay,
+                  startTime: startTime,
+                  durationHours: durHours,
+                  durationMinutes: durMins
+                };
 
-            const updateTableUserTime = (isEnd = false) => {
-              const prefix = isEnd ? endPrefix : startPrefix;
-              const hSel = this.usersTableBody.querySelector(`.${prefix}-hour`);
-              const mSel = this.usersTableBody.querySelector(`.${prefix}-min`);
-              const aSel = this.usersTableBody.querySelector(`.${prefix}-ampm`);
-
-              if (hSel && mSel && aSel) {
-                const time24 = convert12to24(hSel.value, mSel.value, aSel.value);
-                if (isEnd) {
-                  store.updateUser(u.id, { endTime: time24 });
-                  this.showToast('End time updated & schedule auto-aligned');
-                } else {
-                  store.updateUser(u.id, { startTime: time24 });
-                  this.showToast('Start time updated & schedule auto-aligned');
+                if (input.classList.contains('tbl-end-day') || input.classList.contains('tbl-end-time')) {
+                  const calcMins = calculateSlotDurationMinutes(startDay, startTime, endDay, endTime);
+                  updatedFields.durationHours = Math.floor(calcMins / 60);
+                  updatedFields.durationMinutes = calcMins % 60;
+                  updatedFields.totalMinutes = calcMins;
                 }
-              }
-            };
 
-            [`.${startPrefix}-hour`, `.${startPrefix}-min`, `.${startPrefix}-ampm`].forEach(cls => {
-              const el = this.usersTableBody.querySelector(cls);
-              if (el) el.addEventListener('change', () => updateTableUserTime(false));
+                try {
+                  store.updateUser(userId, updatedFields);
+                  this.showToast('Schedule updated & auto-chained ✅');
+                } catch (err) {
+                  console.error('Failed to update inline user schedule:', err);
+                }
+              });
             });
 
-            [`.${endPrefix}-hour`, `.${endPrefix}-min`, `.${endPrefix}-ampm`].forEach(cls => {
-              const el = this.usersTableBody.querySelector(cls);
-              if (el) el.addEventListener('change', () => updateTableUserTime(true));
+            this.usersTableBody.querySelectorAll('.edit-user-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const user = store.getUserById(btn.dataset.id);
+                if (user) this.openUserModal(user);
+              });
             });
-          });
 
-          this.usersTableBody.querySelectorAll('.edit-user-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const user = store.getUserById(btn.dataset.id);
-              if (user) this.openUserModal(user);
+            this.usersTableBody.querySelectorAll('.delete-user-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const user = store.getUserById(btn.dataset.id);
+                if (user && confirm(`Delete member "${user.name}"?`)) {
+                  store.deleteUser(user.id);
+                  this.showToast(`Member ${user.name} deleted.`);
+                }
+              });
             });
-          });
+          }
+        }
 
-          this.usersTableBody.querySelectorAll('.delete-user-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const user = store.getUserById(btn.dataset.id);
-              if (user && confirm(`Delete user "${user.name}"?`)) {
-                store.deleteUser(user.id);
-                this.showToast(`User ${user.name} deleted.`);
-              }
-            });
-          });
+        validateUserCodeInput() {
+          if (!this.userCodeInput || !this.userCodeValidationMsg) return true;
+          const rawCode = (this.userCodeInput.value || '').trim();
+          if (!rawCode) {
+            this.userCodeValidationMsg.style.color = '#ef4444';
+            this.userCodeValidationMsg.textContent = '⚠️ User ID is required';
+            this.userCodeInput.style.borderColor = '#ef4444';
+            if (this.saveUserSubmitBtn) this.saveUserSubmitBtn.disabled = true;
+            return false;
+          }
+
+          const cleanCode = String(rawCode).padStart(2, '0');
+          const isDuplicate = store.isCodeDuplicate(cleanCode, this.currentEditingUserId);
+
+          if (isDuplicate) {
+            const dupUser = store.state.users.find(u => u.id !== this.currentEditingUserId && String(u.userCode || u.code || '').trim().padStart(2, '0') === cleanCode);
+            const dupName = dupUser ? (dupUser.fullName || dupUser.nameEn || dupUser.name || 'Existing Member') : 'another member';
+            const nextFree = store.getNextUserCode();
+
+            this.userCodeValidationMsg.style.color = '#ef4444';
+            this.userCodeValidationMsg.innerHTML = `❌ ID "${cleanCode}" is taken by <strong>${dupName}</strong>. Click "⚡ Auto ID" for next free ID (<strong>${nextFree}</strong>).`;
+            this.userCodeInput.style.borderColor = '#ef4444';
+            if (this.saveUserSubmitBtn) this.saveUserSubmitBtn.disabled = true;
+            return false;
+          } else {
+            this.userCodeValidationMsg.style.color = '#10b981';
+            this.userCodeValidationMsg.textContent = `✅ User ID "${cleanCode}" Available`;
+            this.userCodeInput.style.borderColor = '#10b981';
+            if (this.saveUserSubmitBtn) this.saveUserSubmitBtn.disabled = false;
+            return true;
+          }
         }
 
         openUserModal(user = null) {
+          this.currentEditingUserId = user ? user.id : null;
           if (user) {
-            this.userModalTitle.textContent = 'Edit Registered User & Time Slot';
+            this.userModalTitle.textContent = 'Edit Member & Time Slot / ممبر میں تبدیلی';
             this.userIdInput.value = user.id;
-            this.userNameInput.value = user.name;
+            this.userCodeInput.value = user.userCode || user.code || '01';
+            this.userTypeSelect.value = user.userType || 'internal';
+            this.userNameEnInput.value = user.nameEn || user.name || '';
+            this.userNameUrInput.value = user.nameUr || '';
             this.userPhoneInput.value = user.phone || '';
             this.userStartDaySelect.value = user.startDay || 'Sunday';
             this.setModalStartTime24(user.startTime || '08:00');
-            this.userEndDaySelect.value = user.endDay || 'Monday';
-            this.setModalEndTime24(user.endTime || '01:00');
+
+            const h = user.durationHours !== undefined ? user.durationHours : Math.floor((user.totalMinutes || 600) / 60);
+            const m = user.durationMinutes !== undefined ? user.durationMinutes : ((user.totalMinutes || 600) % 60);
+            this.userDurationHoursInput.value = h;
+            this.userDurationMinutesInput.value = m;
           } else {
-            this.userModalTitle.textContent = 'Add New Registered User & Time Slot';
+            this.userModalTitle.textContent = 'Add New Member & Time Slot / نیا ممبر شامل کریں';
             this.userIdInput.value = '';
-            this.userNameInput.value = '';
+            this.userCodeInput.value = store.getNextUserCode();
+            this.userTypeSelect.value = 'internal';
+            this.userNameEnInput.value = '';
+            this.userNameUrInput.value = '';
             this.userPhoneInput.value = '';
 
             const users = store.getUsers();
@@ -2535,112 +3289,244 @@
               const lastUser = users[users.length - 1];
               this.userStartDaySelect.value = lastUser.endDay;
               this.setModalStartTime24(lastUser.endTime);
-              this.userEndDaySelect.value = lastUser.endDay;
-              this.setModalEndTime24(minutesToTimeStr(timeToMinutes(lastUser.endTime) + 360));
+              this.userDurationHoursInput.value = 10;
+              this.userDurationMinutesInput.value = 0;
             } else {
               this.userStartDaySelect.value = 'Sunday';
               this.setModalStartTime24('08:00');
-              this.userEndDaySelect.value = 'Monday';
-              this.setModalEndTime24('01:00');
+              this.userDurationHoursInput.value = 17;
+              this.userDurationMinutesInput.value = 0;
             }
           }
 
           const sd = this.userStartDaySelect.value;
           const st = this.getModalStartTime24();
-          const ed = this.userEndDaySelect.value;
-          const et = this.getModalEndTime24();
+          const h = parseInt(this.userDurationHoursInput.value, 10) || 0;
+          const m = parseInt(this.userDurationMinutesInput.value, 10) || 0;
+          const totalMins = (h * 60) + m;
 
-          const mins = calculateSlotDurationMinutes(sd, st, ed, et);
-          this.userCalculatedDurationDisplay.textContent = formatDurationText(mins);
+          this.userCalculatedDurationDisplay.textContent = formatDurationText(totalMins);
+
+          const DAYS_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const startOffset = (DAYS_ORDER.indexOf(sd) * 1440) + timeToMinutes(st);
+          const endOffset = startOffset + totalMins;
+          const totalWeekly = (endOffset + (7 * 1440 * 10)) % (7 * 1440);
+          const endDayIdx = Math.floor(totalWeekly / 1440);
+          const minsInDay = totalWeekly % 1440;
+          const endDayName = DAYS_ORDER[endDayIdx];
+          const endTimeStr = minutesToTimeStr(minsInDay);
+          const endDayBili = DAY_NAMES_BILINGUAL[endDayName] || endDayName;
+
+          this.calculatedEndDayTimeBadge.textContent = `${endDayBili} ${formatTime12h(endTimeStr)}`;
           this.validationBadge.className = 'badge badge-success';
           this.validationBadge.textContent = '✅ Valid Time Slot';
-          this.saveUserSubmitBtn.disabled = false;
 
+          this.validateUserCodeInput();
           this.openModal(this.userModal);
         }
 
         handleUserFormSubmit(e) {
           e.preventDefault();
           const id = this.userIdInput.value;
-          const name = this.userNameInput.value;
-          const phone = this.userPhoneInput.value;
+          let userCode = (this.userCodeInput.value || '').trim().padStart(2, '0');
+          const userType = this.userTypeSelect.value;
+          const nameEn = (this.userNameEnInput.value || '').trim();
+          const nameUr = (this.userNameUrInput.value || '').trim();
+          const phone = (this.userPhoneInput.value || '').trim();
           const startDay = this.userStartDaySelect.value;
           const startTime = this.getModalStartTime24();
-          const endDay = this.userEndDaySelect.value;
-          const endTime = this.getModalEndTime24();
+          const durationHours = parseInt(this.userDurationHoursInput.value, 10) || 0;
+          const durationMinutes = parseInt(this.userDurationMinutesInput.value, 10) || 0;
 
-          if (!name.trim()) return alert('Please enter user name.');
-
-          if (id) {
-            store.updateUser(id, { name, phone, startDay, startTime, endDay, endTime });
-            this.showToast(`User ${name} updated & schedule auto-aligned`);
-          } else {
-            store.addUser({ name, phone, startDay, startTime, endDay, endTime });
-            this.showToast(`User ${name} added & schedule chained`);
+          if (!nameEn && !nameUr) {
+            return alert('Please enter at least one name (English or Urdu).');
           }
-          this.closeModal(this.userModal);
+
+          if (store.isCodeDuplicate(userCode, id)) {
+            const nextFree = store.getNextUserCode();
+            this.userCodeInput.value = nextFree;
+            this.validateUserCodeInput();
+            return alert(`User ID "${userCode}" is already assigned to another member. User ID has automatically been updated to the next available ID "${nextFree}". Click Save again!`);
+          }
+
+          try {
+            if (id) {
+              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
+              this.showToast(`Member updated & schedule aligned`);
+            } else {
+              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
+              this.showToast(`Member added & schedule chained`);
+
+              if (this.pendingQuickUserSelectForEntry) {
+                store.updateEntry(this.pendingQuickUserSelectForEntry, { userId: newUser.id, isReviewed: true });
+                this.pendingQuickUserSelectForEntry = null;
+                this.showToast('New member registered & linked to entry! ✅');
+              } else if (this.pendingQuickUserSelect) {
+                this.pendingQuickUserSelect = false;
+                this.openEntryModal();
+                this.entryUserSelect.value = newUser.id;
+              }
+            }
+            this.closeModal(this.userModal);
+          } catch (err) {
+            alert(err.message);
+          }
         }
 
         renderRegisterTab() {
           const entries = store.getEntries();
           const users = store.getUsers();
 
-          this.entryUserSelect.innerHTML = `<option value="">-- Select Registered User --</option>` +
-            users.map(u => `<option value="${u.id}">${getBilingualUserName(u.name)} (${u.startDay} ${formatTime12h(u.startTime)} ➔ ${u.endDay} ${formatTime12h(u.endTime)})</option>`).join('');
+          const userOptionsHtml = users.map(u => {
+            const uCode = u.userCode || u.code || '01';
+            const nameStr = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
+            return `<option value="${u.id}">[${uCode}] ${nameStr}</option>`;
+          }).join('');
 
-          this.entryTransferSelect.innerHTML = `<option value="">None (Original User)</option>` +
-            users.map(u => `<option value="${u.id}">Transfer To: ${getBilingualUserName(u.name)}</option>`).join('');
-
-          this.registerTableBody.innerHTML = '';
-
-          if (entries.length === 0) {
-            this.registerTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding: 2rem;">No register entries yet. Upload an image to run Google Gemini AI Vision OCR.</td></tr>`;
-            return;
+          if (this.entryUserSelect) {
+            this.entryUserSelect.innerHTML = `<option value="">-- Select Registered Member --</option>` + userOptionsHtml;
           }
 
-          entries.forEach((entry, idx) => {
-            const tr = document.createElement('tr');
-            const user = store.getUserById(entry.userId);
-            const transferUser = entry.transferToUserId ? store.getUserById(entry.transferToUserId) : null;
-            const units = Math.max(0, entry.endReading - entry.startReading);
+          if (this.registerTableBody) {
+            this.registerTableBody.innerHTML = '';
 
-            const confBadge = entry.confidence === 'high' 
-              ? `<span class="badge badge-success">High Confidence</span>`
-              : `<span class="badge badge-warning">Medium</span>`;
+            if (entries.length === 0) {
+              this.registerTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding: 2rem;">No register entries yet. Upload register photo or add a manual entry.</td></tr>`;
+              return;
+            }
 
-            tr.innerHTML = `
-              <td>${idx + 1}</td>
-              <td>${entry.date}</td>
-              <td><strong>${user ? getBilingualUserName(user.name) : 'Unassigned'}</strong></td>
-              <td>${entry.startReading} ➔ ${entry.endReading}</td>
-              <td><strong style="color: var(--accent-green);">${units} Units</strong></td>
-              <td>
-                ${transferUser 
-                  ? `<span class="badge badge-warning">Transferred To: ${getBilingualUserName(transferUser.name)}</span>`
-                  : `<span style="color: var(--text-muted);">None</span>`}
-              </td>
-              <td>${confBadge}</td>
-              <td>
-                <button class="btn btn-secondary btn-sm edit-entry-btn" data-id="${entry.id}">✏️</button>
-                <button class="btn btn-danger btn-sm delete-entry-btn" data-id="${entry.id}">🗑️</button>
-              </td>
-            `;
-            this.registerTableBody.appendChild(tr);
-          });
+            entries.forEach((entry, idx) => {
+              const tr = document.createElement('tr');
+              const startVal = parseFloat(entry.startReading) || 0;
+              const endVal = parseFloat(entry.endReading) || 0;
+              const units = Math.max(0, endVal - startVal);
 
-          this.registerTableBody.querySelectorAll('.edit-entry-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const entry = entries.find(e => e.id === btn.dataset.id);
-              if (entry) this.openEntryModal(entry);
+              const isError = endVal > 0 && endVal < startVal;
+              let isSeqDiscrepancy = false;
+              if (idx > 0) {
+                const prev = entries[idx - 1];
+                const prevEndVal = parseFloat(prev.endReading) || 0;
+                if (prevEndVal > 0 && startVal > 0 && startVal < prevEndVal) {
+                  isSeqDiscrepancy = true;
+                }
+              }
+
+              let rowClass = 'row-verified';
+              if (isError) {
+                rowClass = 'row-error';
+              } else if (!entry.isReviewed && (!entry.userId || entry.confidence === 'low' || entry.confidence === 'medium' || isSeqDiscrepancy)) {
+                rowClass = 'row-warning';
+              }
+
+              tr.className = rowClass;
+
+              const scannedHint = (!entry.userId && entry.rawName)
+                ? `<div style="font-size: 0.73rem; color: var(--accent-amber); font-weight: 700; margin-top: 3px;">🔍 Scanned: "${entry.rawName}"</div>`
+                : '';
+
+              const memberDropdownHtml = `
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <select class="tbl-member-select" data-id="${entry.id}">
+                      <option value="">-- Select Member / نام منتخب کریں --</option>
+                      ${users.map(u => {
+                        const uCode = u.userCode || u.code || '01';
+                        const nameStr = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
+                        const isSel = u.id === entry.userId ? 'selected' : '';
+                        return `<option value="${u.id}" ${isSel}>[${uCode}] ${nameStr}</option>`;
+                      }).join('')}
+                    </select>
+                    ${!entry.userId && entry.rawName ? `<button type="button" class="btn btn-secondary btn-sm quick-reg-btn" data-id="${entry.id}" data-name="${(entry.rawName || '').replace(/"/g, '&quot;')}" title="Register this scanned person as a new member" style="padding: 0.25rem 0.45rem; font-size: 0.75rem; white-space: nowrap;">+ Register</button>` : ''}
+                  </div>
+                  ${scannedHint}
+                </div>
+              `;
+
+              tr.innerHTML = `
+                <td style="text-align: center;"><strong>${idx + 1}</strong></td>
+                <td>
+                  <input type="date" class="tbl-date-input" data-id="${entry.id}" value="${entry.date}">
+                </td>
+                <td>${memberDropdownHtml}</td>
+                <td>
+                  <input type="number" class="tbl-reading-input tbl-start-reading" data-id="${entry.id}" value="${startVal}" placeholder="Start">
+                </td>
+                <td>
+                  <input type="number" class="tbl-reading-input tbl-end-reading" data-id="${entry.id}" value="${endVal}" placeholder="End">
+                </td>
+                <td>
+                  <strong style="color: ${isError ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size: 1rem;">${units} Units</strong>
+                </td>
+                <td style="text-align: center;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                    <button class="btn btn-secondary btn-sm edit-entry-btn" data-id="${entry.id}" title="Edit Full Entry">✏️ Edit</button>
+                    <button class="btn btn-danger btn-sm delete-entry-btn" data-id="${entry.id}" title="Delete Entry">🗑️</button>
+                  </div>
+                </td>
+              `;
+
+              this.registerTableBody.appendChild(tr);
             });
-          });
 
-          this.registerTableBody.querySelectorAll('.delete-entry-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              store.deleteEntry(btn.dataset.id);
-              this.showToast('Entry deleted');
+            this.registerTableBody.querySelectorAll('.tbl-date-input').forEach(input => {
+              input.addEventListener('change', () => {
+                const id = input.dataset.id;
+                const val = input.value;
+                if (id && val) {
+                  store.updateEntry(id, { date: val, isReviewed: true });
+                  this.showToast('Date updated & row verified ✅');
+                }
+              });
             });
-          });
+
+            this.registerTableBody.querySelectorAll('.tbl-member-select').forEach(sel => {
+              sel.addEventListener('change', () => {
+                const id = sel.dataset.id;
+                const val = sel.value;
+                store.updateEntry(id, { userId: val, isReviewed: true });
+                this.showToast('Member updated & row verified ✅');
+              });
+            });
+
+            this.registerTableBody.querySelectorAll('.quick-reg-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const rawName = btn.dataset.name;
+                const entryId = btn.dataset.id;
+                this.pendingQuickUserSelectForEntry = entryId;
+                this.openUserModal();
+                this.userNameUrInput.value = rawName;
+                this.userNameEnInput.value = rawName;
+              });
+            });
+
+            this.registerTableBody.querySelectorAll('.tbl-start-reading, .tbl-end-reading').forEach(input => {
+              input.addEventListener('change', () => {
+                const id = input.dataset.id;
+                const row = input.closest('tr');
+                if (!id || !row) return;
+
+                const startVal = parseFloat(row.querySelector('.tbl-start-reading')?.value) || 0;
+                const endVal = parseFloat(row.querySelector('.tbl-end-reading')?.value) || 0;
+
+                store.updateEntry(id, { startReading: startVal, endReading: endVal, isReviewed: true });
+                this.showToast('Readings updated & row verified ✅');
+              });
+            });
+
+            this.registerTableBody.querySelectorAll('.edit-entry-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const entry = entries.find(e => e.id === btn.dataset.id);
+                if (entry) this.openEntryModal(entry);
+              });
+            });
+
+            this.registerTableBody.querySelectorAll('.delete-entry-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                store.deleteEntry(btn.dataset.id);
+                this.showToast('Entry deleted');
+              });
+            });
+          }
         }
 
         openEntryModal(entry = null) {
@@ -2650,31 +3536,45 @@
             this.entryUserSelect.value = entry.userId || '';
             this.entryStartInput.value = entry.startReading;
             this.entryEndInput.value = entry.endReading;
-            this.entryTransferSelect.value = entry.transferToUserId || '';
+            if (this.entryTransferSelect) this.entryTransferSelect.value = entry.transferToUserId || '';
             this.entryNotesInput.value = entry.notes || '';
           } else {
             this.entryIdInput.value = '';
             this.entryDateInput.value = new Date().toISOString().split('T')[0];
+
+            const entries = store.getEntries();
+            if (entries.length > 0) {
+              const lastEntry = entries[entries.length - 1];
+              this.entryStartInput.value = lastEntry.endReading;
+            } else {
+              this.entryStartInput.value = '';
+            }
+
             this.entryUserSelect.value = '';
-            this.entryStartInput.value = '';
             this.entryEndInput.value = '';
-            this.entryTransferSelect.value = '';
+            if (this.entryTransferSelect) this.entryTransferSelect.value = '';
             this.entryNotesInput.value = '';
           }
+
+          this.entryModalErrorBox.classList.add('hidden');
           this.openModal(this.entryModal);
         }
 
         handleEntryFormSubmit(e) {
           e.preventDefault();
           const id = this.entryIdInput.value;
+          const startReading = parseFloat(this.entryStartInput.value) || 0;
+          const endReading = parseFloat(this.entryEndInput.value) || 0;
+
           const entryData = {
             date: this.entryDateInput.value,
             userId: this.entryUserSelect.value,
-            startReading: this.entryStartInput.value,
-            endReading: this.entryEndInput.value,
-            transferToUserId: this.entryTransferSelect.value || null,
+            startReading: startReading,
+            endReading: endReading,
+            transferToUserId: this.entryTransferSelect ? (this.entryTransferSelect.value || null) : null,
             notes: this.entryNotesInput.value,
-            confidence: 'high'
+            confidence: 'high',
+            isReviewed: true
           };
 
           if (id) {
@@ -2715,15 +3615,17 @@
                 <button class="btn btn-danger btn-sm delete-fixed-btn" data-id="${item.id}">🗑️</button>
               </div>
             `;
-            this.fixedExpensesList.appendChild(div);
+            if (this.fixedExpensesList) this.fixedExpensesList.appendChild(div);
           });
 
-          this.fixedExpensesList.querySelectorAll('.delete-fixed-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              store.deleteFixedExpense(btn.dataset.id);
-              this.showToast('Expense removed');
+          if (this.fixedExpensesList) {
+            this.fixedExpensesList.querySelectorAll('.delete-fixed-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                store.deleteFixedExpense(btn.dataset.id);
+                this.showToast('Expense removed');
+              });
             });
-          });
+          }
         }
 
         renderSummaryTab() {
@@ -2733,99 +3635,133 @@
 
           const calc = calculateBilling(users, entries, expenses);
 
-          this.summaryTotalUnits.textContent = `${calc.grandTotalUnits.toLocaleString()} Units`;
-          this.summaryWapdaBill.textContent = `Rs. ${calc.wapdaBill.toLocaleString()}`;
-          this.summaryFixedExpenses.textContent = `Rs. ${calc.totalFixedExpenses.toLocaleString()}`;
-          this.summaryGrandTotal.textContent = `Rs. ${calc.grandTotalBillSystem.toLocaleString()}`;
+          if (this.summaryTotalUnits) this.summaryTotalUnits.textContent = `${calc.grandTotalUnits.toLocaleString()} Units`;
+          if (this.summaryWapdaBill) this.summaryWapdaBill.textContent = `Rs. ${Math.round(calc.wapdaBill).toLocaleString()}`;
+          if (this.summaryFixedExpenses) this.summaryFixedExpenses.textContent = `Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}`;
+          if (this.summaryGrandTotal) this.summaryGrandTotal.textContent = `Rs. ${Math.round(calc.grandTotalBillSystem).toLocaleString()}`;
 
-          this.summaryTableBody.innerHTML = '';
+          const screenshotMonthBadge = document.getElementById('screenshotMonthBadge');
+          if (screenshotMonthBadge) screenshotMonthBadge.textContent = calc.billingMonthLabel || 'Current Month';
+
+          const screenshotContainer = document.getElementById('screenshotListContainer');
+          if (screenshotContainer) {
+            screenshotContainer.innerHTML = '';
+            calc.userBreakdowns.forEach((user, idx) => {
+              const tr = document.createElement('tr');
+              tr.style.borderBottom = '1px solid var(--border-glass)';
+
+              const displayName = user.fullName || user.nameUr || user.nameEn || 'Member';
+              const isExternal = user.userType === 'external';
+
+              tr.innerHTML = `
+                <td style="text-align: center; font-weight: 800; color: var(--accent-blue); padding: 0.75rem 0.5rem;">${idx + 1}</td>
+                <td style="padding: 0.75rem 0.5rem;">
+                  <strong style="font-size: 1.05rem; color: var(--text-primary);">${displayName}</strong>
+                  ${isExternal ? `<div style="font-size: 0.72rem; color: var(--accent-amber); font-weight: 700;">(External Customer/خریدار)</div>` : ''}
+                </td>
+                <td style="text-align: center; font-weight: 700; color: var(--accent-amber); padding: 0.75rem 0.5rem;">
+                  ${user.unitsConsumed.toLocaleString()} Units
+                </td>
+                <td style="text-align: right; font-weight: 800; font-size: 1.15rem; color: var(--accent-green); padding: 0.75rem 0.5rem;">
+                  Rs. ${Math.round(user.grandTotalBill).toLocaleString()}
+                </td>
+              `;
+              screenshotContainer.appendChild(tr);
+            });
+          }
+
+          if (this.summaryTableBody) this.summaryTableBody.innerHTML = '';
 
           if (calc.userBreakdowns.length === 0) {
-            this.summaryTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No registered users to display.</td></tr>`;
+            if (this.summaryTableBody) this.summaryTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No registered members to display.</td></tr>`;
             return;
           }
 
           calc.userBreakdowns.forEach((user, idx) => {
             const tr = document.createElement('tr');
-            const biliName = getBilingualUserName(user.name);
-            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
-            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
+            const isExternal = user.userType === 'external';
+            const displayName = user.fullName || user.nameEn || user.nameUr || 'Member';
 
             tr.innerHTML = `
-              <td><strong>${idx + 1}</strong></td>
-              <td><div style="font-weight: 700;">${biliName}</div></td>
-              <td><span class="badge badge-info">${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}</span></td>
-              <td><strong>${user.formattedDuration}</strong> (${user.effectiveHours} hrs)</td>
+              <td style="text-align: center;"><strong>${idx + 1}</strong></td>
+              <td>
+                <strong>${displayName}</strong>
+                ${isExternal ? `<div style="font-size: 0.72rem; color: var(--accent-amber); font-weight: 700;">(External Customer/خریدار)</div>` : ''}
+              </td>
+              <td><strong>${user.effectiveHours} hrs</strong></td>
               <td><strong>${user.unitsConsumed} Units</strong> (${user.unitsPercentage}%)</td>
-              <td>Rs. ${user.usageBillShare.toLocaleString()}</td>
-              <td>Rs. ${user.fixedBillShare.toLocaleString()}</td>
-              <td><strong style="color: var(--accent-green);">Rs. ${user.grandTotalBill.toLocaleString()}</strong></td>
+              <td>Rs. ${Math.round(user.usageBillShare).toLocaleString()}</td>
+              <td>Rs. ${Math.round(user.fixedBillShare).toLocaleString()} ${isExternal ? `<span style="font-size: 0.75rem; color: var(--text-muted);">(Exempt)</span>` : ''}</td>
+              <td style="text-align: right;"><strong style="color: var(--accent-green); font-size: 1.05rem;">Rs. ${Math.round(user.grandTotalBill).toLocaleString()}</strong></td>
             `;
-            this.summaryTableBody.appendChild(tr);
+            if (this.summaryTableBody) this.summaryTableBody.appendChild(tr);
           });
 
-          this.userCardsContainer.innerHTML = '';
+          if (this.userCardsContainer) this.userCardsContainer.innerHTML = '';
           calc.userBreakdowns.forEach(user => {
             const card = document.createElement('div');
             card.className = 'card';
-            const biliName = getBilingualUserName(user.name);
-            const startDayBili = DAY_NAMES_BILINGUAL[user.startDay] || user.startDay;
-            const endDayBili = DAY_NAMES_BILINGUAL[user.endDay] || user.endDay;
             const cleanPhone = sanitizePhoneForWa(user.phone);
+            const isExternal = user.userType === 'external';
+            const displayName = user.fullName || user.nameEn || user.nameUr || 'Member';
 
             card.innerHTML = `
               <div class="card-header">
                 <div>
-                  <div class="card-title">${biliName}</div>
+                  <div class="card-title">
+                    ${displayName}
+                  </div>
                   <div class="card-subtitle">
-                    Bari: ${startDayBili} ${formatTime12h(user.startTime)} ➔ ${endDayBili} ${formatTime12h(user.endTime)}
+                    ${isExternal ? 'Category: External Customer (بیرونی خریدار)' : 'Category: Internal Shareholder (شریک مالک)'}
                   </div>
                 </div>
-                <span class="badge badge-success" style="font-size: 1rem; padding: 0.4rem 0.8rem;">
-                  Rs. ${user.grandTotalBill.toLocaleString()}
+                <span class="badge badge-success" style="font-size: 1.05rem; padding: 0.4rem 0.85rem; font-weight: 800;">
+                  Rs. ${Math.round(user.grandTotalBill).toLocaleString()}
                 </span>
               </div>
               <div class="grid-2 gap-1 mb-2" style="font-size: 0.9rem;">
-                <div>⏱️ <strong>Allocated Duration:</strong> ${user.formattedDuration}</div>
+                <div>⏱️ <strong>Allocated Slot:</strong> ${user.effectiveHours} hrs</div>
                 <div>⚡ <strong>Units Used:</strong> ${user.unitsConsumed} (${user.unitsPercentage}%)</div>
-                <div>💡 <strong>WAPDA Share:</strong> Rs. ${user.usageBillShare.toLocaleString()}</div>
-                <div>🔧 <strong>Fixed Share:</strong> Rs. ${user.fixedBillShare.toLocaleString()}</div>
+                <div>💡 <strong>Electricity Bill:</strong> Rs. ${Math.round(user.usageBillShare).toLocaleString()}</div>
+                <div>🔧 <strong>Extra Expenses:</strong> Rs. ${Math.round(user.fixedBillShare).toLocaleString()} ${isExternal ? '(Exempt)' : ''}</div>
               </div>
               <div class="flex-between">
-                <button class="btn btn-secondary btn-sm copy-single-wa" data-name="${user.name}">
-                  📋 Copy Summary Text
+                <button class="btn btn-secondary btn-sm copy-single-wa" data-id="${user.userId}">
+                  📋 Copy Bill Text
                 </button>
                 ${cleanPhone 
-                  ? `<button class="btn btn-primary btn-sm send-direct-wa" data-phone="${cleanPhone}" data-name="${user.name}" style="background: #25d366; border: none; color: #fff;">💬 Send via WhatsApp</button>`
+                  ? `<button class="btn btn-primary btn-sm send-direct-wa" data-phone="${cleanPhone}" data-id="${user.userId}" style="background: #25d366; border: none; color: #fff;">💬 Send via WhatsApp</button>`
                   : `<span class="badge badge-warning">No WhatsApp Saved</span>`}
               </div>
             `;
-            this.userCardsContainer.appendChild(card);
+            if (this.userCardsContainer) this.userCardsContainer.appendChild(card);
           });
 
-          this.userCardsContainer.querySelectorAll('.copy-single-wa').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const uName = btn.dataset.name;
-              const uData = calc.userBreakdowns.find(u => u.name === uName);
-              if (uData) {
-                const singleMsg = generateSingleUserWhatsAppMessage(uData, calc.billingMonthLabel);
-                navigator.clipboard.writeText(singleMsg);
-                this.showToast(`Copied WhatsApp bill for ${uName}!`);
-              }
+          if (this.userCardsContainer) {
+            this.userCardsContainer.querySelectorAll('.copy-single-wa').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const uId = btn.dataset.id;
+                const uData = calc.userBreakdowns.find(u => u.userId === uId);
+                if (uData) {
+                  const singleMsg = generateSingleUserWhatsAppMessage(uData, calc.billingMonthLabel, entries);
+                  navigator.clipboard.writeText(singleMsg);
+                  this.showToast(`Copied WhatsApp bill for ${uData.fullName || uData.nameEn}!`);
+                }
+              });
             });
-          });
 
-          this.userCardsContainer.querySelectorAll('.send-direct-wa').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const phoneNum = btn.dataset.phone;
-              const uName = btn.dataset.name;
-              const uData = calc.userBreakdowns.find(u => u.name === uName);
-              if (uData && phoneNum) {
-                const singleMsg = encodeURIComponent(generateSingleUserWhatsAppMessage(uData, calc.billingMonthLabel));
-                window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${singleMsg}`, '_blank');
-              }
+            this.userCardsContainer.querySelectorAll('.send-direct-wa').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const phoneNum = btn.dataset.phone;
+                const uId = btn.dataset.id;
+                const uData = calc.userBreakdowns.find(u => u.userId === uId);
+                if (uData && phoneNum) {
+                  const singleMsg = encodeURIComponent(generateSingleUserWhatsAppMessage(uData, calc.billingMonthLabel, entries));
+                  window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${singleMsg}`, '_blank');
+                }
+              });
             });
-          });
+          }
 
           this.renderWhatsAppPreview(calc);
         }
@@ -2862,10 +3798,17 @@
 
         showToast(message) {
           const container = document.getElementById('toastContainer');
+          let toastBox = document.getElementById('toastBox');
+          if (!toastBox) {
+            toastBox = document.createElement('div');
+            toastBox.id = 'toastBox';
+            toastBox.className = 'toast-container';
+            document.body.appendChild(toastBox);
+          }
           const toast = document.createElement('div');
           toast.className = 'toast';
           toast.innerHTML = `<span>✅</span> <div>${message}</div>`;
-          container.appendChild(toast);
+          toastBox.appendChild(toast);
 
           setTimeout(() => {
             toast.style.animation = 'slideIn 0.3s reverse forwards';
@@ -2874,7 +3817,13 @@
         }
       }
 
-      window.app = new App();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          window.app = new App();
+        });
+      } else {
+        window.app = new App();
+      }
     })();
   </script>
 </body>

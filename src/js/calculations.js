@@ -1,5 +1,5 @@
 /**
- * Tubewell Bill Management System - Calculation Engine
+ * Turbine Bill Management System - Calculation Engine
  * Implements strict proportional math rules according to specification.
  */
 
@@ -8,17 +8,24 @@ export function calculateBilling(users, entries, expenses) {
   const fixedExpensesList = Array.isArray(expenses.fixedExpenses) ? expenses.fixedExpenses : [];
   const totalFixedExpenses = fixedExpensesList.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
-  // 1. Calculate per-user effective hours
-  let totalEffectiveHours = 0;
+  // Separate internal members vs external buyers
+  // Default userType is 'internal' if not specified
+  const internalUsers = users.filter(u => u.userType !== 'external');
+
+  // 1. Calculate per-user effective hours for internal members
+  let totalInternalEffectiveHours = 0;
   const userHoursMap = new Map();
 
   users.forEach(user => {
+    const isInternal = user.userType !== 'external';
     const effectiveHours = (user.overrideHours !== null && user.overrideHours !== undefined) 
       ? Math.max(0, parseFloat(user.overrideHours) || 0)
-      : Math.max(0, parseFloat(user.assignedWeeklyHours) || 0);
+      : Math.max(0, parseFloat(user.totalMinutes ? (user.totalMinutes / 60) : user.assignedWeeklyHours) || 0);
     
     userHoursMap.set(user.id, effectiveHours);
-    totalEffectiveHours += effectiveHours;
+    if (isInternal) {
+      totalInternalEffectiveHours += effectiveHours;
+    }
   });
 
   // 2. Calculate per-user units consumed (handling Bari transfers)
@@ -41,8 +48,6 @@ export function calculateBilling(users, entries, expenses) {
     const end = parseFloat(entry.endReading) || 0;
     const units = Math.max(0, end - start);
 
-    // Determine who gets billed for this session
-    // Rule: If transferToUserId is set to a valid registered user, bill goes to transferToUserId
     const originalUserId = entry.userId;
     const transferUserId = entry.transferToUserId;
 
@@ -64,27 +69,41 @@ export function calculateBilling(users, entries, expenses) {
 
   // 3. Compute final per-user bill shares
   const userBreakdowns = users.map(user => {
+    const isInternal = user.userType !== 'external';
     const units = userUnitsMap.get(user.id) || 0;
     const hours = userHoursMap.get(user.id) || 0;
     const sessions = userSessionsCountMap.get(user.id) || 0;
     const transferredIn = userTransferredInCountMap.get(user.id) || 0;
     const transferredOut = userTransferredOutCountMap.get(user.id) || 0;
 
-    // Proportional Usage Bill
+    // Proportional Usage Bill (WAPDA electricity) for ALL users
     const unitsPercentage = grandTotalUnits > 0 ? (units / grandTotalUnits) * 100 : 0;
     const usageBillShare = grandTotalUnits > 0 ? (units / grandTotalUnits) * wapdaBill : 0;
 
-    // Proportional Fixed Bill
-    const hoursPercentage = totalEffectiveHours > 0 ? (hours / totalEffectiveHours) * 100 : 0;
-    const fixedBillShare = totalEffectiveHours > 0 ? (hours / totalEffectiveHours) * totalFixedExpenses : 0;
+    // Proportional Fixed Maintenance Bill ONLY for internal members
+    let hoursPercentage = 0;
+    let fixedBillShare = 0;
+
+    if (isInternal) {
+      hoursPercentage = totalInternalEffectiveHours > 0 ? (hours / totalInternalEffectiveHours) * 100 : 0;
+      fixedBillShare = totalInternalEffectiveHours > 0 ? (hours / totalInternalEffectiveHours) * totalFixedExpenses : 0;
+    }
 
     // Total Bill
     const grandTotalBill = usageBillShare + fixedBillShare;
 
+    const uCode = user.userCode || user.code || '01';
+    const uNameEn = user.nameEn || user.name || '';
+    const uNameUr = user.nameUr || '';
+    let fullName = uNameEn && uNameUr ? `${uNameEn} (${uNameUr})` : (user.name || uNameEn || uNameUr || 'Member');
+
     return {
       userId: user.id,
-      name: user.name,
-      code: user.code || '',
+      userCode: uCode,
+      nameEn: uNameEn,
+      nameUr: uNameUr,
+      fullName: fullName,
+      userType: user.userType || 'internal',
       assignedWeeklyHours: user.assignedWeeklyHours,
       overrideHours: user.overrideHours,
       effectiveHours: hours,
@@ -112,8 +131,9 @@ export function calculateBilling(users, entries, expenses) {
     fixedExpensesList,
     grandTotalBillSystem: wapdaBill + totalFixedExpenses,
     grandTotalUnits,
-    totalEffectiveHours,
+    totalEffectiveHours: totalInternalEffectiveHours,
     grandTotalBilledAmount,
     userBreakdowns
   };
 }
+

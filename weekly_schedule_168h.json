@@ -1,0 +1,92 @@
+{
+  "appName": "Turbine Bill & Schedule Manager",
+  "exportDate": "2026-08-11T14:00:00.000Z",
+  "version": "1.0",
+  "totalMembers": 6,
+  "users": [
+    {
+      "userCode": "01",
+      "nameEn": "Zahid Javed",
+      "nameUr": "زاہد جاوید",
+      "phone": "03001234567",
+      "userType": "internal",
+      "startDay": "Sunday",
+      "startTime": "08:00",
+      "endDay": "Monday",
+      "endTime": "18:00",
+      "durationHours": 34,
+      "durationMinutes": 0,
+      "totalMinutes": 2040
+    },
+    {
+      "userCode": "02",
+      "nameEn": "Amanat Ali",
+      "nameUr": "امانت علی",
+      "phone": "03017654321",
+      "userType": "internal",
+      "startDay": "Monday",
+      "startTime": "18:00",
+      "endDay": "Tuesday",
+      "endTime": "20:30",
+      "durationHours": 26,
+      "durationMinutes": 30,
+      "totalMinutes": 1590
+    },
+    {
+      "userCode": "03",
+      "nameEn": "Ramzan Anwar",
+      "nameUr": "رمضان انوار",
+      "phone": "03029876543",
+      "userType": "internal",
+      "startDay": "Tuesday",
+      "startTime": "20:30",
+      "endDay": "Thursday",
+      "endTime": "00:45",
+      "durationHours": 28,
+      "durationMinutes": 15,
+      "totalMinutes": 1695
+    },
+    {
+      "userCode": "04",
+      "nameEn": "Muhammad Yasin",
+      "nameUr": "محمد یاسین",
+      "phone": "03031112233",
+      "userType": "internal",
+      "startDay": "Thursday",
+      "startTime": "00:45",
+      "endDay": "Friday",
+      "endTime": "07:30",
+      "durationHours": 30,
+      "durationMinutes": 45,
+      "totalMinutes": 1845
+    },
+    {
+      "userCode": "05",
+      "nameEn": "Tariq Mehmood",
+      "nameUr": "طارق محمود",
+      "phone": "03045556677",
+      "userType": "internal",
+      "startDay": "Friday",
+      "startTime": "07:30",
+      "endDay": "Saturday",
+      "endTime": "08:30",
+      "durationHours": 25,
+      "durationMinutes": 0,
+      "totalMinutes": 1500
+    },
+    {
+      "userCode": "06",
+      "nameEn": "Chaudhry Abdul Rasheed",
+      "nameUr": "چوہدری عبدالرشید",
+      "phone": "03059998877",
+      "userType": "internal",
+      "startDay": "Saturday",
+      "startTime": "08:30",
+      "endDay": "Sunday",
+      "endTime": "08:00",
+      "durationHours": 23,
+      "durationMinutes": 30,
+      "totalMinutes": 1410
+    }
+  ]
+}
