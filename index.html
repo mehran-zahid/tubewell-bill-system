@@ -1267,7 +1267,10 @@
         const ports = [8997, 8998, 8999];
         for (const port of ports) {
           try {
-            const res = await fetch(`http://localhost:${port}${endpoint}`, options);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1200);
+            const res = await fetch(`http://localhost:${port}${endpoint}`, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
             if (res.ok) return await res.json();
           } catch (e) {}
         }
@@ -1276,30 +1279,63 @@
           const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
           const refNo = urlParams.get('refno');
           if (refNo) {
-            try {
-              const targetUrl = `https://bill.pitc.com.pk/mepcobill/general?refno=${refNo}&ru=R`;
-              const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-              const res = await fetch(proxyUrl);
-              if (res.ok) {
-                const htmlText = await res.text();
-                const amountMatch = htmlText.match(/DUE\s*DATE[^\d]*([\d,]+)/i) || htmlText.match(/AMOUNT[^\d]*([\d,]+)/i);
-                const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
-                return {
-                  status: 'success',
-                  bill: {
-                    referenceNo: refNo,
-                    totalAmount: amount,
-                    amountWithinDueDate: amount
+            const cleanRef = refNo.replace(/\D/g, '');
+            const targetUrls = [
+              `https://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
+              `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}`,
+              `https://mepcobill.pk/view-bill/?ref=${cleanRef}`
+            ];
+
+            const corsProxies = [
+              url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+              url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+              url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+            ];
+
+            for (const targetUrl of targetUrls) {
+              for (const makeProxyUrl of corsProxies) {
+                try {
+                  const proxyUrl = makeProxyUrl(targetUrl);
+                  const controller = new AbortController();
+                  const timeoutId = setTimeout(() => controller.abort(), 3500);
+                  const res = await fetch(proxyUrl, { signal: controller.signal });
+                  clearTimeout(timeoutId);
+
+                  if (res.ok) {
+                    const htmlText = await res.text();
+                    if (htmlText.length > 500 && !htmlText.includes('anti-forgery')) {
+                      const amountMatch = htmlText.match(/DUE\s*DATE[^\d]*([\d,]+)/i) || 
+                                          htmlText.match(/PAYABLE\s*WITHIN\s*DUE\s*DATE[^\d]*([\d,]+)/i) ||
+                                          htmlText.match(/Net\s*Amount[^\d]*([\d,]+)/i) ||
+                                          htmlText.match(/Rs\.?\s*([\d,]{4,})/i);
+                      
+                      const dueDateMatch = htmlText.match(/DUE\s*DATE[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{2,4})/i) ||
+                                           htmlText.match(/(\d{2}[-\/]\d{2}[-\/]\d{4})/);
+                      
+                      const nameMatch = htmlText.match(/NAME[:\s]*([A-Z\s]{4,30})/i);
+
+                      const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+                      if (amount > 0) {
+                        return {
+                          status: 'success',
+                          bill: {
+                            referenceNo: cleanRef,
+                            name: nameMatch ? nameMatch[1].trim() : 'MEPCO Consumer',
+                            totalAmount: amount,
+                            amountWithinDueDate: amount,
+                            dueDate: dueDateMatch ? dueDateMatch[1] : '—'
+                          }
+                        };
+                      }
+                    }
                   }
-                };
+                } catch (err) {}
               }
-            } catch (err) {
-              console.warn('Cloud CORS proxy fallback failed:', err);
             }
           }
         }
 
-        throw new Error('Local Proxy Server not reachable. Please start local server or enter WAPDA bill amount manually.');
+        throw new Error('Could not automatically reach MEPCO PITC server online. Please enter your WAPDA bill amount manually.');
       }
 
       function getBilingualUserName(name) {
