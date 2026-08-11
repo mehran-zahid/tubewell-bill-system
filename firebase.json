@@ -5,6 +5,19 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/fetch_mepco",
+        "function": "fetch_mepco"
+      },
+      {
+        "source": "/api/fetch_mepco",
+        "function": "fetch_mepco"
+      }
     ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
