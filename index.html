@@ -1268,7 +1268,7 @@
         for (const port of ports) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1200);
+            const timeoutId = setTimeout(() => controller.abort(), 1000);
             const res = await fetch(`http://localhost:${port}${endpoint}`, { ...options, signal: controller.signal });
             clearTimeout(timeoutId);
             if (res.ok) return await res.json();
@@ -1280,6 +1280,20 @@
           const refNo = urlParams.get('refno');
           if (refNo) {
             const cleanRef = refNo.replace(/\D/g, '');
+
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000);
+              const res = await fetch(`/api/fetch_mepco?refno=${cleanRef}`, { signal: controller.signal });
+              clearTimeout(timeoutId);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.status === 'success' && data.bill && data.bill.totalAmount > 0) {
+                  return data;
+                }
+              }
+            } catch (e) {}
+
             const targetUrls = [
               `https://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
               `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}`,
