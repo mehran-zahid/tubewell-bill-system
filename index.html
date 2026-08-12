@@ -4093,39 +4093,16 @@
             itemizedSec.style.display = 'none';
           }
 
-          // 4. Generate PDF Report via Temporary DOM Clone
-          const pdfBtn = document.getElementById('downloadPdfBtn');
-          const originalBtnHtml = pdfBtn ? pdfBtn.innerHTML : '📥 Download PDF Report';
+          // 4. Generate PDF Report via html2pdf or Native Print Engine
+          const pdfBtn = document.getElementById('printReportBtn') || document.getElementById('downloadPdfBtn');
+          const originalBtnHtml = pdfBtn ? pdfBtn.innerHTML : '📄 Download PDF Report';
           if (pdfBtn) {
             pdfBtn.disabled = true;
             pdfBtn.innerHTML = '⏳ Generating PDF...';
           }
-          this.showToast('📄 Generating A4 PDF report...');
-
-          // Create temporary clone for html2pdf capture
-          const clone = template.cloneNode(true);
-          clone.id = 'pdfReportTemplateClone';
-          clone.style.position = 'absolute';
-          clone.style.left = '0';
-          clone.style.top = '0';
-          clone.style.zIndex = '-999';
-          clone.style.opacity = '1';
-          clone.style.display = 'block';
-          clone.style.visibility = 'visible';
-          clone.style.width = '750px';
-          document.body.appendChild(clone);
+          this.showToast('📄 Preparing A4 PDF report...');
 
           try {
-            if (!window.html2pdf) {
-              await new Promise((resolve) => {
-                const s = document.createElement('script');
-                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                s.onload = resolve;
-                s.onerror = resolve;
-                document.head.appendChild(s);
-              });
-            }
-
             if (window.html2pdf) {
               const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
               const opt = {
@@ -4136,19 +4113,28 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
               };
 
-              await window.html2pdf().set(opt).from(clone).save();
+              // Make template visible temporarily
+              template.style.display = 'block';
+              template.style.position = 'fixed';
+              template.style.left = '0';
+              template.style.top = '0';
+              template.style.width = '800px';
+              template.style.background = '#ffffff';
+              template.style.zIndex = '999999';
+
+              await window.html2pdf().set(opt).from(template).save();
+              template.style.display = 'none';
               this.showToast('✅ PDF Report downloaded successfully!');
             } else {
               window.print();
             }
           } catch (err) {
-            console.error('PDF generation error:', err);
-            this.showToast('⚠️ Opening print dialog fallback...');
+            console.error('html2pdf Export Error, using native print:', err);
+            if (template) template.style.display = 'none';
+            this.showToast('📄 Opening Save as PDF dialog...');
             window.print();
           } finally {
-            if (clone && clone.parentNode) {
-              clone.parentNode.removeChild(clone);
-            }
+            if (template) template.style.display = 'none';
             if (pdfBtn) {
               pdfBtn.disabled = false;
               pdfBtn.innerHTML = originalBtnHtml;
