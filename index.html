@@ -1151,6 +1151,19 @@
             </label>
           </div>
           <div id="tenantDetailsContainer" style="display: none; margin-top: 0.75rem; border-top: 1px dashed rgba(245, 158, 11, 0.3); padding-top: 0.75rem;">
+            <div class="form-group mb-2">
+              <label class="form-label">Thekedar Selection Type / ٹھیکے دار کی قسم</label>
+              <select id="tenantTypeSelect" class="form-control" style="font-weight: 600;">
+                <option value="external">Enter External / New Thekedar (نیا ٹھیکے دار / بیرونی)</option>
+                <option value="existing">Select Existing Registered Member (رجسٹرڈ ممبر منتخب کریں)</option>
+              </select>
+            </div>
+            
+            <div id="tenantExistingSelectGroup" class="form-group mb-2" style="display: none;">
+              <label class="form-label">Select Registered Member as Thekedar (رجسٹرڈ ممبر)</label>
+              <select id="tenantExistingMemberSelect" class="form-control" style="font-weight: 700; color: var(--accent-blue);"></select>
+            </div>
+
             <div class="grid-2 mb-2">
               <div>
                 <label class="form-label">Thekedar English Name (انگریزی نام)</label>
@@ -1855,6 +1868,8 @@
             phone: (user.phone || '').trim(),
             totalLandAcres: parseFloat(user.totalLandAcres) || 0,
             isLeased: !!user.isLeased,
+            tenantType: user.tenantType || 'external',
+            linkedMemberId: user.linkedMemberId || null,
             tenantNameEn: (user.tenantNameEn || user.tenantName || '').trim(),
             tenantNameUr: (user.tenantNameUr || '').trim(),
             tenantPhone: (user.tenantPhone || '').trim(),
@@ -1910,6 +1925,8 @@
               fullName: fullName,
               totalLandAcres: updatedFields.totalLandAcres !== undefined ? (parseFloat(updatedFields.totalLandAcres) || 0) : (current.totalLandAcres || 0),
               isLeased: updatedFields.isLeased !== undefined ? !!updatedFields.isLeased : !!current.isLeased,
+              tenantType: updatedFields.tenantType || current.tenantType || 'external',
+              linkedMemberId: updatedFields.linkedMemberId !== undefined ? updatedFields.linkedMemberId : (current.linkedMemberId || null),
               tenantNameEn: updatedFields.tenantNameEn !== undefined ? updatedFields.tenantNameEn.trim() : (current.tenantNameEn || current.tenantName || ''),
               tenantNameUr: updatedFields.tenantNameUr !== undefined ? updatedFields.tenantNameUr.trim() : (current.tenantNameUr || ''),
               tenantPhone: updatedFields.tenantPhone !== undefined ? updatedFields.tenantPhone.trim() : (current.tenantPhone || ''),
@@ -2098,18 +2115,21 @@
 
           const tEn = (user.tenantNameEn || user.tenantName || '').trim();
           const tUr = (user.tenantNameUr || '').trim();
-          const hasTenant = !!user.isLeased && (!!tEn || !!tUr);
+          const hasTenant = !!user.isLeased && (!!tEn || !!tUr || !!user.linkedMemberId);
           const tenantLeasedHours = hasTenant ? Math.min(totalSlotHours, parseFloat(user.tenantLeasedHours) || 0) : 0;
           const ownerNetHours = hasTenant ? Math.max(0, totalSlotHours - tenantLeasedHours) : totalSlotHours;
+          const ownerNameStrEn = user.nameEn || user.name || '';
+          const ownerNameStrUr = user.nameUr || '';
+          const ownerFullName = ownerNameStrEn && ownerNameStrUr ? `${ownerNameStrEn} (${ownerNameStrUr})` : (user.name || ownerNameStrEn || ownerNameStrUr || 'Owner');
 
           // Owner entity
           if (!hasTenant || ownerNetHours > 0) {
             billableEntities.push({
               id: user.id,
               userCode: user.userCode || user.code || '01',
-              nameEn: user.nameEn || user.name || '',
-              nameUr: user.nameUr || '',
-              fullName: user.fullName || (user.nameEn && user.nameUr ? `${user.nameEn} (${user.nameUr})` : (user.name || 'Member')),
+              nameEn: ownerNameStrEn,
+              nameUr: ownerNameStrUr,
+              fullName: ownerFullName,
               userType: user.userType || 'internal',
               phone: user.phone || '',
               startDay: user.startDay,
@@ -2124,17 +2144,18 @@
 
           // Tenant entity
           if (hasTenant) {
-            const ownerNameStr = user.fullName || user.nameEn || user.name || 'Owner';
-            const tFull = tEn && tUr 
-              ? `${tEn} (${tUr}) [Thekedar for ${ownerNameStr}]` 
-              : `${tEn || tUr || 'Thekedar'} [Thekedar for ${ownerNameStr}]`;
+            const tenantDisplayNameEn = tEn ? `${tEn} (Tenant) — Owner: ${ownerNameStrEn}` : `Tenant — Owner: ${ownerNameStrEn}`;
+            const tenantDisplayNameUr = tUr ? `${tUr} (ٹھیکے دار) — مالک: ${ownerNameStrUr || ownerNameStrEn}` : `ٹھیکے دار — مالک: ${ownerNameStrUr || ownerNameStrEn}`;
+            const tenantFullName = tEn && tUr 
+              ? `${tEn} (${tUr}) [ٹھیکے دار — مالک: ${ownerNameStrEn}]` 
+              : `${tEn || tUr || 'Thekedar'} [ٹھیکے دار — مالک: ${ownerNameStrEn}]`;
 
             billableEntities.push({
               id: user.id + '__tenant',
               userCode: (user.userCode || user.code || '01') + '-T',
-              nameEn: tEn || 'Thekedar',
-              nameUr: tUr || '',
-              fullName: tFull,
+              nameEn: tenantDisplayNameEn,
+              nameUr: tenantDisplayNameUr,
+              fullName: tenantFullName,
               userType: 'internal',
               phone: user.tenantPhone || user.phone || '',
               startDay: user.startDay,
@@ -2144,7 +2165,9 @@
               totalMinutes: user.totalMinutes,
               allocatedHours: tenantLeasedHours > 0 ? tenantLeasedHours : totalSlotHours,
               isTenant: true,
-              ownerName: ownerNameStr
+              ownerNameEn: ownerNameStrEn,
+              ownerNameUr: ownerNameStrUr,
+              leasedHours: tenantLeasedHours
             });
           }
         });
@@ -2550,9 +2573,34 @@
           this.userTotalLandAcresInput = document.getElementById('userTotalLandAcresInput');
           this.userIsLeasedCheckbox = document.getElementById('userIsLeasedCheckbox');
           this.tenantDetailsContainer = document.getElementById('tenantDetailsContainer');
+          this.tenantTypeSelect = document.getElementById('tenantTypeSelect');
+          this.tenantExistingSelectGroup = document.getElementById('tenantExistingSelectGroup');
+          this.tenantExistingMemberSelect = document.getElementById('tenantExistingMemberSelect');
           this.tenantNameEnInput = document.getElementById('tenantNameEnInput');
           this.tenantNameUrInput = document.getElementById('tenantNameUrInput');
           this.tenantPhoneInput = document.getElementById('tenantPhoneInput');
+
+          if (this.tenantTypeSelect) {
+            this.tenantTypeSelect.addEventListener('change', () => {
+              const isExisting = this.tenantTypeSelect.value === 'existing';
+              if (this.tenantExistingSelectGroup) this.tenantExistingSelectGroup.style.display = isExisting ? 'block' : 'none';
+              if (isExisting) this.populateTenantExistingDropdown();
+            });
+          }
+
+          if (this.tenantExistingMemberSelect) {
+            this.tenantExistingMemberSelect.addEventListener('change', () => {
+              const selId = this.tenantExistingMemberSelect.value;
+              if (selId) {
+                const u = store.getUserById(selId);
+                if (u) {
+                  if (this.tenantNameEnInput) this.tenantNameEnInput.value = u.nameEn || u.name || '';
+                  if (this.tenantNameUrInput) this.tenantNameUrInput.value = u.nameUr || '';
+                  if (this.tenantPhoneInput) this.tenantPhoneInput.value = u.phone || '';
+                }
+              }
+            });
+          }
           this.tenantLeasedHoursInput = document.getElementById('tenantLeasedHoursInput');
           this.tenantLeasedAcresInput = document.getElementById('tenantLeasedAcresInput');
 
@@ -3607,7 +3655,16 @@
                 }
               });
             });
-          }
+        populateTenantExistingDropdown(selectedId = null) {
+          if (!this.tenantExistingMemberSelect) return;
+          const users = store.getUsers().filter(u => u.id !== this.currentEditingUserId);
+          this.tenantExistingMemberSelect.innerHTML = `<option value="">-- Select Existing Member --</option>` +
+            users.map(u => {
+              const code = u.userCode || u.code || '01';
+              const name = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
+              const isSel = u.id === selectedId ? 'selected' : '';
+              return `<option value="${u.id}" ${isSel}>[${code}] ${name}</option>`;
+            }).join('');
         }
 
         validateUserCodeInput() {
@@ -3656,6 +3713,9 @@
             if (this.userTotalLandAcresInput) this.userTotalLandAcresInput.value = user.totalLandAcres || '';
             if (this.userIsLeasedCheckbox) this.userIsLeasedCheckbox.checked = !!user.isLeased;
             if (this.tenantDetailsContainer) this.tenantDetailsContainer.style.display = user.isLeased ? 'block' : 'none';
+            if (this.tenantTypeSelect) this.tenantTypeSelect.value = user.tenantType || (user.linkedMemberId ? 'existing' : 'external');
+            if (this.tenantExistingSelectGroup) this.tenantExistingSelectGroup.style.display = (user.tenantType === 'existing' || user.linkedMemberId) ? 'block' : 'none';
+            this.populateTenantExistingDropdown(user.linkedMemberId);
             if (this.tenantNameEnInput) this.tenantNameEnInput.value = user.tenantNameEn || user.tenantName || '';
             if (this.tenantNameUrInput) this.tenantNameUrInput.value = user.tenantNameUr || '';
             if (this.tenantPhoneInput) this.tenantPhoneInput.value = user.tenantPhone || '';
@@ -3679,6 +3739,9 @@
             if (this.userTotalLandAcresInput) this.userTotalLandAcresInput.value = '';
             if (this.userIsLeasedCheckbox) this.userIsLeasedCheckbox.checked = false;
             if (this.tenantDetailsContainer) this.tenantDetailsContainer.style.display = 'none';
+            if (this.tenantTypeSelect) this.tenantTypeSelect.value = 'external';
+            if (this.tenantExistingSelectGroup) this.tenantExistingSelectGroup.style.display = 'none';
+            this.populateTenantExistingDropdown();
             if (this.tenantNameEnInput) this.tenantNameEnInput.value = '';
             if (this.tenantNameUrInput) this.tenantNameUrInput.value = '';
             if (this.tenantPhoneInput) this.tenantPhoneInput.value = '';
@@ -3736,6 +3799,8 @@
           const phone = (this.userPhoneInput.value || '').trim();
           const totalLandAcres = parseFloat(this.userTotalLandAcresInput ? this.userTotalLandAcresInput.value : 0) || 0;
           const isLeased = this.userIsLeasedCheckbox ? this.userIsLeasedCheckbox.checked : false;
+          const tenantType = this.tenantTypeSelect ? this.tenantTypeSelect.value : 'external';
+          const linkedMemberId = tenantType === 'existing' && this.tenantExistingMemberSelect ? this.tenantExistingMemberSelect.value : null;
           const tenantNameEn = (this.tenantNameEnInput ? this.tenantNameEnInput.value : '').trim();
           const tenantNameUr = (this.tenantNameUrInput ? this.tenantNameUrInput.value : '').trim();
           const tenantPhone = (this.tenantPhoneInput ? this.tenantPhoneInput.value : '').trim();
@@ -3759,10 +3824,10 @@
 
           try {
             if (id) {
-              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
+              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
               this.showToast(`Member updated & schedule aligned`);
             } else {
-              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
+              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
               this.showToast(`Member added & schedule chained`);
 
               if (this.pendingQuickUserSelectForEntry) {
