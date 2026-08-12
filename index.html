@@ -767,8 +767,8 @@
                   <div class="tbl-hdr-ur">آخری ریڈنگ</div>
                 </th>
                 <th>
-                  <div>Units Used</div>
-                  <div class="tbl-hdr-ur">استعمال شدہ یونٹ</div>
+                  <div>Running Hours & Points</div>
+                  <div class="tbl-hdr-ur">چلنے کے گھنٹے اور پوائنٹس</div>
                 </th>
                 <th style="text-align: center;">
                   <div>Actions</div>
@@ -895,8 +895,8 @@
                   <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">ممبر کا نام</div>
                 </th>
                 <th style="text-align: center; color: #ffffff; padding: 0.75rem 0.5rem;">
-                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Units Consumed</div>
-                  <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">استعمال شدہ یونٹ</div>
+                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Tubewell Run Hours</div>
+                  <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">استعمال شدہ گھنٹے</div>
                 </th>
                 <th style="text-align: right; color: #ffffff; padding: 0.75rem 0.5rem;">
                   <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Total Payable</div>
@@ -932,8 +932,8 @@
                   <div class="tbl-hdr-ur">باری کے گھنٹے</div>
                 </th>
                 <th>
-                  <div>Units Consumed</div>
-                  <div class="tbl-hdr-ur">استعمال شدہ یونٹ</div>
+                  <div>Tubewell Run Hours</div>
+                  <div class="tbl-hdr-ur">استعمال شدہ گھنٹے</div>
                 </th>
                 <th>
                   <div>Electricity Bill (Rs.)</div>
@@ -1038,8 +1038,8 @@
                 <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">باری گھنٹے</div>
               </th>
               <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
-                <div>Units Consumed</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">استعمال شدہ یونٹ</div>
+                <div>Tubewell Run Hours</div>
+                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">استعمال شدہ گھنٹے</div>
               </th>
               <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
                 <div>Electricity Share (Rs.)</div>
@@ -3704,7 +3704,7 @@
                   <input type="number" class="tbl-reading-input tbl-end-reading" data-id="${entry.id}" value="${endVal}" placeholder="End">
                 </td>
                 <td>
-                  <strong style="color: ${isError ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size: 1rem;">${units} Units</strong>
+                  <strong style="color: ${isError ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size: 0.95rem;">${meterDiff} pts (${runHours} hrs)</strong>
                 </td>
                 <td style="text-align: center;">
                   <div style="display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
@@ -3909,7 +3909,7 @@
                   ${isExternal ? `<div style="font-size: 0.72rem; color: var(--accent-amber); font-weight: 700;">(External Customer/خریدار)</div>` : ''}
                 </td>
                 <td style="text-align: center; font-weight: 700; color: var(--accent-amber); padding: 0.75rem 0.5rem;">
-                  ${user.unitsConsumed.toLocaleString()} Units
+                  ${user.unitsConsumed.toFixed(2)} hrs (${Math.round(user.unitsConsumed * 100)} pts)
                 </td>
                 <td style="text-align: right; font-weight: 800; font-size: 1.15rem; color: var(--accent-green); padding: 0.75rem 0.5rem;">
                   Rs. ${Math.round(user.grandTotalBill).toLocaleString()}
@@ -3938,7 +3938,7 @@
                 ${isExternal ? `<div style="font-size: 0.72rem; color: var(--accent-amber); font-weight: 700;">(External Customer/خریدار)</div>` : ''}
               </td>
               <td><strong>${user.effectiveHours} hrs</strong></td>
-              <td><strong>${user.unitsConsumed} Units</strong> (${user.unitsPercentage}%)</td>
+              <td><strong>${user.unitsConsumed.toFixed(2)} hrs</strong> (${user.unitsPercentage}%)</td>
               <td>Rs. ${Math.round(user.usageBillShare).toLocaleString()}</td>
               <td>Rs. ${Math.round(user.fixedBillShare).toLocaleString()} ${isExternal ? `<span style="font-size: 0.75rem; color: var(--text-muted);">(Exempt)</span>` : ''}</td>
               <td style="text-align: right;"><strong style="color: var(--accent-green); font-size: 1.05rem;">Rs. ${Math.round(user.grandTotalBill).toLocaleString()}</strong></td>
@@ -3970,7 +3970,7 @@
               </div>
               <div class="grid-2 gap-1 mb-2" style="font-size: 0.9rem;">
                 <div>⏱️ <strong>Allocated Slot:</strong> ${user.effectiveHours} hrs</div>
-                <div>⚡ <strong>Units Used:</strong> ${user.unitsConsumed} (${user.unitsPercentage}%)</div>
+                <div>⚡ <strong>Run Time:</strong> ${user.unitsConsumed.toFixed(2)} hrs (${user.unitsPercentage}%)</div>
                 <div>💡 <strong>Electricity Bill:</strong> Rs. ${Math.round(user.usageBillShare).toLocaleString()}</div>
                 <div>🔧 <strong>Extra Expenses:</strong> Rs. ${Math.round(user.fixedBillShare).toLocaleString()} ${isExternal ? '(Exempt)' : ''}</div>
               </div>
@@ -4065,7 +4065,7 @@
 
           if (monthElem) monthElem.textContent = monthLabel;
           if (dateElem) dateElem.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-          if (totalUnitsElem) totalUnitsElem.textContent = `${calc.totalUnits.toLocaleString()} Units`;
+          if (totalUnitsElem) totalUnitsElem.textContent = `${calc.totalUnits.toFixed(2)} hrs`;
           if (wapdaBillElem) wapdaBillElem.textContent = `Rs. ${Math.round(calc.wapdaBill).toLocaleString()}`;
           if (fixedExpensesElem) fixedExpensesElem.textContent = `Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}`;
           if (grandTotalElem) grandTotalElem.textContent = `Rs. ${Math.round(calc.grandTotal).toLocaleString()}`;
@@ -4089,7 +4089,7 @@
                     <div style="font-weight: 700; color: #0f172a;">${u.fullName || u.nameEn}</div>
                   </td>
                   <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0;">${u.weeklyHours ? u.weeklyHours.toFixed(1) : 0} hrs</td>
-                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${u.unitsConsumed}</td>
+                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${u.unitsConsumed.toFixed(2)} hrs</td>
                   <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.wapdaShare).toLocaleString()}</td>
                   <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.fixedShare).toLocaleString()}</td>
                   <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 800; color: #047857; background: #ecfdf5;">Rs. ${Math.round(u.totalPayable).toLocaleString()}</td>
@@ -4104,7 +4104,7 @@
                 footTr.innerHTML = `
                   <td colspan="2" style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">TOTAL (کل توثیق):</td>
                   <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1;">${calc.totalWeeklyHours ? calc.totalWeeklyHours.toFixed(1) : 0} hrs</td>
-                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${calc.totalUnits.toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${calc.totalUnits.toFixed(2)} hrs</td>
                   <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.wapdaBill).toLocaleString()}</td>
                   <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}</td>
                   <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1; color: #059669; background: #d1fae5; font-size: 0.95rem;">Rs. ${Math.round(calc.grandTotal).toLocaleString()}</td>
