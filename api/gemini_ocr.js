@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({
       status: 'error',
-      error: 'GEMINI_API_KEY is missing on Vercel environment. Please add GEMINI_API_KEY in Vercel Project Settings -> Environment Variables.'
+      error: 'GEMINI_API_KEY is missing in Vercel Environment Variables. Please set GEMINI_API_KEY under Vercel Project Settings -> Environment Variables.'
     });
   }
 
@@ -55,57 +55,48 @@ RULES:
 No markdown codeblocks, no explanatory text outside JSON.
 `;
 
-    const candidateModels = [
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest',
-      'gemini-2.0-flash-exp'
-    ];
+    // Official Google Gemini 1.5 Flash Vision Endpoint
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    let lastError = null;
-    let data = null;
-
-    for (const modelName of candidateModels) {
-      try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-        const geminiPayload = {
-          contents: [
+    const geminiPayload = {
+      contents: [
+        {
+          parts: [
+            { text: promptText },
             {
-              parts: [
-                { text: promptText },
-                {
-                  inlineData: {
-                    mimeType: mimeType,
-                    data: cleanBase64
-                  }
-                }
-              ]
+              inlineData: {
+                mimeType: mimeType,
+                data: cleanBase64
+              }
             }
           ]
-        };
-
-        const response = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(geminiPayload)
-        });
-
-        if (response.ok) {
-          data = await response.json();
-          break;
-        } else {
-          const errText = await response.text();
-          lastError = `Model ${modelName} HTTP ${response.status}: ${errText}`;
         }
-      } catch (e) {
-        lastError = e.message;
-      }
+      ]
+    };
+
+    const response = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(geminiPayload)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let msg = `Google Gemini API Error (HTTP ${response.status}): ${errText}`;
+      try {
+        const errObj = JSON.parse(errText);
+        if (errObj && errObj.error && errObj.error.message) {
+          msg = `Google Gemini Error (${errObj.error.status || response.status}): ${errObj.error.message}`;
+        }
+      } catch (e) {}
+
+      return res.status(500).json({
+        status: 'error',
+        error: msg
+      });
     }
 
-    if (!data) {
-      throw new Error(lastError || 'Gemini API call failed across candidate models.');
-    }
-
+    const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     
     let parsedRows = [];
