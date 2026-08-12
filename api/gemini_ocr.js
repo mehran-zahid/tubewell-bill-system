@@ -8,6 +8,7 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  const startTime = Date.now();
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -22,6 +23,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
+    console.error('[OCR ERROR] GEMINI_API_KEY environment variable is not configured on Vercel.');
     return res.status(500).json({
       status: 'error',
       error: 'GEMINI_API_KEY environment variable is missing on Vercel backend. Please add GEMINI_API_KEY under Vercel Project Settings -> Environment Variables and redeploy.'
@@ -31,10 +33,13 @@ export default async function handler(req, res) {
   try {
     const { imageB64, mimeType = 'image/jpeg' } = req.body || {};
     if (!imageB64) {
+      console.error('[OCR ERROR] Missing image data in request payload.');
       return res.status(400).json({ status: 'error', error: 'Missing image data' });
     }
 
     const cleanBase64 = imageB64.replace(/^data:image\/\w+;base64,/, '');
+    const estimatedKb = Math.round((cleanBase64.length * 0.75) / 1024);
+    console.log(`[OCR START] Received image scan request (${estimatedKb} KB).`);
 
     const promptText = `
 You are an expert OCR & Meter Reading Data Assistant for Pakistan Agricultural Tubewell Registers.
@@ -53,7 +58,6 @@ RULES:
     "notes": "Normal run"
   }
 ]
-No markdown codeblocks, no explanatory text outside JSON.
 `;
 
     const geminiPayload = {
@@ -71,54 +75,42 @@ No markdown codeblocks, no explanatory text outside JSON.
         }
       ],
       generationConfig: {
-        temperature: 0.1
+        temperature: 0.1,
+        responseMimeType: 'application/json',
+        maxOutputTokens: 1000
       }
     };
 
-    // 1. Discover active vision models for this specific API Key
-    let activeModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-pro-vision'];
-    try {
-      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (listResp.ok) {
-        const listData = await listResp.json();
-        if (listData && Array.isArray(listData.models)) {
-          const found = listData.models
-            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-            .map(m => m.name.replace(/^models\//, ''));
-          if (found.length > 0) activeModels = found;
-        }
-      }
-    } catch (e) {}
+    // Direct 1-step call to primary Google Gemini 1.5 Flash Vision Endpoint
+    const primaryUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-    let response = null;
-    let lastErrText = '';
+    let fetchStart = Date.now();
+    let response = await fetch(primaryUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(geminiPayload)
+    });
 
-    for (const mName of activeModels) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(geminiPayload)
-        });
-
-        if (res.ok) {
-          response = res;
-          break;
-        } else {
-          lastErrText = await res.text();
-        }
-      } catch (e) {
-        lastErrText = e.message;
-      }
+    if (!response.ok && response.status === 404) {
+      console.warn('[OCR WARN] gemini-1.5-flash 404, attempting gemini-1.5-flash-latest fallback...');
+      response = await fetch(fallbackUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiPayload)
+      });
     }
 
-    if (!response) {
-      let msg = `Google Gemini Error: ${lastErrText}`;
+    const fetchDuration = Date.now() - fetchStart;
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[OCR FAILURE] Google Gemini API Error HTTP ${response.status}: ${errText}`);
+      let msg = `Google Gemini API Error (HTTP ${response.status}): ${errText}`;
       try {
-        const errObj = JSON.parse(lastErrText);
+        const errObj = JSON.parse(errText);
         if (errObj && errObj.error && errObj.error.message) {
-          msg = `Google Gemini Error (${errObj.error.status || 'API_ERROR'}): ${errObj.error.message}`;
+          msg = `Google Gemini Error (${errObj.error.status || response.status}): ${errObj.error.message}`;
         }
       } catch (e) {}
 
@@ -144,6 +136,9 @@ No markdown codeblocks, no explanatory text outside JSON.
       }
     }
 
+    const totalDuration = Date.now() - startTime;
+    console.log(`[OCR SUCCESS] Processed in ${totalDuration}ms (Gemini Fetch: ${fetchDuration}ms). Parsed ${parsedRows.length} rows.`);
+
     return res.status(200).json({
       status: 'success',
       rowsCount: Array.isArray(parsedRows) ? parsedRows.length : 0,
@@ -151,7 +146,7 @@ No markdown codeblocks, no explanatory text outside JSON.
       rawText: rawText
     });
   } catch (err) {
-    console.error('Vercel Gemini OCR Error:', err);
+    console.error('[OCR EXCEPTION]', err);
     return res.status(500).json({
       status: 'error',
       error: err.message || 'Failed to process AI OCR image on Vercel backend.'

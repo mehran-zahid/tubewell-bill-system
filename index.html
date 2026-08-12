@@ -2961,7 +2961,7 @@
               // Call secure Vercel Serverless Endpoint /api/gemini_ocr exclusively
               try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 25000);
+                const timeoutId = setTimeout(() => controller.abort(), 35000);
 
                 const response = await fetch('/api/gemini_ocr', {
                   method: 'POST',
@@ -2983,7 +2983,7 @@
                   errorMessage = (ocrRes && ocrRes.error) ? ocrRes.error : `Server HTTP ${response.status}`;
                 }
               } catch (e) {
-                errorMessage = e.name === 'AbortError' ? 'Network timeout after 25s. Please retry.' : e.message;
+                errorMessage = e.name === 'AbortError' ? 'Network timeout after 35s. Please retry.' : e.message;
               }
 
               if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {
