@@ -1030,79 +1030,83 @@
     </section>
 
     <!-- Hidden A4 PDF Report Template (Rendered Off-Screen for html2pdf capture) -->
-    <div id="pdfReportTemplate" style="position: fixed; left: -9999px; top: 0; width: 800px; padding: 2.5rem; background: #ffffff; color: #0f172a; font-family: 'Inter', system-ui, sans-serif; line-height: 1.4; box-sizing: border-box; z-index: -9999; display: block; visibility: visible;">
+    <div id="pdfReportTemplate" style="position: fixed; left: -9999px; top: 0; width: 730px; padding: 1.25rem; background: #ffffff; color: #0f172a; font-family: 'Inter', system-ui, sans-serif; line-height: 1.35; box-sizing: border-box; z-index: -9999; display: block; visibility: visible;">
       <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #059669; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #059669; padding-bottom: 0.75rem; margin-bottom: 1rem;">
         <div>
-          <div style="font-size: 1.6rem; font-weight: 900; color: #059669; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em;">
+          <div style="font-size: 1.5rem; font-weight: 900; color: #059669; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em;">
             ⚡ <span>TUBEWELL BILL SYSTEM</span>
           </div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0.25rem; font-family: 'Noto Naskh Arabic', serif;">
+          <div style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 0.2rem; font-family: 'Noto Naskh Arabic', serif;">
             ٹربائن بجلی و مرمت بل کی تفصیلی رپورٹ
           </div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 1.15rem; font-weight: 900; color: #0284c7;" id="pdfBillingMonth">August 2026</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem; font-weight: 600;">Date: <span id="pdfGenDate">12 Aug 2026</span></div>
-          <div style="font-weight: 800; color: #059669; font-size: 0.78rem; margin-top: 0.2rem; text-transform: uppercase;">Status: Verified Final</div>
+          <div style="font-size: 1.1rem; font-weight: 900; color: #0284c7;" id="pdfBillingMonth">August 2026</div>
+          <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.15rem; font-weight: 600;">Date: <span id="pdfGenDate">12 Aug 2026</span></div>
+          <div style="font-weight: 800; color: #059669; font-size: 0.75rem; margin-top: 0.15rem; text-transform: uppercase;">Status: Verified Final</div>
         </div>
       </div>
 
       <!-- Summary Metric Cards Banner -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Units Consumed</div>
-          <div style="font-size: 1.15rem; font-weight: 900; color: #0284c7; margin-top: 0.2rem;" id="pdfTotalUnits">0 Units</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Units Consumed</div>
+          <div style="font-size: 1.05rem; font-weight: 900; color: #0284c7; margin-top: 0.15rem;" id="pdfTotalUnits">0 Units</div>
         </div>
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">WAPDA Electricity Bill</div>
-          <div style="font-size: 1.15rem; font-weight: 900; color: #d97706; margin-top: 0.2rem;" id="pdfWapdaBill">Rs. 0</div>
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">WAPDA Electricity Bill</div>
+          <div style="font-size: 1.05rem; font-weight: 900; color: #d97706; margin-top: 0.15rem;" id="pdfWapdaBill">Rs. 0</div>
         </div>
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fixed / Repair Expenses</div>
-          <div style="font-size: 1.15rem; font-weight: 900; color: #dc2626; margin-top: 0.2rem;" id="pdfFixedExpenses">Rs. 0</div>
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fixed / Repair Expenses</div>
+          <div style="font-size: 1.05rem; font-weight: 900; color: #dc2626; margin-top: 0.15rem;" id="pdfFixedExpenses">Rs. 0</div>
         </div>
-        <div style="background: #ecfdf5; border: 2px solid #059669; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #047857; font-weight: 800; text-transform: uppercase;">Grand Collection Total</div>
-          <div style="font-size: 1.25rem; font-weight: 900; color: #059669; margin-top: 0.2rem;" id="pdfGrandTotal">Rs. 0</div>
+        <div style="background: #ecfdf5; border: 2px solid #059669; border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-size: 0.68rem; color: #047857; font-weight: 800; text-transform: uppercase;">Grand Collection Total</div>
+          <div style="font-size: 1.15rem; font-weight: 900; color: #059669; margin-top: 0.15rem;" id="pdfGrandTotal">Rs. 0</div>
         </div>
       </div>
 
       <!-- Member Breakdown Table -->
-      <div style="margin-bottom: 1.5rem;">
-        <div style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3rem;">
+      <div style="margin-bottom: 1rem;">
+        <div style="font-size: 0.92rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.25rem;">
           📋 Member Bill Breakdown (تفصیلی ممبر بل خلاصہ)
         </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem; border: 1px solid #cbd5e1;">
           <thead>
             <tr style="background: #0f172a; color: #ffffff;">
-              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155; width: 35px;">#</th>
-              <th style="padding: 0.5rem; text-align: left; border: 1px solid #334155;">
+              <th style="padding: 0.4rem 0.3rem; text-align: center; border: 1px solid #334155; width: 30px;">#</th>
+              <th style="padding: 0.4rem 0.4rem; text-align: left; border: 1px solid #334155;">
                 <div>Member Name</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">ممبر کا نام</div>
+                <div style="font-size: 0.7rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">ممبر کا نام</div>
               </th>
-              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
-                <div>Allocated Hours</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">باری گھنٹے</div>
+              <th style="padding: 0.4rem 0.3rem; text-align: center; border: 1px solid #334155; width: 75px;">
+                <div>Allocated</div>
+                <div style="font-size: 0.7rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">باری گھنٹے</div>
               </th>
-              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
-                <div>Tubewell Run Hours</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">استعمال شدہ گھنٹے</div>
+              <th style="padding: 0.4rem 0.3rem; text-align: center; border: 1px solid #334155; width: 85px;">
+                <div>Run Hours</div>
+                <div style="font-size: 0.7rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">استعمال گھنٹے</div>
               </th>
-              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
-                <div>Electricity Share (Rs.)</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">بجلی بل</div>
+              <th style="padding: 0.4rem 0.4rem; text-align: right; border: 1px solid #334155; width: 105px;">
+                <div>Electricity (Rs.)</div>
+                <div style="font-size: 0.7rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">بجلی بل</div>
               </th>
-              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
+              <th style="padding: 0.4rem 0.4rem; text-align: right; border: 1px solid #334155; width: 105px;">
                 <div>Fixed Expenses (Rs.)</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">دیگر اخراجات</div>
+                <div style="font-size: 0.7rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">دیگر اخراجات</div>
               </th>
-              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155; background: #047857;">
-                <div>Total Payable (Rs.)</div>
-                <div style="font-size: 0.75rem; color: #ecfdf5; font-family: 'Noto Naskh Arabic', serif;">کل واجب الادا بل</div>
+              <th style="padding: 0.4rem 0.4rem; text-align: right; border: 1px solid #334155; background: #047857; width: 110px;">
+                <div>Total Due (Rs.)</div>
+                <div style="font-size: 0.7rem; color: #ecfdf5; font-family: 'Noto Naskh Arabic', serif;">کل واجب الادا بل</div>
               </th>
             </tr>
           </thead>
+          <tbody id="pdfTableBody"></tbody>
+          <tfoot id="pdfTableFoot"></tfoot>
+        </table>
+      </div>
           <tbody id="pdfTableBody"></tbody>
           <tfoot id="pdfTableFoot"></tfoot>
         </table>
@@ -4995,21 +4999,21 @@
 
           if (tbody) {
             if (calc.userBreakdowns.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: #64748b;">No registered members to display.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1rem; color: #64748b;">No registered members to display.</td></tr>`;
             } else {
               calc.userBreakdowns.forEach((u, idx) => {
                 const tr = document.createElement('tr');
                 tr.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 tr.innerHTML = `
-                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700;">${idx + 1}</td>
-                  <td style="padding: 0.45rem; border: 1px solid #e2e8f0;">
+                  <td style="padding: 0.35rem 0.25rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700;">${idx + 1}</td>
+                  <td style="padding: 0.35rem 0.35rem; border: 1px solid #e2e8f0;">
                     <div style="font-weight: 700; color: #0f172a;">${u.fullName || u.nameEn}</div>
                   </td>
-                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0;">${u.effectiveHours ? u.effectiveHours.toFixed(1) : 0} hrs</td>
-                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${(u.unitsConsumed || 0).toFixed(2)} hrs</td>
-                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.usageBillShare || 0).toLocaleString()}</td>
-                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.fixedBillShare || 0).toLocaleString()}</td>
-                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 800; color: #047857; background: #ecfdf5;">Rs. ${Math.round(u.grandTotalBill || 0).toLocaleString()}</td>
+                  <td style="padding: 0.35rem 0.25rem; text-align: center; border: 1px solid #e2e8f0;">${u.effectiveHours ? u.effectiveHours.toFixed(1) : 0} hrs</td>
+                  <td style="padding: 0.35rem 0.25rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${(u.unitsConsumed || 0).toFixed(2)} hrs</td>
+                  <td style="padding: 0.35rem 0.35rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.usageBillShare || 0).toLocaleString()}</td>
+                  <td style="padding: 0.35rem 0.35rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.fixedBillShare || 0).toLocaleString()}</td>
+                  <td style="padding: 0.35rem 0.35rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 800; color: #047857; background: #ecfdf5;">Rs. ${Math.round(u.grandTotalBill || 0).toLocaleString()}</td>
                 `;
                 tbody.appendChild(tr);
               });
@@ -5019,12 +5023,12 @@
                 footTr.style.background = '#f1f5f9';
                 footTr.style.fontWeight = '800';
                 footTr.innerHTML = `
-                  <td colspan="2" style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">TOTAL (کل توثیق):</td>
-                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1;">${(calc.totalInternalEffectiveHours || 168).toFixed(1)} hrs</td>
-                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${(calc.grandTotalUnits || 0).toFixed(2)} hrs</td>
-                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.wapdaBill || 0).toLocaleString()}</td>
-                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.totalFixedExpenses || 0).toLocaleString()}</td>
-                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1; color: #059669; background: #d1fae5; font-size: 0.95rem;">Rs. ${Math.round(calc.grandTotalBillSystem || 0).toLocaleString()}</td>
+                  <td colspan="2" style="padding: 0.4rem; text-align: right; border: 1px solid #cbd5e1;">TOTAL (کل توثیق):</td>
+                  <td style="padding: 0.4rem; text-align: center; border: 1px solid #cbd5e1;">${(calc.totalInternalEffectiveHours || 168).toFixed(1)} hrs</td>
+                  <td style="padding: 0.4rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${(calc.grandTotalUnits || 0).toFixed(2)} hrs</td>
+                  <td style="padding: 0.4rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.wapdaBill || 0).toLocaleString()}</td>
+                  <td style="padding: 0.4rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.totalFixedExpenses || 0).toLocaleString()}</td>
+                  <td style="padding: 0.4rem; text-align: right; border: 1px solid #cbd5e1; color: #059669; background: #d1fae5; font-size: 0.88rem;">Rs. ${Math.round(calc.grandTotalBillSystem || 0).toLocaleString()}</td>
                 `;
                 tfoot.appendChild(footTr);
               }
@@ -5042,8 +5046,8 @@
               const tr = document.createElement('tr');
               tr.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
               tr.innerHTML = `
-                <td style="padding: 0.4rem 0.6rem; border: 1px solid #e2e8f0; font-weight: 600;">${exp.description}</td>
-                <td style="padding: 0.4rem 0.6rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 700; color: #dc2626;">Rs. ${Math.round(exp.amount).toLocaleString()}</td>
+                <td style="padding: 0.35rem 0.5rem; border: 1px solid #e2e8f0; font-weight: 600;">${exp.description}</td>
+                <td style="padding: 0.35rem 0.5rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 700; color: #dc2626;">Rs. ${Math.round(exp.amount).toLocaleString()}</td>
               `;
               itemizedBody.appendChild(tr);
             });
@@ -5068,7 +5072,7 @@
             container.style.position = 'absolute';
             container.style.top = '0px';
             container.style.left = '0px';
-            container.style.width = '794px';
+            container.style.width = '730px';
             container.style.background = '#ffffff';
             container.style.color = '#0f172a';
             container.style.zIndex = '9999999';
@@ -5099,9 +5103,10 @@
                   logging: false,
                   scrollX: 0,
                   scrollY: 0,
-                  windowWidth: 1024
+                  windowWidth: 750
                 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
               };
 
               // Wait 250ms to ensure DOM layout engine renders clone completely
