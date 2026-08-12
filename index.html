@@ -1558,7 +1558,8 @@
       }
 
       function populate12HourOptions(hourSelect, minSelect) {
-        if (hourSelect.options.length === 0) {
+        if (!hourSelect || !minSelect) return;
+        if (hourSelect.options && hourSelect.options.length === 0) {
           for (let i = 1; i <= 12; i++) {
             const opt = document.createElement('option');
             opt.value = i;
@@ -1566,7 +1567,7 @@
             hourSelect.appendChild(opt);
           }
         }
-        if (minSelect.options.length === 0) {
+        if (minSelect.options && minSelect.options.length === 0) {
           for (let m = 0; m < 60; m += 5) {
             const opt = document.createElement('option');
             const valStr = String(m).padStart(2, '0');
@@ -2740,6 +2741,17 @@
         return null;
       }
 
+      function parseRegisterTextIntoEntries(rawText, registeredUsers = []) {
+        if (!rawText || !rawText.trim()) return [];
+        let list = [];
+        const cleanStr = rawText.replace(/^```json\s*/m, '').replace(/```$/m, '').trim();
+
+        const allUsers = (registeredUsers && registeredUsers.length > 0) ? registeredUsers : store.getUsers();
+
+        function findMatchingUser(searchStr) {
+          return findGlobalUserMatch(searchStr, allUsers);
+        }
+
         try {
           const parsed = JSON.parse(cleanStr);
           if (Array.isArray(parsed)) {
@@ -3603,8 +3615,12 @@
         }
 
         applyTheme(theme) {
-          document.documentElement.setAttribute('data-theme', theme);
-          this.themeToggleBtn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+          if (document.documentElement && document.documentElement.setAttribute) {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+          if (this.themeToggleBtn) {
+            this.themeToggleBtn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+          }
         }
 
         render() {
