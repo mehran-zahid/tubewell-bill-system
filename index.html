@@ -1167,56 +1167,19 @@
 
         <!-- Tenant / Thekedar Section (Optional) -->
         <div class="form-group mb-2" style="background: rgba(245, 158, 11, 0.07); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(245, 158, 11, 0.3);">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <input type="checkbox" id="userIsLeasedCheckbox" style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
-            <label for="userIsLeasedCheckbox" style="font-weight: 700; color: #f59e0b; cursor: pointer; margin: 0; font-size: 0.92rem;">
-              Land / Turn Leased out to Tenant? (ٹھیکے دار کو زمین دی ہوئی ہے)
-            </label>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" id="userIsLeasedCheckbox" style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
+              <label for="userIsLeasedCheckbox" style="font-weight: 700; color: #f59e0b; cursor: pointer; margin: 0; font-size: 0.92rem;">
+                Land / Turn Leased out to Tenants? (ٹھیکے داروں کو زمین دی ہوئی ہے)
+              </label>
+            </div>
           </div>
           <div id="tenantDetailsContainer" style="display: none; margin-top: 0.75rem; border-top: 1px dashed rgba(245, 158, 11, 0.3); padding-top: 0.75rem;">
-            <div class="form-group mb-2">
-              <label class="form-label">Thekedar Selection Type / ٹھیکے دار کی قسم</label>
-              <select id="tenantTypeSelect" class="form-control" style="font-weight: 600;">
-                <option value="external">Enter External / New Thekedar (نیا ٹھیکے دار / بیرونی)</option>
-                <option value="existing">Select Existing Registered Member (رجسٹرڈ ممبر منتخب کریں)</option>
-              </select>
-            </div>
-            
-            <div id="tenantExistingSelectGroup" class="form-group mb-2" style="display: none;">
-              <label class="form-label">Select Registered Member as Thekedar (رجسٹرڈ ممبر)</label>
-              <select id="tenantExistingMemberSelect" class="form-control" style="font-weight: 700; color: var(--accent-blue);"></select>
-            </div>
-
-            <div class="grid-2 mb-2">
-              <div>
-                <label class="form-label">Thekedar English Name (انگریزی نام)</label>
-                <input type="text" id="tenantNameEnInput" class="form-control" placeholder="e.g. Ali Raza">
-              </div>
-              <div>
-                <label class="form-label">Thekedar Urdu Name (اردو نام)</label>
-                <input type="text" id="tenantNameUrInput" class="form-control" placeholder="e.g. علی رضا" style="font-family: var(--font-urdu);">
-              </div>
-            </div>
-            <div class="grid-2 mb-2">
-              <div>
-                <label class="form-label">Thekedar Phone (فون)</label>
-                <input type="text" id="tenantPhoneInput" class="form-control" placeholder="e.g. 03001234567">
-              </div>
-              <div>
-                <label class="form-label">Leased Acres (ایکڑ)</label>
-                <input type="number" step="0.1" min="0" id="tenantLeasedAcresInput" class="form-control" placeholder="e.g. 1.0">
-              </div>
-            </div>
-            <div class="grid-2 mb-2">
-              <div>
-                <label class="form-label">Leased Hours (گھنٹے)</label>
-                <input type="number" min="0" id="tenantLeasedHoursInput" class="form-control" placeholder="e.g. 1">
-              </div>
-              <div>
-                <label class="form-label">Leased Minutes (منٹ)</label>
-                <input type="number" min="0" max="59" step="5" id="tenantLeasedMinutesInput" class="form-control" placeholder="e.g. 30">
-              </div>
-            </div>
+            <div id="tenantsListContainer" style="display: flex; flex-direction: column; gap: 0.85rem;"></div>
+            <button type="button" id="addTenantRowBtn" class="btn btn-secondary btn-sm mt-2" style="font-weight: 700; border: 1px dashed #f59e0b; color: #f59e0b; width: 100%; padding: 0.5rem;">
+              ➕ Add Another Thekedar (+ نیا ٹھیکے دار شامل کریں)
+            </button>
           </div>
         </div>
 
@@ -1897,15 +1860,22 @@
             phone: (user.phone || '').trim(),
             totalLandAcres: parseFloat(user.totalLandAcres) || 0,
             isLeased: !!user.isLeased,
-            tenantType: user.tenantType || 'external',
-            linkedMemberId: user.linkedMemberId || null,
-            tenantNameEn: (user.tenantNameEn || user.tenantName || '').trim(),
-            tenantNameUr: (user.tenantNameUr || '').trim(),
-            tenantPhone: (user.tenantPhone || '').trim(),
-            tenantLeasedHours: parseInt(user.tenantLeasedHours, 10) || 0,
-            tenantLeasedMinutes: parseInt(user.tenantLeasedMinutes, 10) || 0,
-            tenantTotalLeasedMins: (parseInt(user.tenantLeasedHours, 10) || 0) * 60 + (parseInt(user.tenantLeasedMinutes, 10) || 0),
-            tenantLeasedAcres: parseFloat(user.tenantLeasedAcres) || 0,
+            tenants: Array.isArray(user.tenants) && user.tenants.length > 0 
+              ? user.tenants 
+              : (user.isLeased && (user.tenantNameEn || user.tenantNameUr || user.tenantName || user.linkedMemberId)
+                  ? [{
+                      id: 't-1',
+                      tenantType: user.tenantType || 'external',
+                      linkedMemberId: user.linkedMemberId || null,
+                      tenantNameEn: (user.tenantNameEn || user.tenantName || '').trim(),
+                      tenantNameUr: (user.tenantNameUr || '').trim(),
+                      tenantPhone: (user.tenantPhone || '').trim(),
+                      tenantLeasedHours: parseInt(user.tenantLeasedHours, 10) || 0,
+                      tenantLeasedMinutes: parseInt(user.tenantLeasedMinutes, 10) || 0,
+                      tenantTotalLeasedMins: (parseInt(user.tenantLeasedHours, 10) || 0) * 60 + (parseInt(user.tenantLeasedMinutes, 10) || 0),
+                      tenantLeasedAcres: parseFloat(user.tenantLeasedAcres) || 0
+                    }]
+                  : []),
             userType: user.userType || 'internal',
             startDay: user.startDay || 'Sunday',
             startTime: user.startTime || '08:00',
@@ -1956,15 +1926,7 @@
               fullName: fullName,
               totalLandAcres: updatedFields.totalLandAcres !== undefined ? (parseFloat(updatedFields.totalLandAcres) || 0) : (current.totalLandAcres || 0),
               isLeased: updatedFields.isLeased !== undefined ? !!updatedFields.isLeased : !!current.isLeased,
-              tenantType: updatedFields.tenantType || current.tenantType || 'external',
-              linkedMemberId: updatedFields.linkedMemberId !== undefined ? updatedFields.linkedMemberId : (current.linkedMemberId || null),
-              tenantNameEn: updatedFields.tenantNameEn !== undefined ? updatedFields.tenantNameEn.trim() : (current.tenantNameEn || current.tenantName || ''),
-              tenantNameUr: updatedFields.tenantNameUr !== undefined ? updatedFields.tenantNameUr.trim() : (current.tenantNameUr || ''),
-              tenantPhone: updatedFields.tenantPhone !== undefined ? updatedFields.tenantPhone.trim() : (current.tenantPhone || ''),
-              tenantLeasedHours: updatedFields.tenantLeasedHours !== undefined ? (parseInt(updatedFields.tenantLeasedHours, 10) || 0) : (current.tenantLeasedHours || 0),
-              tenantLeasedMinutes: updatedFields.tenantLeasedMinutes !== undefined ? (parseInt(updatedFields.tenantLeasedMinutes, 10) || 0) : (current.tenantLeasedMinutes || 0),
-              tenantTotalLeasedMins: ((updatedFields.tenantLeasedHours !== undefined ? (parseInt(updatedFields.tenantLeasedHours, 10) || 0) : (current.tenantLeasedHours || 0)) * 60) + ((updatedFields.tenantLeasedMinutes !== undefined ? (parseInt(updatedFields.tenantLeasedMinutes, 10) || 0) : (current.tenantLeasedMinutes || 0))),
-              tenantLeasedAcres: updatedFields.tenantLeasedAcres !== undefined ? (parseFloat(updatedFields.tenantLeasedAcres) || 0) : (current.tenantLeasedAcres || 0),
+              tenants: updatedFields.tenants !== undefined ? updatedFields.tenants : (current.tenants || []),
               userType: updatedFields.userType || current.userType || 'internal',
               durationHours: durationHours,
               durationMinutes: durationMinutes,
@@ -2146,18 +2108,37 @@
           const mins = user.totalMinutes || calculateSlotDurationMinutes(user.startDay, user.startTime, user.endDay, user.endTime);
           const totalSlotHours = mins / 60;
 
-          const tEn = (user.tenantNameEn || user.tenantName || '').trim();
-          const tUr = (user.tenantNameUr || '').trim();
-          const hasTenant = !!user.isLeased && (!!tEn || !!tUr || !!user.linkedMemberId);
-          const tMins = user.tenantTotalLeasedMins || ((user.tenantLeasedHours || 0) * 60 + (user.tenantLeasedMinutes || 0));
-          const tenantLeasedHours = hasTenant ? Math.min(totalSlotHours, tMins > 0 ? (tMins / 60) : (parseFloat(user.tenantLeasedHours) || 0)) : 0;
-          const ownerNetHours = hasTenant ? Math.max(0, totalSlotHours - tenantLeasedHours) : totalSlotHours;
+          const userTenants = Array.isArray(user.tenants) && user.tenants.length > 0
+            ? user.tenants
+            : (user.isLeased && (user.tenantNameEn || user.tenantNameUr || user.tenantName || user.linkedMemberId)
+                ? [{
+                    id: 't-1',
+                    tenantType: user.tenantType || 'external',
+                    linkedMemberId: user.linkedMemberId || null,
+                    tenantNameEn: user.tenantNameEn || user.tenantName || '',
+                    tenantNameUr: user.tenantNameUr || '',
+                    tenantPhone: user.tenantPhone || '',
+                    tenantLeasedHours: user.tenantLeasedHours || 0,
+                    tenantLeasedMinutes: user.tenantLeasedMinutes || 0,
+                    tenantTotalLeasedMins: user.tenantTotalLeasedMins || 0,
+                    tenantLeasedAcres: user.tenantLeasedAcres || 0
+                  }]
+                : []);
+
+          let totalLeasedHoursSum = 0;
+          userTenants.forEach(t => {
+            const tMins = t.tenantTotalLeasedMins || ((t.tenantLeasedHours || 0) * 60 + (t.tenantLeasedMinutes || 0));
+            totalLeasedHoursSum += tMins > 0 ? (tMins / 60) : (parseFloat(t.tenantLeasedHours) || 0);
+          });
+
+          const hasTenants = user.isLeased && userTenants.length > 0;
+          const ownerNetHours = hasTenants ? Math.max(0, totalSlotHours - totalLeasedHoursSum) : totalSlotHours;
           const ownerNameStrEn = user.nameEn || user.name || '';
           const ownerNameStrUr = user.nameUr || '';
           const ownerFullName = ownerNameStrEn && ownerNameStrUr ? `${ownerNameStrEn} (${ownerNameStrUr})` : (user.name || ownerNameStrEn || ownerNameStrUr || 'Owner');
 
           // Owner entity
-          if (!hasTenant || ownerNetHours > 0) {
+          if (!hasTenants || ownerNetHours > 0) {
             billableEntities.push({
               id: user.id,
               userCode: user.userCode || user.code || '01',
@@ -2176,36 +2157,43 @@
             });
           }
 
-          // Tenant entity
-          if (hasTenant) {
-            const ownerNameEn = ownerNameStrEn;
-            const ownerNameUr = ownerNameStrUr || ownerNameStrEn;
-            const tenantDisplayNameEn = tEn ? `${tEn} Tenant (Owner: ${ownerNameEn})` : `Tenant (Owner: ${ownerNameEn})`;
-            const tenantDisplayNameUr = tUr ? `${tUr} ٹھیکے دار (مالک: ${ownerNameUr})` : `ٹھیکے دار (مالک: ${ownerNameUr})`;
-            const tenantFullName = tEn && tUr 
-              ? `${tEn} (${tUr}) ٹھیکے دار (مالک: ${ownerNameUr})` 
-              : `${tEn || tUr || 'Thekedar'} ٹھیکے دار (مالک: ${ownerNameUr})`;
+          // Tenant entities
+          if (hasTenants) {
+            userTenants.forEach((t, tIdx) => {
+              const tEn = (t.tenantNameEn || t.tenantName || '').trim();
+              const tUr = (t.tenantNameUr || '').trim();
+              const tMins = t.tenantTotalLeasedMins || ((t.tenantLeasedHours || 0) * 60 + (t.tenantLeasedMinutes || 0));
+              const tHrs = tMins > 0 ? (tMins / 60) : (parseFloat(t.tenantLeasedHours) || 0);
 
-            billableEntities.push({
-              id: user.id + '__tenant',
-              userCode: (user.userCode || user.code || '01') + '-T',
-              nameEn: tenantDisplayNameEn,
-              nameUr: tenantDisplayNameUr,
-              fullName: tenantFullName,
-              userType: 'internal',
-              phone: user.tenantPhone || user.phone || '',
-              startDay: user.startDay,
-              startTime: user.startTime,
-              endDay: user.endDay,
-              endTime: user.endTime,
-              totalMinutes: user.totalMinutes,
-              allocatedHours: tenantLeasedHours > 0 ? tenantLeasedHours : totalSlotHours,
-              isTenant: true,
-              ownerNameEn: ownerNameEn,
-              ownerNameUr: ownerNameUr,
-              ownerName: ownerNameUr || ownerNameEn,
-              leasedHours: tenantLeasedHours,
-              leasedAcres: parseFloat(user.tenantLeasedAcres) || 0
+              const ownerNameEn = ownerNameStrEn;
+              const ownerNameUr = ownerNameStrUr || ownerNameStrEn;
+              const tenantDisplayNameEn = tEn ? `${tEn} Tenant (Owner: ${ownerNameEn})` : `Tenant (Owner: ${ownerNameEn})`;
+              const tenantDisplayNameUr = tUr ? `${tUr} ٹھیکے دار (مالک: ${ownerNameUr})` : `ٹھیکے دار (مالک: ${ownerNameUr})`;
+              const tenantFullName = tEn && tUr 
+                ? `${tEn} (${tUr}) ٹھیکے دار (مالک: ${ownerNameUr})` 
+                : `${tEn || tUr || 'Thekedar'} ٹھیکے دار (مالک: ${ownerNameUr})`;
+
+              billableEntities.push({
+                id: `${user.id}__tenant_${tIdx}`,
+                userCode: `${user.userCode || user.code || '01'}-T${tIdx + 1}`,
+                nameEn: tenantDisplayNameEn,
+                nameUr: tenantDisplayNameUr,
+                fullName: tenantFullName,
+                userType: 'internal',
+                phone: t.tenantPhone || user.phone || '',
+                startDay: user.startDay,
+                startTime: user.startTime,
+                endDay: user.endDay,
+                endTime: user.endTime,
+                totalMinutes: user.totalMinutes,
+                allocatedHours: tHrs > 0 ? tHrs : totalSlotHours,
+                isTenant: true,
+                ownerNameEn: ownerNameEn,
+                ownerNameUr: ownerNameUr,
+                ownerName: ownerNameUr || ownerNameEn,
+                leasedHours: tHrs,
+                leasedAcres: parseFloat(t.tenantLeasedAcres) || 0
+              });
             });
           }
         });
@@ -3475,9 +3463,22 @@
               const m = u.durationMinutes !== undefined ? u.durationMinutes : ((u.totalMinutes || 600) % 60);
               const totMins = u.totalMinutes || (h * 60 + m);
 
-              const th = u.tenantLeasedHours !== undefined ? u.tenantLeasedHours : Math.floor((u.tenantTotalLeasedMins || 0) / 60);
-              const tm = u.tenantLeasedMinutes !== undefined ? u.tenantLeasedMinutes : ((u.tenantTotalLeasedMins || 0) % 60);
-              const tTotMins = u.tenantTotalLeasedMins || (th * 60 + tm);
+              const tenants = Array.isArray(u.tenants) && u.tenants.length > 0 
+                ? u.tenants 
+                : (u.isLeased && (u.tenantNameEn || u.tenantNameUr || u.tenantName || u.linkedMemberId)
+                    ? [{
+                        id: 't-1',
+                        tenantType: u.tenantType || 'external',
+                        linkedMemberId: u.linkedMemberId || null,
+                        tenantNameEn: u.tenantNameEn || u.tenantName || '',
+                        tenantNameUr: u.tenantNameUr || '',
+                        tenantPhone: u.tenantPhone || '',
+                        tenantLeasedHours: u.tenantLeasedHours || 0,
+                        tenantLeasedMinutes: u.tenantLeasedMinutes || 0,
+                        tenantTotalLeasedMins: u.tenantTotalLeasedMins || 0,
+                        tenantLeasedAcres: u.tenantLeasedAcres || 0
+                      }]
+                    : []);
 
               return {
                 userCode: u.userCode || u.code || '01',
@@ -3494,15 +3495,7 @@
                 totalMinutes: totMins,
                 totalLandAcres: u.totalLandAcres || 0,
                 isLeased: !!u.isLeased,
-                tenantType: u.tenantType || 'external',
-                linkedMemberId: u.linkedMemberId || null,
-                tenantNameEn: u.tenantNameEn || u.tenantName || '',
-                tenantNameUr: u.tenantNameUr || '',
-                tenantPhone: u.tenantPhone || '',
-                tenantLeasedHours: th,
-                tenantLeasedMinutes: tm,
-                tenantTotalLeasedMins: tTotMins,
-                tenantLeasedAcres: u.tenantLeasedAcres || 0
+                tenants: tenants
               };
             })
           };
@@ -3552,10 +3545,22 @@
                   if (totMins <= 0 && u.totalMinutes) totMins = u.totalMinutes;
                   if (totMins <= 0) totMins = 600;
 
-                  const th = parseInt(u.tenantLeasedHours, 10) || 0;
-                  const tm = parseInt(u.tenantLeasedMinutes, 10) || 0;
-                  let tTotMins = (th * 60) + tm;
-                  if (tTotMins <= 0 && u.tenantTotalLeasedMins) tTotMins = u.tenantTotalLeasedMins;
+                  const rawTenants = Array.isArray(u.tenants) && u.tenants.length > 0
+                    ? u.tenants
+                    : (u.isLeased || u.tenantNameEn || u.tenantNameUr || u.tenantName
+                        ? [{
+                            id: 't-1',
+                            tenantType: u.tenantType || 'external',
+                            linkedMemberId: u.linkedMemberId || null,
+                            tenantNameEn: (u.tenantNameEn || u.tenantName || '').trim(),
+                            tenantNameUr: (u.tenantNameUr || '').trim(),
+                            tenantPhone: (u.tenantPhone || '').trim(),
+                            tenantLeasedHours: parseInt(u.tenantLeasedHours, 10) || 0,
+                            tenantLeasedMinutes: parseInt(u.tenantLeasedMinutes, 10) || 0,
+                            tenantTotalLeasedMins: u.tenantTotalLeasedMins || ((parseInt(u.tenantLeasedHours, 10) || 0) * 60 + (parseInt(u.tenantLeasedMinutes, 10) || 0)),
+                            tenantLeasedAcres: parseFloat(u.tenantLeasedAcres) || 0
+                          }]
+                        : []);
 
                   return {
                     id: 'usr-' + Date.now() + '-' + idx,
@@ -3575,16 +3580,8 @@
                     durationMinutes: m || (totMins % 60),
                     totalMinutes: totMins,
                     totalLandAcres: parseFloat(u.totalLandAcres) || 0,
-                    isLeased: !!u.isLeased,
-                    tenantType: u.tenantType || 'external',
-                    linkedMemberId: u.linkedMemberId || null,
-                    tenantNameEn: (u.tenantNameEn || u.tenantName || '').trim(),
-                    tenantNameUr: (u.tenantNameUr || '').trim(),
-                    tenantPhone: (u.tenantPhone || '').trim(),
-                    tenantLeasedHours: th || Math.floor(tTotMins / 60),
-                    tenantLeasedMinutes: tm || (tTotMins % 60),
-                    tenantTotalLeasedMins: tTotMins,
-                    tenantLeasedAcres: parseFloat(u.tenantLeasedAcres) || 0
+                    isLeased: !!u.isLeased || rawTenants.length > 0,
+                    tenants: rawTenants
                   };
                 });
               } else {
@@ -3875,15 +3872,24 @@
             if (this.userTotalLandAcresInput) this.userTotalLandAcresInput.value = user.totalLandAcres || '';
             if (this.userIsLeasedCheckbox) this.userIsLeasedCheckbox.checked = !!user.isLeased;
             if (this.tenantDetailsContainer) this.tenantDetailsContainer.style.display = user.isLeased ? 'block' : 'none';
-            if (this.tenantTypeSelect) this.tenantTypeSelect.value = user.tenantType || (user.linkedMemberId ? 'existing' : 'external');
-            if (this.tenantExistingSelectGroup) this.tenantExistingSelectGroup.style.display = (user.tenantType === 'existing' || user.linkedMemberId) ? 'block' : 'none';
-            this.populateTenantExistingDropdown(user.linkedMemberId);
-            if (this.tenantNameEnInput) this.tenantNameEnInput.value = user.tenantNameEn || user.tenantName || '';
-            if (this.tenantNameUrInput) this.tenantNameUrInput.value = user.tenantNameUr || '';
-            if (this.tenantPhoneInput) this.tenantPhoneInput.value = user.tenantPhone || '';
-            if (this.tenantLeasedHoursInput) this.tenantLeasedHoursInput.value = user.tenantLeasedHours !== undefined ? user.tenantLeasedHours : '';
-            if (this.tenantLeasedMinutesInput) this.tenantLeasedMinutesInput.value = user.tenantLeasedMinutes !== undefined ? user.tenantLeasedMinutes : '';
-            if (this.tenantLeasedAcresInput) this.tenantLeasedAcresInput.value = user.tenantLeasedAcres || '';
+
+            const tenantsList = Array.isArray(user.tenants) && user.tenants.length > 0 
+              ? user.tenants 
+              : (user.isLeased && (user.tenantNameEn || user.tenantNameUr || user.tenantName || user.linkedMemberId)
+                  ? [{
+                      id: 't-1',
+                      tenantType: user.tenantType || (user.linkedMemberId ? 'existing' : 'external'),
+                      linkedMemberId: user.linkedMemberId || null,
+                      tenantNameEn: user.tenantNameEn || user.tenantName || '',
+                      tenantNameUr: user.tenantNameUr || '',
+                      tenantPhone: user.tenantPhone || '',
+                      tenantLeasedHours: user.tenantLeasedHours || 0,
+                      tenantLeasedMinutes: user.tenantLeasedMinutes || 0,
+                      tenantLeasedAcres: user.tenantLeasedAcres || 0
+                    }]
+                  : []);
+            this.renderTenantsList(tenantsList);
+
             this.userStartDaySelect.value = user.startDay || 'Sunday';
             this.setModalStartTime24(user.startTime || '08:00');
 
@@ -3902,15 +3908,7 @@
             if (this.userTotalLandAcresInput) this.userTotalLandAcresInput.value = '';
             if (this.userIsLeasedCheckbox) this.userIsLeasedCheckbox.checked = false;
             if (this.tenantDetailsContainer) this.tenantDetailsContainer.style.display = 'none';
-            if (this.tenantTypeSelect) this.tenantTypeSelect.value = 'external';
-            if (this.tenantExistingSelectGroup) this.tenantExistingSelectGroup.style.display = 'none';
-            this.populateTenantExistingDropdown();
-            if (this.tenantNameEnInput) this.tenantNameEnInput.value = '';
-            if (this.tenantNameUrInput) this.tenantNameUrInput.value = '';
-            if (this.tenantPhoneInput) this.tenantPhoneInput.value = '';
-            if (this.tenantLeasedHoursInput) this.tenantLeasedHoursInput.value = '';
-            if (this.tenantLeasedMinutesInput) this.tenantLeasedMinutesInput.value = '';
-            if (this.tenantLeasedAcresInput) this.tenantLeasedAcresInput.value = '';
+            this.renderTenantsList([]);
 
             const users = store.getUsers();
             if (users.length > 0) {
@@ -3953,6 +3951,178 @@
           this.openModal(this.userModal);
         }
 
+        renderTenantsList(tenants = []) {
+          if (!this.tenantsListContainer) return;
+          this.tenantsListContainer.innerHTML = '';
+
+          if (!tenants || tenants.length === 0) {
+            tenants = [{
+              id: 't-1',
+              tenantType: 'external',
+              linkedMemberId: null,
+              tenantNameEn: '',
+              tenantNameUr: '',
+              tenantPhone: '',
+              tenantLeasedHours: 1,
+              tenantLeasedMinutes: 0,
+              tenantLeasedAcres: 1
+            }];
+          }
+
+          tenants.forEach((t, idx) => {
+            const div = document.createElement('div');
+            div.className = 'tenant-card-item';
+            div.style.cssText = 'background: rgba(255, 255, 255, 0.04); padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid rgba(245, 158, 11, 0.25); position: relative; margin-bottom: 0.65rem;';
+
+            const members = store.getUsers().filter(u => u.id !== this.currentEditingUserId);
+            const memberOpts = members.map(m => {
+              const code = m.userCode || m.code || '01';
+              const name = m.fullName || `${m.nameEn || m.name} (${m.nameUr || ''})`;
+              const isSel = m.id === t.linkedMemberId ? 'selected' : '';
+              return `<option value="${m.id}" ${isSel}>[${code}] ${name}</option>`;
+            }).join('');
+
+            div.innerHTML = `
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span style="font-weight: 800; color: #f59e0b; font-size: 0.88rem;">🚜 Thekedar #${idx + 1}</span>
+                ${tenants.length > 1 ? `<button type="button" class="btn btn-danger btn-sm remove-tenant-btn" data-index="${idx}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">🗑️ Remove</button>` : ''}
+              </div>
+
+              <div class="grid-2 mb-2">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Selection Type / ٹھیکے دار کی قسم</label>
+                  <select class="form-control tenant-type-select" data-index="${idx}" style="font-size: 0.85rem;">
+                    <option value="external" ${t.tenantType === 'external' ? 'selected' : ''}>External / New (نیا ٹھیکے دار)</option>
+                    <option value="existing" ${t.tenantType === 'existing' ? 'selected' : ''}>Existing Member (رجسٹرڈ ممبر)</option>
+                  </select>
+                </div>
+                <div class="tenant-existing-group" data-index="${idx}" style="display: ${t.tenantType === 'existing' ? 'block' : 'none'};">
+                  <label class="form-label" style="font-size: 0.78rem;">Select Member (رجسٹرڈ ممبر)</label>
+                  <select class="form-control tenant-member-select" data-index="${idx}" style="font-size: 0.85rem;">
+                    <option value="">-- Select Member --</option>
+                    ${memberOpts}
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid-2 mb-2">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">English Name (انگریزی نام)</label>
+                  <input type="text" class="form-control tenant-name-en-input" data-index="${idx}" value="${t.tenantNameEn || t.tenantName || ''}" placeholder="e.g. Ali Raza">
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Urdu Name (اردو نام)</label>
+                  <input type="text" class="form-control tenant-name-ur-input" data-index="${idx}" value="${t.tenantNameUr || ''}" placeholder="e.g. علی رضا" style="font-family: var(--font-urdu);">
+                </div>
+              </div>
+
+              <div class="grid-2 mb-2">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Phone (فون)</label>
+                  <input type="text" class="form-control tenant-phone-input" data-index="${idx}" value="${t.tenantPhone || ''}" placeholder="e.g. 03001234567">
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Leased Acres (ایکڑ)</label>
+                  <input type="number" step="0.1" min="0" class="form-control tenant-acres-input" data-index="${idx}" value="${t.tenantLeasedAcres || 0}" placeholder="e.g. 1.0">
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Leased Hours (گھنٹے)</label>
+                  <input type="number" min="0" class="form-control tenant-hours-input" data-index="${idx}" value="${t.tenantLeasedHours !== undefined ? t.tenantLeasedHours : 1}" placeholder="e.g. 1">
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.78rem;">Leased Minutes (منٹ)</label>
+                  <input type="number" min="0" max="59" step="5" class="form-control tenant-mins-input" data-index="${idx}" value="${t.tenantLeasedMinutes !== undefined ? t.tenantLeasedMinutes : 0}" placeholder="e.g. 30">
+                </div>
+              </div>
+            `;
+
+            this.tenantsListContainer.appendChild(div);
+          });
+
+          // Bind remove buttons
+          this.tenantsListContainer.querySelectorAll('.remove-tenant-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const idx = parseInt(e.target.dataset.index, 10);
+              const current = this.getTenantsFromUI();
+              current.splice(idx, 1);
+              this.renderTenantsList(current);
+            });
+          });
+
+          // Bind type select
+          this.tenantsListContainer.querySelectorAll('.tenant-type-select').forEach(sel => {
+            sel.addEventListener('change', (e) => {
+              const idx = parseInt(e.target.dataset.index, 10);
+              const group = this.tenantsListContainer.querySelector(`.tenant-existing-group[data-index="${idx}"]`);
+              if (group) group.style.display = e.target.value === 'existing' ? 'block' : 'none';
+            });
+          });
+
+          // Bind member select
+          this.tenantsListContainer.querySelectorAll('.tenant-member-select').forEach(sel => {
+            sel.addEventListener('change', (e) => {
+              const idx = parseInt(e.target.dataset.index, 10);
+              const memberId = e.target.value;
+              if (memberId) {
+                const u = store.getUserById(memberId);
+                if (u) {
+                  const en = this.tenantsListContainer.querySelector(`.tenant-name-en-input[data-index="${idx}"]`);
+                  const ur = this.tenantsListContainer.querySelector(`.tenant-name-ur-input[data-index="${idx}"]`);
+                  const ph = this.tenantsListContainer.querySelector(`.tenant-phone-input[data-index="${idx}"]`);
+                  if (en) en.value = u.nameEn || u.name || '';
+                  if (ur) ur.value = u.nameUr || '';
+                  if (ph) ph.value = u.phone || '';
+                }
+              }
+            });
+          });
+        }
+
+        getTenantsFromUI() {
+          if (!this.tenantsListContainer) return [];
+          const cards = this.tenantsListContainer.querySelectorAll('.tenant-card-item');
+          const res = [];
+          cards.forEach((card, idx) => {
+            const typeSel = card.querySelector('.tenant-type-select');
+            const memSel = card.querySelector('.tenant-member-select');
+            const enInput = card.querySelector('.tenant-name-en-input');
+            const urInput = card.querySelector('.tenant-name-ur-input');
+            const phInput = card.querySelector('.tenant-phone-input');
+            const acresInput = card.querySelector('.tenant-acres-input');
+            const hrsInput = card.querySelector('.tenant-hours-input');
+            const minsInput = card.querySelector('.tenant-mins-input');
+
+            const tType = typeSel ? typeSel.value : 'external';
+            const linkedId = tType === 'existing' && memSel ? memSel.value : null;
+            const en = enInput ? enInput.value.trim() : '';
+            const ur = urInput ? urInput.value.trim() : '';
+            const phone = phInput ? phInput.value.trim() : '';
+            const acres = parseFloat(acresInput ? acresInput.value : 0) || 0;
+            const hrs = parseInt(hrsInput ? hrsInput.value : 0, 10) || 0;
+            const mins = parseInt(minsInput ? minsInput.value : 0, 10) || 0;
+            const totMins = (hrs * 60) + mins;
+
+            if (en || ur || linkedId) {
+              res.push({
+                id: 't-' + Date.now() + '-' + idx,
+                tenantType: tType,
+                linkedMemberId: linkedId,
+                tenantNameEn: en,
+                tenantNameUr: ur,
+                tenantPhone: phone,
+                tenantLeasedHours: hrs,
+                tenantLeasedMinutes: mins,
+                tenantTotalLeasedMins: totMins,
+                tenantLeasedAcres: acres
+              });
+            }
+          });
+          return res;
+        }
+
         handleUserFormSubmit(e) {
           e.preventDefault();
           const id = this.userIdInput.value;
@@ -3963,14 +4133,7 @@
           const phone = (this.userPhoneInput.value || '').trim();
           const totalLandAcres = parseFloat(this.userTotalLandAcresInput ? this.userTotalLandAcresInput.value : 0) || 0;
           const isLeased = this.userIsLeasedCheckbox ? this.userIsLeasedCheckbox.checked : false;
-          const tenantType = this.tenantTypeSelect ? this.tenantTypeSelect.value : 'external';
-          const linkedMemberId = tenantType === 'existing' && this.tenantExistingMemberSelect ? this.tenantExistingMemberSelect.value : null;
-          const tenantNameEn = (this.tenantNameEnInput ? this.tenantNameEnInput.value : '').trim();
-          const tenantNameUr = (this.tenantNameUrInput ? this.tenantNameUrInput.value : '').trim();
-          const tenantPhone = (this.tenantPhoneInput ? this.tenantPhoneInput.value : '').trim();
-          const tenantLeasedHours = parseInt(this.tenantLeasedHoursInput ? this.tenantLeasedHoursInput.value : 0, 10) || 0;
-          const tenantLeasedMinutes = parseInt(this.tenantLeasedMinutesInput ? this.tenantLeasedMinutesInput.value : 0, 10) || 0;
-          const tenantLeasedAcres = parseFloat(this.tenantLeasedAcresInput ? this.tenantLeasedAcresInput.value : 0) || 0;
+          const tenants = isLeased ? this.getTenantsFromUI() : [];
           const startDay = this.userStartDaySelect.value;
           const startTime = this.getModalStartTime24();
           const durationHours = parseInt(this.userDurationHoursInput.value, 10) || 0;
@@ -3989,10 +4152,10 @@
 
           try {
             if (id) {
-              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedMinutes, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
+              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenants, startDay, startTime, durationHours, durationMinutes });
               this.showToast(`Member updated & schedule aligned`);
             } else {
-              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedMinutes, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
+              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenants, startDay, startTime, durationHours, durationMinutes });
               this.showToast(`Member added & schedule chained`);
 
               if (this.pendingQuickUserSelectForEntry) {
@@ -4019,12 +4182,21 @@
             const uCode = u.userCode || u.code || '01';
             const nameStr = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
             const opts = [`<option value="${u.id}">[${uCode}] ${nameStr}</option>`];
-            const tEn = u.tenantNameEn || u.tenantName || '';
-            const tUr = u.tenantNameUr || '';
-            if (u.isLeased && (tEn || tUr)) {
-              const tenantId = `${u.id}__tenant`;
-              const tStr = tEn && tUr ? `${tEn} (${tUr})` : (tEn || tUr);
-              opts.push(`<option value="${tenantId}">[${uCode}-T] ${tStr} (Thekedar for ${u.nameEn || u.name})</option>`);
+
+            const tenants = Array.isArray(u.tenants) && u.tenants.length > 0
+              ? u.tenants
+              : (u.isLeased && (u.tenantNameEn || u.tenantNameUr || u.tenantName)
+                  ? [{ tenantNameEn: u.tenantNameEn || u.tenantName || '', tenantNameUr: u.tenantNameUr || '' }]
+                  : []);
+
+            if (u.isLeased && tenants.length > 0) {
+              tenants.forEach((t, tIdx) => {
+                const tenantId = `${u.id}__tenant_${tIdx}`;
+                const tEn = t.tenantNameEn || t.tenantName || '';
+                const tUr = t.tenantNameUr || '';
+                const tStr = tEn && tUr ? `${tEn} (${tUr})` : (tEn || tUr || 'Thekedar');
+                opts.push(`<option value="${tenantId}">[${uCode}-T${tIdx + 1}] ${tStr} ٹھیکے دار (مالک: ${u.nameEn || u.name})</option>`);
+              });
             }
             return opts;
           }).join('');
@@ -4081,13 +4253,22 @@
                         const nameStr = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
                         const isSel = u.id === entry.userId ? 'selected' : '';
                         const opts = [`<option value="${u.id}" ${isSel}>[${uCode}] ${nameStr}</option>`];
-                        const tEn = u.tenantNameEn || u.tenantName || '';
-                        const tUr = u.tenantNameUr || '';
-                        if (u.isLeased && (tEn || tUr)) {
-                          const tenantId = `${u.id}__tenant`;
-                          const isTenantSel = tenantId === entry.userId ? 'selected' : '';
-                          const tStr = tEn && tUr ? `${tEn} (${tUr})` : (tEn || tUr);
-                          opts.push(`<option value="${tenantId}" ${isTenantSel}>[${uCode}-T] ${tStr} (Thekedar for ${u.nameEn || u.name})</option>`);
+
+                        const tenants = Array.isArray(u.tenants) && u.tenants.length > 0
+                          ? u.tenants
+                          : (u.isLeased && (u.tenantNameEn || u.tenantNameUr || u.tenantName)
+                              ? [{ tenantNameEn: u.tenantNameEn || u.tenantName || '', tenantNameUr: u.tenantNameUr || '' }]
+                              : []);
+
+                        if (u.isLeased && tenants.length > 0) {
+                          tenants.forEach((t, tIdx) => {
+                            const tenantId = `${u.id}__tenant_${tIdx}`;
+                            const isTenantSel = tenantId === entry.userId ? 'selected' : '';
+                            const tEn = t.tenantNameEn || t.tenantName || '';
+                            const tUr = t.tenantNameUr || '';
+                            const tStr = tEn && tUr ? `${tEn} (${tUr})` : (tEn || tUr || 'Thekedar');
+                            opts.push(`<option value="${tenantId}" ${isTenantSel}>[${uCode}-T${tIdx + 1}] ${tStr} ٹھیکے دار (مالک: ${u.nameEn || u.name})</option>`);
+                          });
                         }
                         return opts;
                       }).join('')}
