@@ -591,15 +591,25 @@
     <!-- Tab 1: Turbine Members & Continuous Weekly Time Slots (Bari Turns) -->
     <section id="tab-users" class="tab-content">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="flex-wrap:wrap;gap:0.75rem">
           <div>
             <h2 class="card-title">👥 Turbine Members & Weekly Schedule</h2>
             <p class="card-subtitle">ٹربائن ممبران اور ہفتہ وار باری کا جدول</p>
+            <!-- Server sync status -->
+            <span id="syncStatusBadge" style="
+              display:inline-flex;align-items:center;gap:0.3rem;
+              font-size:0.72rem;padding:0.2rem 0.6rem;border-radius:20px;
+              background:rgba(100,116,139,0.2);color:#94a3b8;
+              margin-top:0.3rem;
+            ">⏳ Connecting to server...</span>
           </div>
           <div class="flex-center gap-2" style="flex-wrap: wrap;">
-            <button id="importScheduleBtn" class="btn btn-secondary btn-sm">📥 Import Schedule / امپورٹ</button>
-            <button id="exportScheduleBtn" class="btn btn-secondary btn-sm">📤 Export Schedule / ایکسپورٹ</button>
-            <button id="addUserBtn" class="btn btn-primary">+ Add New Member & Slot / نیا ممبر شامل کریں</button>
+            <!-- Admin login/logout -->
+            <button id="loginAdminBtn" class="btn btn-secondary btn-sm" style="border-color:rgba(251,191,36,0.4);color:#fbbf24">🔐 Login as Admin</button>
+            <button id="logoutAdminBtn" class="btn btn-secondary btn-sm" style="display:none;border-color:rgba(16,185,129,0.4);color:#10b981">✅ Admin — Logout</button>
+            <button id="importScheduleBtn" class="btn btn-secondary btn-sm">📥 Import</button>
+            <button id="exportScheduleBtn" class="btn btn-secondary btn-sm">📤 Export</button>
+            <button id="addUserBtn" class="btn btn-primary">+ Add New Member</button>
             <input type="file" id="importScheduleFileInput" accept=".json,.csv" style="display: none;">
           </div>
         </div>
@@ -1638,10 +1648,16 @@
               this.state.users = json.users;
               this.saveState();
               console.log(`[Server Sync] Loaded ${json.users.length} users from server`);
+              this._serverSyncStatus = 'online';
+            } else {
+              this._serverSyncStatus = json.users && json.users.length === 0 ? 'empty' : 'online';
             }
           } catch (e) {
             console.warn('[Server Sync] Offline or server unreachable — using local copy');
+            this._serverSyncStatus = 'offline';
           }
+          // Notify UI to update badge
+          if (window.app) window.app.updateSyncBadge();
         }
 
         async pushUsersToServer(password) {
@@ -1659,8 +1675,9 @@
         isAdminAuthenticated() {
           return Date.now() < this._adminSessionExpiry;
         }
-        setAdminAuthenticated() {
+        setAdminAuthenticated(password) {
           this._adminSessionExpiry = Date.now() + 15 * 60 * 1000; // 15 min
+          this._adminPassword = password; // store for background syncs
         }
 
         sanitizeLocalStorage() {
@@ -1917,10 +1934,11 @@
           this.saveState();
         }
 
-        // Called after any user mutation with valid password to push to server
-        async _syncAfterMutation(password) {
+        // Called after any user mutation to push to server
+        async _syncAfterMutation() {
+          if (!this._adminPassword) return;
           try {
-            await this.pushUsersToServer(password);
+            await this.pushUsersToServer(this._adminPassword);
             console.log('[Server Sync] Users saved to server successfully');
           } catch (e) {
             console.warn('[Server Sync] Could not push to server:', e.message);
@@ -2447,6 +2465,9 @@
 
           this.usersTableBody = document.getElementById('usersTableBody');
           this.addUserBtn = document.getElementById('addUserBtn');
+          this.loginAdminBtn = document.getElementById('loginAdminBtn');
+          this.logoutAdminBtn = document.getElementById('logoutAdminBtn');
+          this.syncStatusBadge = document.getElementById('syncStatusBadge');
           this.importScheduleBtn = document.getElementById('importScheduleBtn');
           this.exportScheduleBtn = document.getElementById('exportScheduleBtn');
           this.importScheduleFileInput = document.getElementById('importScheduleFileInput');
@@ -2577,7 +2598,25 @@
             });
           });
 
-          this.addUserBtn.addEventListener('click', () => this.openUserModal());
+          this.addUserBtn.addEventListener('click', () => {
+            if (!store.isAdminAuthenticated()) {
+              this.showToast('🔐 Please login as Admin first to add members.');
+              return;
+            }
+            this.openUserModal();
+          });
+
+          // Admin login button
+          if (this.loginAdminBtn) {
+            this.loginAdminBtn.addEventListener('click', () => this.showAdminLoginModal());
+          }
+          if (this.logoutAdminBtn) {
+            this.logoutAdminBtn.addEventListener('click', () => {
+              store._adminSessionExpiry = 0;
+              this.updateAdminUI();
+              this.showToast('Logged out of Admin mode.');
+            });
+          }
           if (this.exportScheduleBtn) {
             this.exportScheduleBtn.addEventListener('click', () => this.exportSchedule());
           }
@@ -3473,13 +3512,15 @@
 
             this.usersTableBody.querySelectorAll('.delete-user-btn').forEach(btn => {
               btn.addEventListener('click', () => {
+                if (!store.isAdminAuthenticated()) {
+                  this.showToast('🔐 Please login as Admin first.');
+                  return;
+                }
                 const user = store.getUserById(btn.dataset.id);
                 if (user && confirm(`Delete member "${user.name}"?`)) {
-                  this.requireAdminPassword((password) => {
-                    store.deleteUser(user.id);
-                    this.showToast(`Member ${user.name} deleted.`);
-                    store._syncAfterMutation(password);
-                  });
+                  store.deleteUser(user.id);
+                  this.showToast(`Member ${user.name} deleted.`);
+                  store._syncAfterMutation();
                 }
               });
             });
@@ -3610,31 +3651,29 @@
             return alert(`User ID "${userCode}" is already assigned to another member. User ID has automatically been updated to the next available ID "${nextFree}". Click Save again!`);
           }
 
-          this.requireAdminPassword((password) => {
-            try {
-              if (id) {
-                store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
-                this.showToast(`Member updated & schedule aligned`);
-              } else {
-                const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
-                this.showToast(`Member added & schedule chained`);
+          try {
+            if (id) {
+              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
+              this.showToast(`Member updated & schedule aligned`);
+            } else {
+              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
+              this.showToast(`Member added & schedule chained`);
 
-                if (this.pendingQuickUserSelectForEntry) {
-                  store.updateEntry(this.pendingQuickUserSelectForEntry, { userId: newUser.id, isReviewed: true });
-                  this.pendingQuickUserSelectForEntry = null;
-                  this.showToast('New member registered & linked to entry! ✅');
-                } else if (this.pendingQuickUserSelect) {
-                  this.pendingQuickUserSelect = false;
-                  this.openEntryModal();
-                  this.entryUserSelect.value = newUser.id;
-                }
+              if (this.pendingQuickUserSelectForEntry) {
+                store.updateEntry(this.pendingQuickUserSelectForEntry, { userId: newUser.id, isReviewed: true });
+                this.pendingQuickUserSelectForEntry = null;
+                this.showToast('New member registered & linked to entry! ✅');
+              } else if (this.pendingQuickUserSelect) {
+                this.pendingQuickUserSelect = false;
+                this.openEntryModal();
+                this.entryUserSelect.value = newUser.id;
               }
-              this.closeModal(this.userModal);
-              store._syncAfterMutation(password);
-            } catch (err) {
-              alert(err.message);
             }
-          });
+            this.closeModal(this.userModal);
+            store._syncAfterMutation();
+          } catch (err) {
+            alert(err.message);
+          }
         }
 
         renderRegisterTab() {
@@ -4221,57 +4260,55 @@
           }, 2800);
         }
 
-        // ── Admin Password Modal ─────────────────────────────────────────────
-        requireAdminPassword(onSuccess) {
-          // If already authenticated in this session, skip modal
-          if (store.isAdminAuthenticated()) {
-            onSuccess('__session__');
-            return;
-          }
-
-          // Build/show modal
+        // ── Admin Login Modal (called once via Login button) ──────────────────
+        showAdminLoginModal() {
           let modal = document.getElementById('adminPasswordModal');
           if (!modal) {
             modal = document.createElement('div');
             modal.id = 'adminPasswordModal';
             modal.style.cssText = `
               position:fixed;inset:0;z-index:99999;
-              background:rgba(0,0,0,0.7);
+              background:rgba(0,0,0,0.75);
               display:flex;align-items:center;justify-content:center;
-              backdrop-filter:blur(6px);
+              backdrop-filter:blur(8px);
             `;
             modal.innerHTML = `
               <div style="
                 background:var(--bg-card,#1a2744);
-                border:1px solid var(--border-glass,rgba(255,255,255,0.12));
-                border-radius:16px;padding:2rem;width:90%;max-width:380px;
-                box-shadow:0 24px 64px rgba(0,0,0,0.5);
+                border:1px solid rgba(251,191,36,0.3);
+                border-radius:20px;padding:2rem;width:90%;max-width:400px;
+                box-shadow:0 32px 80px rgba(0,0,0,0.6);
                 text-align:center;
               ">
-                <div style="font-size:2.5rem;margin-bottom:0.5rem">🔐</div>
-                <h3 style="margin:0 0 0.25rem;color:var(--text-primary,#fff);font-size:1.2rem">Admin Access Required</h3>
-                <p style="color:var(--text-muted,#94a3b8);font-size:0.85rem;margin:0 0 1.25rem">
-                  Enter the admin password to modify the member list.
+                <div style="font-size:3rem;margin-bottom:0.5rem">🔐</div>
+                <h3 style="margin:0 0 0.25rem;color:var(--text-primary,#fff);font-size:1.25rem">Admin Login</h3>
+                <p style="color:var(--text-muted,#94a3b8);font-size:0.85rem;margin:0 0 1.5rem">
+                  Enter the admin password to manage the members list.<br>
+                  <span style="font-size:0.75rem;opacity:0.6">Session stays active for 15 minutes.</span>
                 </p>
-                <input id="adminPwdInput" type="password" placeholder="Admin Password"
+                <input id="adminPwdInput" type="password" placeholder="Enter Admin Password"
+                  autocomplete="current-password"
                   style="
-                    width:100%;box-sizing:border-box;padding:0.75rem 1rem;
-                    border-radius:8px;border:1px solid var(--border-glass,rgba(255,255,255,0.15));
+                    width:100%;box-sizing:border-box;padding:0.85rem 1rem;
+                    border-radius:10px;border:1px solid rgba(251,191,36,0.3);
                     background:rgba(255,255,255,0.06);color:var(--text-primary,#fff);
                     font-size:1rem;margin-bottom:0.5rem;outline:none;
+                    transition:border-color 0.2s;
                   "
                 />
-                <div id="adminPwdError" style="color:#ef4444;font-size:0.8rem;min-height:1.2rem;margin-bottom:0.75rem"></div>
+                <div id="adminPwdError" style="color:#ef4444;font-size:0.82rem;min-height:1.3rem;margin-bottom:0.75rem"></div>
                 <div style="display:flex;gap:0.75rem">
                   <button id="adminPwdCancelBtn" style="
-                    flex:1;padding:0.7rem;border-radius:8px;border:1px solid var(--border-glass,rgba(255,255,255,0.15));
+                    flex:1;padding:0.75rem;border-radius:10px;
+                    border:1px solid var(--border-glass,rgba(255,255,255,0.15));
                     background:transparent;color:var(--text-muted,#94a3b8);cursor:pointer;font-size:0.9rem;
                   ">Cancel</button>
                   <button id="adminPwdSubmitBtn" style="
-                    flex:2;padding:0.7rem;border-radius:8px;border:none;
-                    background:linear-gradient(135deg,#3b82f6,#6366f1);
-                    color:#fff;cursor:pointer;font-size:0.9rem;font-weight:600;
-                  ">✓ Confirm</button>
+                    flex:2;padding:0.75rem;border-radius:10px;border:none;
+                    background:linear-gradient(135deg,#f59e0b,#f97316);
+                    color:#fff;cursor:pointer;font-size:0.95rem;font-weight:700;
+                    letter-spacing:0.02em;
+                  ">🔓 Login as Admin</button>
                 </div>
               </div>
             `;
@@ -4294,7 +4331,6 @@
 
           const onKey = (e) => { if (e.key === 'Enter') doSubmit(); };
           input.addEventListener('keydown', onKey);
-
           cancelBtn.onclick = cleanup;
 
           const doSubmit = async () => {
@@ -4314,23 +4350,55 @@
               const json = await res.json();
 
               if (res.ok && json.success) {
-                store.setAdminAuthenticated();
+                store.setAdminAuthenticated(pwd);
                 cleanup();
-                onSuccess(pwd);
+                this.updateAdminUI();
+                this.showToast('✅ Admin login successful! You can now add, edit & delete members.');
               } else {
                 errDiv.textContent = json.error || 'Incorrect password. Access denied.';
                 input.value = '';
                 input.focus();
               }
             } catch (e) {
-              errDiv.textContent = 'Network error. Please try again.';
+              errDiv.textContent = 'Network error. Please check your connection.';
             } finally {
               submitBtn.disabled = false;
-              submitBtn.textContent = '✓ Confirm';
+              submitBtn.textContent = '🔓 Login as Admin';
             }
           };
 
           submitBtn.onclick = doSubmit;
+        }
+
+        // Update Login/Logout button visibility based on session state
+        updateAdminUI() {
+          const isAdmin = store.isAdminAuthenticated();
+          if (this.loginAdminBtn) this.loginAdminBtn.style.display = isAdmin ? 'none' : '';
+          if (this.logoutAdminBtn) this.logoutAdminBtn.style.display = isAdmin ? '' : 'none';
+          if (this.addUserBtn) {
+            this.addUserBtn.style.opacity = isAdmin ? '1' : '0.55';
+            this.addUserBtn.title = isAdmin ? '' : 'Login as Admin to add members';
+          }
+        }
+
+        // Update server sync status badge
+        updateSyncBadge() {
+          const badge = document.getElementById('syncStatusBadge');
+          if (!badge) return;
+          const status = store._serverSyncStatus;
+          if (status === 'online') {
+            badge.style.background = 'rgba(16,185,129,0.15)';
+            badge.style.color = '#10b981';
+            badge.innerHTML = `🌐 Users synced from server (${store.getUsers().length} members)`;
+          } else if (status === 'empty') {
+            badge.style.background = 'rgba(245,158,11,0.15)';
+            badge.style.color = '#f59e0b';
+            badge.innerHTML = `⚠️ Server connected but no users stored yet`;
+          } else if (status === 'offline') {
+            badge.style.background = 'rgba(239,68,68,0.15)';
+            badge.style.color = '#ef4444';
+            badge.innerHTML = `📱 Offline \u2014 using local data`;
+          }
         }
       }
 
