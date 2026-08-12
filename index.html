@@ -765,48 +765,41 @@
     <!-- Tab 3: Bills & Expenses -->
     <section id="tab-expenses" class="tab-content hidden">
       <div class="grid-2 mb-3">
+        <!-- Card 1: WAPDA Electricity Bill -->
         <div class="card">
           <div class="card-header">
             <div>
-              <h2 class="card-title">⚡ WAPDA Electricity Bill</h2>
+              <h2 class="card-title">⚡ WAPDA Electricity Bill (واپڈا بجلی بل)</h2>
               <p class="card-subtitle">Monthly electricity bill divided proportionally by units consumed.</p>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Billing Period / Month</label>
+          <div class="form-group mb-3">
+            <label class="form-label">Billing Period / Month (بلنگ مہینہ)</label>
             <input type="month" id="billingMonthInput" class="form-control" value="2026-08">
-          </div>
-
-          <!-- Reference Input & Official MEPCO Portal Link -->
-          <div class="card mb-3" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); padding: 1.25rem;">
-            <div class="flex-between mb-2">
-              <label class="form-label" style="color: var(--accent-green); margin: 0; font-size: 1.05rem; font-weight: 700;">⚡ MEPCO Bill Portal & Reference</label>
-              <span class="badge badge-success">Official PITC Portal</span>
-            </div>
-            
-            <div class="form-group mb-0">
-              <label class="card-subtitle mb-1">14-Digit WAPDA Reference Number (حوالہ نمبر)</label>
-              <div class="grid-2 gap-2">
-                <input type="text" id="wapdaRefNoInput" class="form-control" placeholder="e.g. 29153110982900" value="" style="font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;">
-                <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.18); border: 1px solid var(--accent-green); color: var(--accent-green); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
-                  <span>🌐 Open Official MEPCO Portal</span>
-                </button>
-              </div>
-            </div>
           </div>
 
           <div class="form-group mb-3">
             <label class="form-label">Total WAPDA Bill Amount (PKR / کل بل رقم)</label>
-            <input type="number" id="wapdaBillInput" class="form-control" placeholder="Enter actual monthly bill amount in Rs. (e.g. 336275)" value="" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-green);">
-            <p class="card-subtitle mt-1" style="font-size: 0.85rem;">Enter the total electricity bill amount from your MEPCO bill.</p>
+            <input type="number" id="wapdaBillInput" class="form-control" placeholder="Enter actual monthly bill amount in Rs. (e.g. 336275)" value="" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-green);">
+            <p class="card-subtitle mt-1" style="font-size: 0.82rem;">Enter the total electricity bill amount from your MEPCO bill statement.</p>
+          </div>
+
+          <div class="grid-2 gap-2 mt-3">
+            <button id="saveWapdaBillBtn" type="button" class="btn btn-primary btn-full" style="padding: 0.85rem; font-size: 1rem; font-weight: 700;">
+              💾 Save Bill Amount
+            </button>
+            <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); border: 1px solid var(--accent-green); color: var(--accent-green); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+              <span>🌐 Open MEPCO Portal</span>
+            </button>
           </div>
         </div>
 
+        <!-- Card 2: Fixed & Repair Expenses -->
         <div class="card">
           <div class="card-header">
             <div>
-              <h2 class="card-title">🔧 Fixed & Repair Expenses</h2>
+              <h2 class="card-title">🔧 Fixed & Repair Expenses (دیگر اخراجات)</h2>
               <p class="card-subtitle">Motor repairs, oiling, and maintenance divided by assigned time slot hours.</p>
             </div>
           </div>
@@ -814,27 +807,14 @@
           <div class="form-group">
             <label class="form-label">Add Itemized Repair Expense</label>
             <div class="grid-2 gap-1 mb-2">
-              <input type="text" id="fixedDescInput" class="form-control" placeholder="Expense description">
+              <input type="text" id="fixedDescInput" class="form-control" placeholder="Expense description (e.g. Motor Repair)">
               <input type="number" id="fixedAmountInput" class="form-control" placeholder="Amount Rs.">
             </div>
-            <button id="addFixedExpenseBtn" class="btn btn-secondary btn-full">+ Add Fixed Expense</button>
+            <button id="addFixedExpenseBtn" class="btn btn-secondary btn-full">+ Add Fixed Expense Item</button>
           </div>
 
           <div id="fixedExpensesList" class="mt-2"></div>
         </div>
-      </div>
-
-      <!-- Real Live PITC MEPCO Web Bill Render Container -->
-      <div id="mepcoDynamicCard" class="card hidden">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">🌐 Live Official PITC MEPCO Web Bill Document</h2>
-            <p class="card-subtitle">Real HTML document fetched directly from PITC MEPCO Server for Ref: <strong id="mepcoDynamicRefText">29153110982900 R</strong></p>
-          </div>
-          <button id="closeDynamicCardBtn" class="btn btn-danger btn-sm">✖ Close View</button>
-        </div>
-
-        <div id="liveMepcoHtmlContainer" class="live-mepco-document-card"></div>
       </div>
     </section>
 
@@ -2327,6 +2307,21 @@
           this.scannedPageResults = [];
 
           this.imageGalleryCard = document.getElementById('imageGalleryCard');
+          this.saveWapdaBillBtn = document.getElementById('saveWapdaBillBtn');
+          this.openOfficialMepcoPortalBtn = document.getElementById('openOfficialMepcoPortalBtn');
+          this.wapdaBillInput = document.getElementById('wapdaBillInput');
+          this.billingMonthInput = document.getElementById('billingMonthInput');
+          this.fixedExpensesList = document.getElementById('fixedExpensesList');
+          this.addFixedExpenseBtn = document.getElementById('addFixedExpenseBtn');
+          this.fixedDescInput = document.getElementById('fixedDescInput');
+          this.fixedAmountInput = document.getElementById('fixedAmountInput');
+          this.entryStartInput = document.getElementById('entryStartInput');
+          this.entryEndInput = document.getElementById('entryEndInput');
+          this.entryModalErrorBox = document.getElementById('entryModalErrorBox');
+          this.entryModalErrorText = document.getElementById('entryModalErrorText');
+          this.entryTransferSelect = document.getElementById('entryTransferSelect');
+          this.entryNotesInput = document.getElementById('entryNotesInput');
+
           this.stagedCountBadge = document.getElementById('stagedCountBadge');
           this.stagedThumbnailsGrid = document.getElementById('stagedThumbnailsGrid');
           this.addMorePhotosBtn = document.getElementById('addMorePhotosBtn');
@@ -2345,27 +2340,9 @@
           this.entryDateInput = document.getElementById('entryDateInput');
           this.entryUserSelect = document.getElementById('entryUserSelect');
           this.quickAddUserBtn = document.getElementById('quickAddUserBtn');
-          this.entryStartInput = document.getElementById('entryStartInput');
-          this.entryEndInput = document.getElementById('entryEndInput');
-          this.entryModalErrorBox = document.getElementById('entryModalErrorBox');
-          this.entryModalErrorText = document.getElementById('entryModalErrorText');
-          this.entryTransferSelect = document.getElementById('entryTransferSelect');
-          this.entryNotesInput = document.getElementById('entryNotesInput');
 
-          this.wapdaRefNoInput = document.getElementById('wapdaRefNoInput');
-          this.fetchDynamicLiveBillBtn = document.getElementById('fetchDynamicLiveBillBtn');
-          this.mepcoDynamicCard = document.getElementById('mepcoDynamicCard');
-          this.closeDynamicCardBtn = document.getElementById('closeDynamicCardBtn');
-          this.liveMepcoHtmlContainer = document.getElementById('liveMepcoHtmlContainer');
-          this.mepcoDynamicRefText = document.getElementById('mepcoDynamicRefText');
-
-          this.billMetadataBox = document.getElementById('billMetadataBox');
-          this.dispRefNo = document.getElementById('dispRefNo');
-          this.dispNameAddress = document.getElementById('dispNameAddress');
-          this.dispReadingDate = document.getElementById('dispReadingDate');
-          this.dispIssueDate = document.getElementById('dispIssueDate');
-          this.dispDueDate = document.getElementById('dispDueDate');
-
+          this.saveWapdaBillBtn = document.getElementById('saveWapdaBillBtn');
+          this.openOfficialMepcoPortalBtn = document.getElementById('openOfficialMepcoPortalBtn');
           this.wapdaBillInput = document.getElementById('wapdaBillInput');
           this.billingMonthInput = document.getElementById('billingMonthInput');
           this.fixedExpensesList = document.getElementById('fixedExpensesList');
@@ -2579,7 +2556,11 @@
             this.showToast(`Reparsing not fully implemented for manual text; please use AI scanner.`);
           });
 
-          this.wapdaBillInput.addEventListener('input', (e) => store.updateWapdaBill(e.target.value));
+          this.wapdaBillInput.addEventListener('input', (e) => {
+            store.updateWapdaBill(e.target.value);
+            this.renderSummaryTab();
+          });
+
           this.billingMonthInput.addEventListener('change', (e) => {
             const dateVal = e.target.value;
             if (dateVal) {
@@ -2587,27 +2568,31 @@
               const dateObj = new Date(year, parseInt(month) - 1, 1);
               const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
               store.updateBillingMonth(dateVal, monthLabel);
+              this.renderSummaryTab();
             }
           });
 
-          const openPortalBtn = document.getElementById('openOfficialMepcoPortalBtn');
-          if (openPortalBtn) {
-            openPortalBtn.addEventListener('click', () => {
-              const refNo = (this.wapdaRefNoInput.value || '').trim() || '29153110982900';
-              const cleanRef = refNo.replace(/\D/g, '');
-              const url = `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`;
-              window.open(url, '_blank');
+          if (this.saveWapdaBillBtn) {
+            this.saveWapdaBillBtn.addEventListener('click', () => {
+              const amt = parseFloat(this.wapdaBillInput.value) || 0;
+              const dateVal = this.billingMonthInput.value;
+              store.updateWapdaBill(amt);
+              if (dateVal) {
+                const [year, month] = dateVal.split('-');
+                const dateObj = new Date(year, parseInt(month) - 1, 1);
+                const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                store.updateBillingMonth(dateVal, monthLabel);
+              }
+              this.renderSummaryTab();
+              this.showToast(`✅ WAPDA Bill of Rs. ${Math.round(amt).toLocaleString()} saved successfully!`);
             });
           }
 
-          this.wapdaRefNoInput.addEventListener('input', (e) => {
-            const refNo = (e.target.value || '').trim();
-            store.updateWapdaRefDetails(refNo, 'R');
-          });
-
-          this.closeDynamicCardBtn.addEventListener('click', () => {
-            this.mepcoDynamicCard.classList.add('hidden');
-          });
+          if (this.openOfficialMepcoPortalBtn) {
+            this.openOfficialMepcoPortalBtn.addEventListener('click', () => {
+              window.open('http://bill.pitc.com.pk/mepcobill', '_blank');
+            });
+          }
 
           this.addFixedExpenseBtn.addEventListener('click', () => {
             const desc = this.fixedDescInput.value;
