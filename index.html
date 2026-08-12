@@ -2943,31 +2943,72 @@
               let rawOutput = '';
               let errorMessage = '';
 
-              try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 35000);
+              const viteEnvKey = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY)
+                ? import.meta.env.VITE_GEMINI_API_KEY
+                : (window.VITE_GEMINI_API_KEY || store.getGeminiApiKey());
 
-                const response = await fetch('/api/gemini_ocr', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    imageB64: imageBase64,
-                    mimeType: 'image/jpeg'
-                  }),
-                  signal: controller.signal
-                });
-                clearTimeout(timeoutId);
+              if (viteEnvKey) {
+                // Direct browser call using VITE_GEMINI_API_KEY baked from Vercel Environment Variables
+                const rawB64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+                const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
 
-                const ocrRes = await response.json().catch(() => null);
-
-                if (response.ok && ocrRes && ocrRes.status === 'success') {
-                  aiRows = ocrRes.rows || [];
-                  rawOutput = ocrRes.rawText || '';
-                } else {
-                  errorMessage = (ocrRes && ocrRes.error) ? ocrRes.error : `Server HTTP ${response.status}`;
+                for (const mName of modelsToTry) {
+                  try {
+                    const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${viteEnvKey}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        contents: [{
+                          parts: [
+                            { text: "Extract table rows from this handwritten Urdu/English turbine log register image. Return ONLY a valid JSON array of objects with keys: 'date' (YYYY-MM-DD), 'name' (Urdu/English user name), 'startReading' (number), 'endReading' (number), 'confidenceScore' (number 0.0-1.0). No markdown." },
+                            { inlineData: { mimeType: "image/jpeg", data: rawB64 } }
+                          ]
+                        }]
+                      })
+                    });
+                    const gData = await gResp.json();
+                    if (gData.error) {
+                      errorMessage = gData.error.message || JSON.stringify(gData.error);
+                      continue;
+                    }
+                    if (gData.candidates && gData.candidates[0] && gData.candidates[0].content) {
+                      const textOut = gData.candidates[0].content.parts[0].text;
+                      rawOutput = textOut;
+                      aiRows = JSON.parse(textOut.replace(/^```json\s*/m, '').replace(/```$/m, '').trim());
+                      break;
+                    }
+                  } catch (e) {
+                    errorMessage = e.message;
+                  }
                 }
-              } catch (e) {
-                errorMessage = e.name === 'AbortError' ? 'Network timeout after 35s. Please retry.' : e.message;
+              } else {
+                // Fallback to /api/gemini_ocr serverless endpoint
+                try {
+                  const controller = new AbortController();
+                  const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+                  const response = await fetch('/api/gemini_ocr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      imageB64: imageBase64,
+                      mimeType: 'image/jpeg'
+                    }),
+                    signal: controller.signal
+                  });
+                  clearTimeout(timeoutId);
+
+                  const ocrRes = await response.json().catch(() => null);
+
+                  if (response.ok && ocrRes && ocrRes.status === 'success') {
+                    aiRows = ocrRes.rows || [];
+                    rawOutput = ocrRes.rawText || '';
+                  } else {
+                    errorMessage = (ocrRes && ocrRes.error) ? ocrRes.error : `Server HTTP ${response.status}`;
+                  }
+                } catch (e) {
+                  errorMessage = e.name === 'AbortError' ? 'Network timeout after 25s. Please retry.' : e.message;
+                }
               }
 
               if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {
