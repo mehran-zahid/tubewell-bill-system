@@ -590,17 +590,25 @@
 
     <!-- Tab 1: Turbine Members & Continuous Weekly Time Slots (Bari Turns) -->
     <section id="tab-users" class="tab-content">
-      <div class="grid-3 mb-3">
+      <div class="mb-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
         <div class="card" style="padding: 1rem 1.25rem; background: rgba(16, 185, 129, 0.07); border: 1px solid rgba(16, 185, 129, 0.25);">
           <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">👥 TOTAL MEMBERS (کل ممبران)</div>
           <div id="statTotalMembers" style="font-size: 1.5rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">0</div>
         </div>
+        <div class="card" style="padding: 1rem 1.25rem; background: rgba(168, 85, 247, 0.07); border: 1px solid rgba(168, 85, 247, 0.25);">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">🤝 TOTAL TENANTS (کل ٹھیکے دار)</div>
+          <div id="statTotalTenants" style="font-size: 1.5rem; font-weight: 800; color: #a855f7; margin-top: 2px;">0</div>
+        </div>
+        <div class="card" style="padding: 1rem 1.25rem; background: rgba(236, 72, 153, 0.07); border: 1px solid rgba(236, 72, 153, 0.25);">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⏱️ TENANT LEASED HOURS (ٹھیکے داروں کے گھنٹے)</div>
+          <div id="statTenantHours" style="font-size: 1.5rem; font-weight: 800; color: #ec4899; margin-top: 2px;">0.00 hrs</div>
+        </div>
         <div class="card" style="padding: 1rem 1.25rem; background: rgba(59, 130, 246, 0.07); border: 1px solid rgba(59, 130, 246, 0.25);">
-          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⏱️ TOTAL ASSIGNED HOURS (کل باری گھنٹے)</div>
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⏰ TOTAL ASSIGNED HOURS (کل باری گھنٹے)</div>
           <div id="statAssignedHours" style="font-size: 1.5rem; font-weight: 800; color: var(--accent-blue); margin-top: 2px;">0.00 / 168.00 hrs</div>
         </div>
         <div class="card" style="padding: 1rem 1.25rem; background: rgba(245, 158, 11, 0.07); border: 1px solid rgba(245, 158, 11, 0.25);">
-          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⏳ REMAINING WEEKLY HOURS (بقیہ گھنٹے)</div>
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⌛ REMAINING WEEKLY HOURS (بقیہ گھنٹے)</div>
           <div id="statRemainingHours" style="font-size: 1.5rem; font-weight: 800; color: #f59e0b; margin-top: 2px;">168.00 hrs</div>
         </div>
       </div>
@@ -3116,6 +3124,14 @@
           this.addMorePhotosBtn.addEventListener('click', () => this.registerImageUpload.click());
           this.dropzoneBox.addEventListener('click', () => this.registerImageUpload.click());
 
+          if (this.exportRegisterBtn) {
+            this.exportRegisterBtn.addEventListener('click', () => this.exportRegister());
+          }
+          if (this.importRegisterBtn && this.importRegisterFileInput) {
+            this.importRegisterBtn.addEventListener('click', () => this.importRegisterFileInput.click());
+            this.importRegisterFileInput.addEventListener('change', (e) => this.handleRegisterImportFile(e));
+          }
+
           ['dragenter', 'dragover'].forEach(eventName => {
             this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-green)'; }, false);
           });
@@ -3911,14 +3927,32 @@
         renderUsersTab() {
           const users = store.getUsers();
           let totalSlotMins = 0;
+          let totalTenantsCount = 0;
+          let totalTenantLeasedHours = 0;
+
           users.forEach(u => {
             const m = u.totalMinutes || calculateSlotDurationMinutes(u.startDay, u.startTime, u.endDay, u.endTime);
             totalSlotMins += m;
+
+            if (u.isLeased && Array.isArray(u.tenants) && u.tenants.length > 0) {
+              u.tenants.forEach(t => {
+                totalTenantsCount++;
+                const tMins = t.tenantTotalLeasedMins || ((t.tenantLeasedHours || 0) * 60 + (t.tenantLeasedMinutes || 0));
+                totalTenantLeasedHours += tMins > 0 ? (tMins / 60) : (parseFloat(t.tenantLeasedHours) || 0);
+              });
+            }
           });
+
           const totalAssignedHrs = Math.round((totalSlotMins / 60) * 100) / 100;
           const remainingHrs = Math.round((168 - totalAssignedHrs) * 100) / 100;
 
           if (this.statTotalMembers) this.statTotalMembers.textContent = users.length;
+
+          const statTotalTenantsEl = document.getElementById('statTotalTenants');
+          const statTenantHoursEl = document.getElementById('statTenantHours');
+          if (statTotalTenantsEl) statTotalTenantsEl.textContent = totalTenantsCount;
+          if (statTenantHoursEl) statTenantHoursEl.textContent = `${totalTenantLeasedHours.toFixed(2)} hrs`;
+
           if (this.statAssignedHours) this.statAssignedHours.textContent = `${totalAssignedHrs.toFixed(2)} hrs / 168.00 hrs`;
           if (this.statRemainingHours) {
             if (remainingHrs >= 0) {
@@ -4757,7 +4791,7 @@
 
           const calc = calculateBilling(users, entries, expenses);
 
-          const totalRunningHours = Math.round((calc.grandTotalUnits / 100) * 100) / 100;
+          const totalRunningHours = Math.round(calc.grandTotalUnits * 100) / 100;
           if (this.summaryTotalUnits) this.summaryTotalUnits.textContent = `${totalRunningHours.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Hours`;
           if (this.summaryWapdaBill) this.summaryWapdaBill.textContent = `Rs. ${Math.round(calc.wapdaBill).toLocaleString()}`;
           if (this.summaryFixedExpenses) this.summaryFixedExpenses.textContent = `Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}`;
@@ -4948,10 +4982,10 @@
 
           if (monthElem) monthElem.textContent = monthLabel;
           if (dateElem) dateElem.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-          if (totalUnitsElem) totalUnitsElem.textContent = `${calc.totalUnits.toFixed(2)} hrs`;
-          if (wapdaBillElem) wapdaBillElem.textContent = `Rs. ${Math.round(calc.wapdaBill).toLocaleString()}`;
-          if (fixedExpensesElem) fixedExpensesElem.textContent = `Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}`;
-          if (grandTotalElem) grandTotalElem.textContent = `Rs. ${Math.round(calc.grandTotal).toLocaleString()}`;
+          if (totalUnitsElem) totalUnitsElem.textContent = `${(calc.grandTotalUnits || 0).toFixed(2)} hrs`;
+          if (wapdaBillElem) wapdaBillElem.textContent = `Rs. ${Math.round(calc.wapdaBill || 0).toLocaleString()}`;
+          if (fixedExpensesElem) fixedExpensesElem.textContent = `Rs. ${Math.round(calc.totalFixedExpenses || 0).toLocaleString()}`;
+          if (grandTotalElem) grandTotalElem.textContent = `Rs. ${Math.round(calc.grandTotalBillSystem || 0).toLocaleString()}`;
 
           // 2. Populate Member Table
           const tbody = document.getElementById('pdfTableBody');
@@ -4971,11 +5005,11 @@
                   <td style="padding: 0.45rem; border: 1px solid #e2e8f0;">
                     <div style="font-weight: 700; color: #0f172a;">${u.fullName || u.nameEn}</div>
                   </td>
-                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0;">${u.weeklyHours ? u.weeklyHours.toFixed(1) : 0} hrs</td>
-                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${u.unitsConsumed.toFixed(2)} hrs</td>
-                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.wapdaShare).toLocaleString()}</td>
-                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.fixedShare).toLocaleString()}</td>
-                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 800; color: #047857; background: #ecfdf5;">Rs. ${Math.round(u.totalPayable).toLocaleString()}</td>
+                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0;">${u.effectiveHours ? u.effectiveHours.toFixed(1) : 0} hrs</td>
+                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${(u.unitsConsumed || 0).toFixed(2)} hrs</td>
+                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.usageBillShare || 0).toLocaleString()}</td>
+                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.fixedBillShare || 0).toLocaleString()}</td>
+                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 800; color: #047857; background: #ecfdf5;">Rs. ${Math.round(u.grandTotalBill || 0).toLocaleString()}</td>
                 `;
                 tbody.appendChild(tr);
               });
@@ -4986,11 +5020,11 @@
                 footTr.style.fontWeight = '800';
                 footTr.innerHTML = `
                   <td colspan="2" style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">TOTAL (کل توثیق):</td>
-                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1;">${calc.totalWeeklyHours ? calc.totalWeeklyHours.toFixed(1) : 0} hrs</td>
-                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${calc.totalUnits.toFixed(2)} hrs</td>
-                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.wapdaBill).toLocaleString()}</td>
-                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}</td>
-                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1; color: #059669; background: #d1fae5; font-size: 0.95rem;">Rs. ${Math.round(calc.grandTotal).toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1;">${(calc.totalInternalEffectiveHours || 168).toFixed(1)} hrs</td>
+                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${(calc.grandTotalUnits || 0).toFixed(2)} hrs</td>
+                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.wapdaBill || 0).toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.totalFixedExpenses || 0).toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1; color: #059669; background: #d1fae5; font-size: 0.95rem;">Rs. ${Math.round(calc.grandTotalBillSystem || 0).toLocaleString()}</td>
                 `;
                 tfoot.appendChild(footTr);
               }
