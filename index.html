@@ -790,9 +790,12 @@
               <input type="text" id="wapdaRefNoInput" class="form-control" placeholder="e.g. 29153110982900" value="" style="font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;">
             </div>
 
-            <div class="flex-between gap-2">
-              <button id="fetchDynamicLiveBillBtn" class="btn btn-primary btn-full" style="padding: 0.85rem; font-size: 1.05rem;">
-                ⚡ Fetch & Auto-Fill Bill Details
+            <div class="grid-2 gap-2 mt-1">
+              <button id="fetchDynamicLiveBillBtn" class="btn btn-primary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                ⚡ Auto-Fetch Bill
+              </button>
+              <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green);">
+                🌐 Open MEPCO Portal
               </button>
             </div>
           </div>
@@ -2626,6 +2629,16 @@
               store.updateBillingMonth(dateVal, monthLabel);
             }
           });
+
+          const openPortalBtn = document.getElementById('openOfficialMepcoPortalBtn');
+          if (openPortalBtn) {
+            openPortalBtn.addEventListener('click', () => {
+              const refNo = (this.wapdaRefNoInput.value || '').trim() || '29153110982900';
+              const cleanRef = refNo.replace(/\D/g, '');
+              const url = `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`;
+              window.open(url, '_blank');
+            });
+          }
 
           this.fetchDynamicLiveBillBtn.addEventListener('click', async () => {
             const refNo = (this.wapdaRefNoInput.value || '').trim();

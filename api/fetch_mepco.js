@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('X-Tubewell-Build-Sync', '2026-08-12-v1.0.8');
+  res.setHeader('X-Tubewell-Build-Sync', '2026-08-12-v1.0.9');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const { refno, ref } = req.query;
   const rawRef = refno || ref || '';
   if (!rawRef) {
-    return res.status(400).json({ status: 'error', error: 'Missing reference number (refno)' });
+    return res.status(400).json({ status: 'error', error: 'Missing reference number' });
   }
 
   const cleanRef = String(rawRef).replace(/\D/g, '');
@@ -46,43 +46,17 @@ export default async function handler(req, res) {
     return null;
   };
 
-  // Strategy 1: Session Cookie Handshake with PITC
-  try {
-    const initRes = await fetch('http://bill.pitc.com.pk/mepcobill', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-      }
-    });
-
-    const setCookies = initRes.headers.getSetCookie ? initRes.headers.getSetCookie().join('; ') : (initRes.headers.get('set-cookie') || '');
-
-    const billRes = await fetch(`http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Cookie': setCookies
-      }
-    });
-
-    if (billRes.ok) {
-      const html = await billRes.text();
-      const parsed = parseBillHtml(html);
-      if (parsed) return res.status(200).json(parsed);
-    }
-  } catch (e) {}
-
-  // Strategy 2: Direct DISCO Candidates via Codetabs and AllOrigins
-  const targetUrl = `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`;
   const candidateUrls = [
-    targetUrl,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
-    `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`
+    `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(`http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`)}`
   ];
 
-  for (const url of candidateUrls) {
+  const fetchWithTimeout = async (url, ms = 2500) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ms);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const resObj = await fetch(url, {
+      const response = await fetch(url, {
         signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
@@ -90,23 +64,31 @@ export default async function handler(req, res) {
       });
       clearTimeout(timeoutId);
 
-      if (resObj.ok) {
-        let htmlText = '';
-        if (url.includes('allorigins')) {
-          const json = await resObj.json();
-          htmlText = json.contents || '';
-        } else {
-          htmlText = await resObj.text();
-        }
-
-        const parsed = parseBillHtml(htmlText);
-        if (parsed) return res.status(200).json(parsed);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      let htmlText = '';
+      if (url.includes('allorigins')) {
+        const json = await response.json();
+        htmlText = json.contents || '';
+      } else {
+        htmlText = await response.text();
       }
-    } catch (e) {}
-  }
 
-  return res.status(500).json({
-    status: 'error',
-    error: 'Could not fetch bill from MEPCO PITC servers.'
-  });
+      const parsed = parseBillHtml(htmlText);
+      if (parsed) return parsed;
+      throw new Error('Parse error');
+    } catch (e) {
+      clearTimeout(timeoutId);
+      throw e;
+    }
+  };
+
+  try {
+    const result = await Promise.any(candidateUrls.map(url => fetchWithTimeout(url, 2500)));
+    return res.status(200).json(result);
+  } catch (err) {
+    return res.status(500).json({
+      status: 'error',
+      error: 'PITC MEPCO server Geo-IP blocked or unavailable.'
+    });
+  }
 }
