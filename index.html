@@ -2943,9 +2943,7 @@
               let rawOutput = '';
               let errorMessage = '';
 
-              const viteEnvKey = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY)
-                ? import.meta.env.VITE_GEMINI_API_KEY
-                : (window.VITE_GEMINI_API_KEY || store.getGeminiApiKey());
+              const viteEnvKey = window.VITE_GEMINI_API_KEY || store.getGeminiApiKey();
 
               if (viteEnvKey) {
                 // Direct browser call using VITE_GEMINI_API_KEY baked from Vercel Environment Variables
