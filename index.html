@@ -2316,7 +2316,7 @@
           let msg = `⚡ *ٹربائن بل خلاصہ — ${dateHeader}* ⚡\n`;
           msg += `====================================\n\n`;
           msg += `📊 *کل اخراجات کا خلاصہ:* \n`;
-          msg += `• کل استعمال شدہ یونٹ: *${grandTotalUnits.toLocaleString()} یونٹ*\n`;
+          msg += `• کل ٹیوب ویل استعمال: *${grandTotalUnits.toLocaleString()} گھنٹے*\n`;
           msg += `• میپکو بجلی بل: *Rs. ${Math.round(wapdaBill).toLocaleString()}*\n`;
 
           if (fixedExpensesList.length > 0) {
@@ -2337,7 +2337,7 @@
             const typeLabel = user.userType === 'external' ? ' (خریدار)' : '';
             const displayName = user.nameUr || user.fullName || user.nameEn || 'ممبر';
             msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
-            msg += `   • باری وقت: ${user.effectiveHours} گھنٹے | یونٹ: ${user.unitsConsumed} گھنٹے (${user.unitsPercentage}%)\n`;
+            msg += `   • استعمال: ${user.unitsConsumed} گھنٹے (${user.unitsPercentage}%)\n`;
             if (user.isTenant) {
               const oName = user.ownerNameUr || user.ownerNameEn || user.ownerName || 'مالک';
               const shareNote = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'urdu');
@@ -2358,7 +2358,7 @@
           let msg = `⚡ *TURBINE BILL SUMMARY — ${(dateHeader).toUpperCase()}* ⚡\n`;
           msg += `====================================\n\n`;
           msg += `📊 *OVERALL TOTALS:*\n`;
-          msg += `• Total Electricity Consumed: *${grandTotalUnits.toLocaleString()} Units*\n`;
+          msg += `• Total Tubewell Run Time: *${grandTotalUnits.toLocaleString()} Hours*\n`;
           msg += `• MEPCO Electricity Bill: *Rs. ${Math.round(wapdaBill).toLocaleString()}*\n`;
 
           if (fixedExpensesList.length > 0) {
@@ -2379,7 +2379,7 @@
             const typeLabel = user.userType === 'external' ? ' (Customer)' : '';
             const displayName = user.nameEn || user.fullName || 'Member';
             msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
-            msg += `   • Bari Hours: ${user.effectiveHours} hrs | Usage: ${user.unitsConsumed} hrs (${user.unitsPercentage}%)\n`;
+            msg += `   • Run Time: ${user.unitsConsumed} hrs (${user.unitsPercentage}%)\n`;
             if (user.isTenant) {
               const oName = user.ownerNameEn || user.ownerNameUr || user.ownerName || 'Owner';
               const shareNote = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'english');
@@ -2399,7 +2399,7 @@
         let msg = `⚡ *TURBINE BILL SUMMARY (ٹربائن بل خلاصہ) — ${dateHeader}* ⚡\n`;
         msg += `====================================\n\n`;
         msg += `📊 *OVERALL TOTALS (کل اخراجات):*\n`;
-        msg += `• Total Electricity Units: *${grandTotalUnits.toLocaleString()} Units*\n`;
+        msg += `• Total Tubewell Usage: *${grandTotalUnits.toLocaleString()} Hours*\n`;
         msg += `• MEPCO Electricity Bill: *Rs. ${Math.round(wapdaBill).toLocaleString()}*\n`;
 
         if (fixedExpensesList.length > 0) {
@@ -2420,8 +2420,14 @@
           const typeLabel = user.userType === 'external' ? ' (External Customer/خریدار)' : '';
           const displayName = user.fullName || user.nameEn || user.nameUr || 'Member';
           msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
-          msg += `   • Allocated Slot: ${user.effectiveHours} hrs | Usage: ${user.unitsConsumed} Units (${user.unitsPercentage}%)\n`;
-          msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+          msg += `   • Usage: ${user.unitsConsumed} hrs (${user.unitsPercentage}%)\n`;
+          if (user.isTenant) {
+            const oName = user.ownerNameUr || user.ownerNameEn || user.ownerName || 'مالک';
+            const shareNote = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'roman');
+            msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses (${shareNote}): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+          } else {
+            msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+          }
           msg += `   👉 *TOTAL DUE (کل واجب الادا): Rs. ${Math.round(user.grandTotalBill).toLocaleString()}*\n\n`;
         });
 
