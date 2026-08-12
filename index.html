@@ -666,8 +666,11 @@
           </div>
           <div class="flex-center gap-2">
             <button id="triggerUploadBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">
-              📷 Upload Photo to Extract Readings
+              📷 Select Register Photos (گشت کے اوراق منتخب کریں)
             </button>
+            <button id="exportRegisterBtn" class="btn btn-secondary btn-sm">📤 Export Readings / ایکسپورٹ</button>
+            <button id="importRegisterBtn" class="btn btn-secondary btn-sm">📥 Import Readings / امپورٹ</button>
+            <input type="file" id="importRegisterFileInput" accept=".json,.csv" style="display: none;">
             <button id="addEntryBtn" class="btn btn-secondary">+ Manual Entry / دستی اینٹری</button>
             <button id="clearEntriesBtn" class="btn btn-danger btn-sm">Clear All Entries</button>
           </div>
@@ -859,8 +862,8 @@
         <div class="stat-card">
           <div class="stat-icon" style="color: var(--accent-blue);">⚡</div>
           <div>
-            <div class="stat-val" id="summaryTotalUnits">0 Units</div>
-            <div class="stat-lbl">Total Electricity Consumed</div>
+            <div class="stat-val" id="summaryTotalUnits">0 Hours</div>
+            <div class="stat-lbl">Total Turbine Running Hours</div>
           </div>
         </div>
 
@@ -886,6 +889,20 @@
             <div class="stat-val" style="color: var(--accent-green);" id="summaryGrandTotal">Rs. 0</div>
             <div class="stat-lbl">Total Collection Amount</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Per Hour Rate Metrics Cards -->
+      <div class="grid-2 mb-3">
+        <div class="card" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem 1.25rem;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);">🏷️ ELECTRICITY RATE PER HOUR (فی گھنٹہ بجلی ریٹ)</div>
+          <div id="summaryElecRatePerHour" style="font-size: 1.6rem; font-weight: 800; color: var(--accent-green); margin-top: 4px;">Rs. 0.00 / hr</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Formula: WAPDA Bill ÷ Total Turbine Running Hours</div>
+        </div>
+        <div class="card" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1rem 1.25rem;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);">💰 TOTAL COST PER HOUR INCL. REPAIRS (کل اخراجات فی گھنٹہ)</div>
+          <div id="summaryTotalRatePerHour" style="font-size: 1.6rem; font-weight: 800; color: var(--accent-blue); margin-top: 4px;">Rs. 0.00 / hr</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Formula: (WAPDA Bill + Repair Expenses) ÷ Total Running Hours</div>
         </div>
       </div>
 
@@ -2511,55 +2528,115 @@
         return msg;
       }
 
+      function normalizeUrdu(str) {
+        if (!str) return '';
+        return str.toString()
+          .replace(/[أإآآ]/g, 'ا')
+          .replace(/ي/g, 'ی')
+          .replace(/ك/g, 'ک')
+          .replace(/ہ/g, 'ھ')
+          .replace(/[ًٌٍَُِّْ]/g, '')
+          .toLowerCase()
+          .trim();
+      }
+
       function findGlobalUserMatch(searchStr, usersList = []) {
         if (!searchStr) return null;
         const allUsers = (usersList && usersList.length > 0) ? usersList : store.getUsers();
         if (!allUsers || !allUsers.length) return null;
 
-        const sLower = searchStr.toLowerCase().trim();
+        const rawSearch = searchStr.trim();
+        const sNormUr = normalizeUrdu(rawSearch);
+        const sLowerEn = rawSearch.toLowerCase();
 
-        // 1. Match by code (e.g. "01", "07", "08")
-        const codeMatch = allUsers.find(u => {
-          const uCode = (u.userCode || u.code || '').toString().toLowerCase();
-          return uCode && (sLower === uCode || sLower.includes(`[${uCode}]`) || sLower.includes(`code ${uCode}`));
-        });
-        if (codeMatch) return codeMatch;
-
-        // 2. Match by Urdu or English name
-        return allUsers.find(u => {
-          const nameEn = (u.nameEn || u.name || u.fullName || '').toLowerCase();
-          const nameUr = (u.nameUr || '').toLowerCase();
-          return (nameEn && (sLower.includes(nameEn) || nameEn.includes(sLower))) ||
-                 (nameUr && (sLower.includes(nameUr) || nameUr.includes(sLower)));
-        });
-      }
-
-      function parseRegisterTextIntoEntries(rawText, registeredUsers = []) {
-        if (!rawText || !rawText.trim()) return [];
-        let list = [];
-        const cleanStr = rawText.replace(/^```json\s*/m, '').replace(/```$/m, '').trim();
-
-        const allUsers = (registeredUsers && registeredUsers.length > 0) ? registeredUsers : store.getUsers();
-
-        function findMatchingUser(searchStr) {
-          if (!searchStr || !allUsers.length) return null;
-          const sLower = searchStr.toLowerCase().trim();
-
-          // 1. Match by code (e.g. "01", "07", "08")
-          const codeMatch = allUsers.find(u => {
-            const uCode = (u.userCode || u.code || '').toString().toLowerCase();
-            return uCode && (sLower === uCode || sLower.includes(`[${uCode}]`) || sLower.includes(`code ${uCode}`));
+        // 1. Build candidates list of all owners and tenants
+        const candidates = [];
+        allUsers.forEach(u => {
+          candidates.push({
+            id: u.id,
+            user: u,
+            userCode: String(u.userCode || u.code || ''),
+            nameEn: (u.nameEn || u.name || '').toLowerCase(),
+            nameUr: u.nameUr || '',
+            normUr: normalizeUrdu(u.nameUr || ''),
+            isTenant: false
           });
-          if (codeMatch) return codeMatch;
 
-          // 2. Match by Urdu or English name
-          return allUsers.find(u => {
-            const nameEn = (u.nameEn || u.name || u.fullName || '').toLowerCase();
-            const nameUr = (u.nameUr || '').toLowerCase();
-            return (nameEn && (sLower.includes(nameEn) || nameEn.includes(sLower))) ||
-                   (nameUr && (sLower.includes(nameUr) || nameUr.includes(sLower)));
-          });
+          if (u.isLeased && Array.isArray(u.tenants)) {
+            u.tenants.forEach((t, tIdx) => {
+              const tenantEntityId = `${u.id}__tenant_${tIdx}`;
+              candidates.push({
+                id: tenantEntityId,
+                user: u,
+                userCode: `${u.userCode || u.code || ''}-T${tIdx + 1}`,
+                nameEn: (t.tenantNameEn || t.tenantName || '').toLowerCase(),
+                nameUr: t.tenantNameUr || '',
+                normUr: normalizeUrdu(t.tenantNameUr || ''),
+                isTenant: true,
+                tenantIdx: tIdx
+              });
+            });
+          }
+        });
+
+        // Priority 1: Exact Normalized Urdu Name Match (e.g. "رمضان اروڑ", "سلیم بھٹی", "زمان", "عمران")
+        for (const cand of candidates) {
+          if (cand.normUr && (sNormUr === cand.normUr)) {
+            return cand.isTenant ? { id: cand.id, user: cand.user } : cand.user;
+          }
         }
+
+        // Priority 2: Substring Normalized Urdu Match
+        for (const cand of candidates) {
+          if (cand.normUr && cand.normUr.length >= 3) {
+            if (sNormUr.includes(cand.normUr) || cand.normUr.includes(sNormUr)) {
+              return cand.isTenant ? { id: cand.id, user: cand.user } : cand.user;
+            }
+          }
+        }
+
+        // Priority 3: Word Token Overlap (e.g. "سلیم", "سکھیرہ", "بھٹی", "ممتاز", "جاوید", "اروڑ")
+        const searchUrTokens = sNormUr.split(/\s+/).filter(t => t.length >= 2);
+        for (const cand of candidates) {
+          if (cand.normUr) {
+            const candTokens = cand.normUr.split(/\s+/).filter(t => t.length >= 2);
+            const hasOverlap = searchUrTokens.some(st => candTokens.some(ct => st === ct || (st.length >= 3 && ct.includes(st))));
+            if (hasOverlap) {
+              return cand.isTenant ? { id: cand.id, user: cand.user } : cand.user;
+            }
+          }
+        }
+
+        // Priority 4: English Name Match
+        for (const cand of candidates) {
+          if (cand.nameEn && cand.nameEn.length >= 3) {
+            if (sLowerEn.includes(cand.nameEn) || cand.nameEn.includes(sLowerEn)) {
+              return cand.isTenant ? { id: cand.id, user: cand.user } : cand.user;
+            }
+          }
+        }
+
+        // Priority 5: Tenant Code Match if present (e.g. "12-T2")
+        const tenantCodeMatch = sLowerEn.match(/\b(\d{1,2})-t(\d{1,2})?\b/i);
+        if (tenantCodeMatch) {
+          const parentCode = tenantCodeMatch[1].padStart(2, '0');
+          const tenantIdx = tenantCodeMatch[2] ? parseInt(tenantCodeMatch[2], 10) - 1 : 0;
+          const parent = allUsers.find(u => String(u.userCode || u.code || '').padStart(2, '0') === parentCode);
+          if (parent) {
+            return { id: `${parent.id}__tenant_${tenantIdx >= 0 ? tenantIdx : 0}`, user: parent };
+          }
+        }
+
+        // Priority 6: Member Code Match if present (e.g. "03", "[10]")
+        const codeMatch = sLowerEn.match(/(?:^|[^\d])(\d{1,2})(?:[^\d]|$)/);
+        if (codeMatch) {
+          const code = codeMatch[1].padStart(2, '0');
+          const match = allUsers.find(u => String(u.userCode || u.code || '').padStart(2, '0') === code);
+          if (match) return match;
+        }
+
+        return null;
+      }
 
         try {
           const parsed = JSON.parse(cleanStr);
@@ -2709,6 +2786,9 @@
 
           this.registerTableBody = document.getElementById('registerTableBody');
           this.triggerUploadBtn = document.getElementById('triggerUploadBtn');
+          this.exportRegisterBtn = document.getElementById('exportRegisterBtn');
+          this.importRegisterBtn = document.getElementById('importRegisterBtn');
+          this.importRegisterFileInput = document.getElementById('importRegisterFileInput');
           this.registerImageUpload = document.getElementById('registerImageUpload');
           this.dropzoneBox = document.getElementById('dropzoneBox');
           this.addEntryBtn = document.getElementById('addEntryBtn');
@@ -3441,6 +3521,80 @@
           this.renderRegisterTab();
           this.renderExpensesTab();
           this.renderSummaryTab();
+        }
+
+        exportRegister() {
+          const entries = store.getEntries();
+          if (!entries || entries.length === 0) {
+            return alert('No meter readings to export.');
+          }
+
+          const exportPayload = {
+            appName: "Turbine Register Readings",
+            exportDate: new Date().toISOString(),
+            version: "1.0",
+            totalEntries: entries.length,
+            entries: entries
+          };
+
+          const jsonStr = JSON.stringify(exportPayload, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tubewell_readings_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          this.showToast(`Exported ${entries.length} readings successfully!`);
+        }
+
+        handleRegisterImportFile(e) {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const text = event.target.result;
+              let importedEntries = [];
+
+              if (file.name.endsWith('.json') || text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                const parsed = JSON.parse(text);
+                const rawList = Array.isArray(parsed) ? parsed : (parsed.entries || parsed.readings || []);
+
+                if (!Array.isArray(rawList) || rawList.length === 0) {
+                  throw new Error('JSON file does not contain a valid readings list.');
+                }
+
+                importedEntries = rawList.map((ent, idx) => ({
+                  id: ent.id || `ent-imp-${Date.now()}-${idx}`,
+                  date: ent.date || new Date().toISOString().split('T')[0],
+                  userId: ent.userId || '',
+                  startReading: parseFloat(ent.startReading || 0),
+                  endReading: parseFloat(ent.endReading || 0),
+                  transferToUserId: ent.transferToUserId || null,
+                  notes: ent.notes || 'Imported reading',
+                  confidence: ent.confidence || 'high',
+                  isReviewed: ent.isReviewed !== undefined ? ent.isReviewed : true
+                }));
+              }
+
+              if (importedEntries.length === 0) {
+                return alert('No valid meter readings found in file.');
+              }
+
+              store.setEntries(importedEntries);
+              this.showToast(`🎉 Successfully imported ${importedEntries.length} meter readings!`);
+            } catch (err) {
+              alert('Failed to import readings file: ' + err.message);
+            }
+          };
+          reader.readAsText(file);
+          e.target.value = '';
         }
 
         exportSchedule() {
@@ -4483,12 +4637,20 @@
           const entries = store.getEntries();
           const expenses = store.getExpenses();
 
-          const calc = calculateBilling(users, entries, expenses);
-
-          if (this.summaryTotalUnits) this.summaryTotalUnits.textContent = `${calc.grandTotalUnits.toLocaleString()} Units`;
+          const totalRunningHours = Math.round((calc.grandTotalUnits / 100) * 100) / 100;
+          if (this.summaryTotalUnits) this.summaryTotalUnits.textContent = `${totalRunningHours.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Hours`;
           if (this.summaryWapdaBill) this.summaryWapdaBill.textContent = `Rs. ${Math.round(calc.wapdaBill).toLocaleString()}`;
           if (this.summaryFixedExpenses) this.summaryFixedExpenses.textContent = `Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}`;
           if (this.summaryGrandTotal) this.summaryGrandTotal.textContent = `Rs. ${Math.round(calc.grandTotalBillSystem).toLocaleString()}`;
+
+          // Calculate Per Hour Rate Metrics
+          const elecRate = totalRunningHours > 0 ? (calc.wapdaBill / totalRunningHours) : 0;
+          const totalRate = totalRunningHours > 0 ? (calc.grandTotalBillSystem / totalRunningHours) : 0;
+
+          const elecRateEl = document.getElementById('summaryElecRatePerHour');
+          const totalRateEl = document.getElementById('summaryTotalRatePerHour');
+          if (elecRateEl) elecRateEl.textContent = `Rs. ${elecRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / hr`;
+          if (totalRateEl) totalRateEl.textContent = `Rs. ${totalRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / hr`;
 
           const screenshotMonthBadge = document.getElementById('screenshotMonthBadge');
           if (screenshotMonthBadge) screenshotMonthBadge.textContent = calc.billingMonthLabel || 'Current Month';
