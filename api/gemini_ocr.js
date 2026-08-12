@@ -57,9 +57,9 @@ No markdown codeblocks, no explanatory text outside JSON.
 
     const candidateModels = [
       'gemini-1.5-flash',
-      'gemini-2.0-flash',
-      'gemini-2.5-flash',
-      'gemini-1.5-pro'
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-pro-latest',
+      'gemini-2.0-flash-exp'
     ];
 
     let lastError = null;
@@ -74,18 +74,14 @@ No markdown codeblocks, no explanatory text outside JSON.
               parts: [
                 { text: promptText },
                 {
-                  inline_data: {
-                    mime_type: mimeType,
+                  inlineData: {
+                    mimeType: mimeType,
                     data: cleanBase64
                   }
                 }
               ]
             }
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            response_mime_type: 'application/json'
-          }
+          ]
         };
 
         const response = await fetch(geminiUrl, {
@@ -99,7 +95,7 @@ No markdown codeblocks, no explanatory text outside JSON.
           break;
         } else {
           const errText = await response.text();
-          lastError = `Model ${modelName} returned HTTP ${response.status}: ${errText}`;
+          lastError = `Model ${modelName} HTTP ${response.status}: ${errText}`;
         }
       } catch (e) {
         lastError = e.message;
@@ -107,18 +103,21 @@ No markdown codeblocks, no explanatory text outside JSON.
     }
 
     if (!data) {
-      throw new Error(lastError || 'Gemini API call failed across all candidate models.');
+      throw new Error(lastError || 'Gemini API call failed across candidate models.');
     }
 
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     
     let parsedRows = [];
     try {
-      parsedRows = JSON.parse(rawText);
+      const cleanJson = rawText.replace(/^```json\s*/m, '').replace(/^```\s*/m, '').replace(/```$/m, '').trim();
+      parsedRows = JSON.parse(cleanJson);
     } catch (e) {
       const match = rawText.match(/\[[\s\S]*\]/);
       if (match) {
-        parsedRows = JSON.parse(match[0]);
+        try {
+          parsedRows = JSON.parse(match[0]);
+        } catch (e2) {}
       }
     }
 
