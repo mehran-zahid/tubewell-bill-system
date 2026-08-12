@@ -5061,22 +5061,34 @@
           this.showToast('📄 Preparing A4 PDF report...');
 
           try {
+            const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
+
+            // Create temporary clean print container in DOM for html2canvas
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.top = '0px';
+            container.style.left = '0px';
+            container.style.width = '794px';
+            container.style.background = '#ffffff';
+            container.style.color = '#0f172a';
+            container.style.zIndex = '9999999';
+            container.style.opacity = '1';
+            container.style.visibility = 'visible';
+
+            const clone = template.cloneNode(true);
+            clone.style.position = 'static';
+            clone.style.left = 'auto';
+            clone.style.top = 'auto';
+            clone.style.width = '100%';
+            clone.style.zIndex = 'auto';
+            clone.style.display = 'block';
+
+            container.appendChild(clone);
+            document.body.appendChild(container);
+
+            window.scrollTo(0, 0);
+
             if (window.html2pdf) {
-              const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
-              
-              // Position template on top of viewport cleanly for html2canvas capture
-              template.style.position = 'fixed';
-              template.style.left = '0px';
-              template.style.top = '0px';
-              template.style.width = '800px';
-              template.style.background = '#ffffff';
-              template.style.zIndex = '999999';
-              template.style.display = 'block';
-              template.style.visibility = 'visible';
-              template.style.opacity = '1';
-
-              window.scrollTo(0, 0);
-
               const opt = {
                 margin: [6, 6, 6, 6],
                 filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
@@ -5092,33 +5104,26 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
               };
 
-              // Wait 200ms to guarantee browser renders DOM elements before canvas capture
-              await new Promise(res => setTimeout(res, 200));
+              // Wait 250ms to ensure DOM layout engine renders clone completely
+              await new Promise(res => setTimeout(res, 250));
 
-              await window.html2pdf().set(opt).from(template).save();
+              await window.html2pdf().set(opt).from(clone).save();
 
-              template.style.position = 'fixed';
-              template.style.left = '-9999px';
-              template.style.zIndex = '-9999';
+              if (document.body.contains(container)) {
+                document.body.removeChild(container);
+              }
               this.showToast('✅ PDF Report downloaded successfully!');
             } else {
+              if (document.body.contains(container)) {
+                document.body.removeChild(container);
+              }
               window.print();
             }
           } catch (err) {
             console.error('html2pdf Export Error, using native print:', err);
-            if (template) {
-              template.style.position = 'fixed';
-              template.style.left = '-9999px';
-              template.style.zIndex = '-9999';
-            }
             this.showToast('📄 Opening Save as PDF dialog...');
             window.print();
           } finally {
-            if (template) {
-              template.style.position = 'fixed';
-              template.style.left = '-9999px';
-              template.style.zIndex = '-9999';
-            }
             if (pdfBtn) {
               pdfBtn.disabled = false;
               pdfBtn.innerHTML = originalBtnHtml;
