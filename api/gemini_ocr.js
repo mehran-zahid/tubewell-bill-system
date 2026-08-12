@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    console.error('[OCR ERROR] GEMINI_API_KEY environment variable is not configured on Vercel.');
+    console.error('[OCR ERROR] GEMINI_API_KEY environment variable is missing on Vercel backend.');
     return res.status(500).json({
       status: 'error',
       error: 'GEMINI_API_KEY environment variable is missing on Vercel backend. Please add GEMINI_API_KEY under Vercel Project Settings -> Environment Variables and redeploy.'
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   try {
     const { imageB64, mimeType = 'image/jpeg' } = req.body || {};
     if (!imageB64) {
-      console.error('[OCR ERROR] Missing image data in request payload.');
+      console.error('[OCR ERROR] Missing image data in request body.');
       return res.status(400).json({ status: 'error', error: 'Missing image data' });
     }
 
@@ -81,36 +81,47 @@ RULES:
       }
     };
 
-    // Direct 1-step call to primary Google Gemini 1.5 Flash Vision Endpoint
-    const primaryUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    // Official active Google Gemini models from Google AI Documentation (ai.google.dev/gemini-api/docs/models)
+    const targetModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash'];
 
-    let fetchStart = Date.now();
-    let response = await fetch(primaryUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiPayload)
-    });
+    let response = null;
+    let lastErrText = '';
+    let usedModel = '';
 
-    if (!response.ok && response.status === 404) {
-      console.warn('[OCR WARN] gemini-1.5-flash 404, attempting gemini-1.5-flash-latest fallback...');
-      response = await fetch(fallbackUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(geminiPayload)
-      });
+    for (const mName of targetModels) {
+      try {
+        const fetchStart = Date.now();
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
+        console.log(`[OCR FETCH] Calling official Google endpoint for model: ${mName}...`);
+        
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiPayload)
+        });
+
+        if (res.ok) {
+          response = res;
+          usedModel = mName;
+          console.log(`[OCR SUCCESS MODEL] Model ${mName} responded OK in ${Date.now() - fetchStart}ms.`);
+          break;
+        } else {
+          lastErrText = await res.text();
+          console.warn(`[OCR WARN MODEL] Model ${mName} returned HTTP ${res.status}: ${lastErrText}`);
+        }
+      } catch (e) {
+        lastErrText = e.message;
+        console.error(`[OCR ERROR MODEL] Model ${mName} exception:`, e);
+      }
     }
 
-    const fetchDuration = Date.now() - fetchStart;
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`[OCR FAILURE] Google Gemini API Error HTTP ${response.status}: ${errText}`);
-      let msg = `Google Gemini API Error (HTTP ${response.status}): ${errText}`;
+    if (!response) {
+      console.error(`[OCR FAILURE ALL MODELS] All target models failed. Last error: ${lastErrText}`);
+      let msg = `Google Gemini API Error: ${lastErrText}`;
       try {
-        const errObj = JSON.parse(errText);
+        const errObj = JSON.parse(lastErrText);
         if (errObj && errObj.error && errObj.error.message) {
-          msg = `Google Gemini Error (${errObj.error.status || response.status}): ${errObj.error.message}`;
+          msg = `Google Gemini Error (${errObj.error.status || 'API_ERROR'}): ${errObj.error.message}`;
         }
       } catch (e) {}
 
@@ -137,10 +148,11 @@ RULES:
     }
 
     const totalDuration = Date.now() - startTime;
-    console.log(`[OCR SUCCESS] Processed in ${totalDuration}ms (Gemini Fetch: ${fetchDuration}ms). Parsed ${parsedRows.length} rows.`);
+    console.log(`[OCR COMPLETE] Model: ${usedModel} | Duration: ${totalDuration}ms | Rows Extracted: ${parsedRows.length}`);
 
     return res.status(200).json({
       status: 'success',
+      modelUsed: usedModel,
       rowsCount: Array.isArray(parsedRows) ? parsedRows.length : 0,
       rows: Array.isArray(parsedRows) ? parsedRows : [],
       rawText: rawText
