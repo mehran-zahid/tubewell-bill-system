@@ -778,69 +778,28 @@
             <input type="month" id="billingMonthInput" class="form-control" value="2026-08">
           </div>
 
-          <!-- Reference Input Box -->
+          <!-- Reference Input & Official MEPCO Portal Link -->
           <div class="card mb-3" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); padding: 1.25rem;">
             <div class="flex-between mb-2">
-              <label class="form-label" style="color: var(--accent-green); margin: 0; font-size: 1.05rem; font-weight: 700;">⚡ MEPCO Online Bill Details</label>
-              <span class="badge badge-success">MEPCO Bill Details / میپکو بل تفصیلات</span>
+              <label class="form-label" style="color: var(--accent-green); margin: 0; font-size: 1.05rem; font-weight: 700;">⚡ MEPCO Bill Portal & Reference</label>
+              <span class="badge badge-success">Official PITC Portal</span>
             </div>
             
-            <div class="form-group mb-2">
-              <label class="card-subtitle">Enter 14-Digit WAPDA Reference Number</label>
-              <input type="text" id="wapdaRefNoInput" class="form-control" placeholder="e.g. 29153110982900" value="" style="font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;">
-            </div>
-
-            <div class="grid-2 gap-2 mt-1">
-              <button id="fetchDynamicLiveBillBtn" class="btn btn-primary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
-                ⚡ Auto-Fetch Bill
-              </button>
-              <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green);">
-                🌐 Open MEPCO Portal
-              </button>
-            </div>
-          </div>
-
-          <!-- Sleek Readonly Display Cards for Bill Metadata (Hidden Until Fetched) -->
-          <div id="billMetadataBox" class="card mb-3 hidden" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1.25rem;">
-            <div class="card-subtitle mb-2" style="font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem;">
-              <span>📋 Extracted Bill Details (خودکار بل تفصیلات)</span>
-              <span class="badge badge-success" style="font-size: 0.7rem;">Verified Live PITC</span>
-            </div>
-
-            <div class="grid-2 gap-1 mb-2">
-              <div style="background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
-                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">🔢 REFERENCE NUMBER (حوالہ نمبر)</div>
-                <div id="dispRefNo" style="font-size: 1.1rem; font-weight: 800; color: var(--accent-blue);">—</div>
-              </div>
-              
-              <div style="background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
-                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">👤 NAME & ADDRESS (نام و پتہ)</div>
-                <div id="dispNameAddress" style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">—</div>
-              </div>
-            </div>
-
-            <div class="grid-3 gap-1">
-              <div style="background: var(--bg-card); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
-                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">🗓️ READING DATE</div>
-                <div id="dispReadingDate" style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">—</div>
-              </div>
-              
-              <div style="background: var(--bg-card); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
-                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">🗓️ ISSUE DATE</div>
-                <div id="dispIssueDate" style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">—</div>
-              </div>
-              
-              <div style="background: var(--bg-card); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08);">
-                <div style="font-size: 0.75rem; color: var(--accent-red); font-weight: 700;">🗓️ DUE DATE (مقررہ تاریخ)</div>
-                <div id="dispDueDate" style="font-size: 1rem; font-weight: 800; color: var(--accent-red);">—</div>
+            <div class="form-group mb-0">
+              <label class="card-subtitle mb-1">14-Digit WAPDA Reference Number (حوالہ نمبر)</label>
+              <div class="grid-2 gap-2">
+                <input type="text" id="wapdaRefNoInput" class="form-control" placeholder="e.g. 29153110982900" value="" style="font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;">
+                <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.18); border: 1px solid var(--accent-green); color: var(--accent-green); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                  <span>🌐 Open Official MEPCO Portal</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Total WAPDA Bill Amount (PKR / Rs.)</label>
-            <input type="number" id="wapdaBillInput" class="form-control" placeholder="Enter actual bill amount Rs. (e.g. 336275)" value="" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-green);">
-            <p class="card-subtitle mt-1" style="font-size: 0.8rem;">Auto-populated from Live PITC MEPCO Web Bill.</p>
+          <div class="form-group mb-3">
+            <label class="form-label">Total WAPDA Bill Amount (PKR / کل بل رقم)</label>
+            <input type="number" id="wapdaBillInput" class="form-control" placeholder="Enter actual monthly bill amount in Rs. (e.g. 336275)" value="" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-green);">
+            <p class="card-subtitle mt-1" style="font-size: 0.85rem;">Enter the total electricity bill amount from your MEPCO bill.</p>
           </div>
         </div>
 
@@ -2641,40 +2600,9 @@
             });
           }
 
-          this.fetchDynamicLiveBillBtn.addEventListener('click', async () => {
-            const refNo = (this.wapdaRefNoInput.value || '').trim();
-            if (!refNo || refNo.length < 10) {
-              alert('Please enter a valid 14-Digit WAPDA Reference Number!');
-              return;
-            }
-
+          this.wapdaRefNoInput.addEventListener('input', (e) => {
+            const refNo = (e.target.value || '').trim();
             store.updateWapdaRefDetails(refNo, 'R');
-            const fullRefStr = `${refNo} R`;
-            this.mepcoDynamicRefText.textContent = fullRefStr;
-            this.showToast(`Connecting to PITC MEPCO Server for Ref: ${refNo}...`);
-
-            try {
-              const data = await fetchProxyApi(`/fetch_mepco?refno=${refNo}&ru=R`);
-
-              if (data && data.status === 'success' && data.bill) {
-                const b = data.bill;
-                this.dispRefNo.textContent = b.referenceNo || fullRefStr;
-                this.dispNameAddress.textContent = `${b.name || ''} ${b.address || ''}`.trim() || 'MEPCO Consumer';
-                this.dispReadingDate.textContent = b.readingDate || '—';
-                this.dispIssueDate.textContent = b.issueDate || '—';
-                this.dispDueDate.textContent = b.dueDate || '—';
-                this.billMetadataBox.classList.remove('hidden');
-
-                const billAmt = parseFloat(b.amountWithinDueDate || b.totalAmount || 0);
-                if (billAmt > 0) {
-                  this.wapdaBillInput.value = billAmt;
-                  store.updateWapdaBill(billAmt);
-                  this.showToast(`✅ Auto-filled bill amount Rs. ${billAmt.toLocaleString()} from PITC MEPCO!`);
-                }
-              }
-            } catch (err) {
-              alert(`Error fetching bill details: ${err.message}`);
-            }
           });
 
           this.closeDynamicCardBtn.addEventListener('click', () => {
