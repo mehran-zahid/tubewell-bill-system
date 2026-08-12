@@ -81,8 +81,29 @@ RULES:
       }
     };
 
-    // Official active Google Gemini models from Google AI Documentation (ai.google.dev/gemini-api/docs/models)
-    const targetModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash'];
+    // Dynamically query ListModels from Google to discover exact allowed models for this key
+    let discoveredModels = [];
+    try {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        if (listData && Array.isArray(listData.models)) {
+          discoveredModels = listData.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace(/^models\//, ''));
+          console.log('[OCR DISCOVERED MODELS]', discoveredModels.join(', '));
+        }
+      } else {
+        const listErr = await listRes.text();
+        console.warn('[OCR LIST MODELS WARN]', listRes.status, listErr);
+      }
+    } catch (e) {
+      console.warn('[OCR LIST MODELS EXCEPTION]', e.message);
+    }
+
+    // Combine discovered models with default Google AI Studio models
+    const fallbackList = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-exp'];
+    const targetModels = Array.from(new Set([...discoveredModels, ...fallbackList]));
 
     let response = null;
     let lastErrText = '';
@@ -92,7 +113,7 @@ RULES:
       try {
         const fetchStart = Date.now();
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
-        console.log(`[OCR FETCH] Calling official Google endpoint for model: ${mName}...`);
+        console.log(`[OCR FETCH] Calling model: ${mName}...`);
         
         const res = await fetch(url, {
           method: 'POST',
