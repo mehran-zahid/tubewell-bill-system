@@ -1,3 +1,11 @@
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -15,7 +23,7 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({
       status: 'error',
-      error: 'GEMINI_API_KEY environment variable is not configured on Vercel backend server.'
+      error: 'GEMINI_API_KEY is missing on Vercel environment. Please add GEMINI_API_KEY in Vercel Project Settings -> Environment Variables.'
     });
   }
 
@@ -47,40 +55,61 @@ RULES:
 No markdown codeblocks, no explanatory text outside JSON.
 `;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const candidateModels = [
+      'gemini-1.5-flash',
+      'gemini-2.0-flash',
+      'gemini-2.5-flash',
+      'gemini-1.5-pro'
+    ];
 
-    const geminiPayload = {
-      contents: [
-        {
-          parts: [
-            { text: promptText },
+    let lastError = null;
+    let data = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const geminiPayload = {
+          contents: [
             {
-              inline_data: {
-                mime_type: mimeType,
-                data: cleanBase64
-              }
+              parts: [
+                { text: promptText },
+                {
+                  inline_data: {
+                    mime_type: mimeType,
+                    data: cleanBase64
+                  }
+                }
+              ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            response_mime_type: 'application/json'
+          }
+        };
+
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiPayload)
+        });
+
+        if (response.ok) {
+          data = await response.json();
+          break;
+        } else {
+          const errText = await response.text();
+          lastError = `Model ${modelName} returned HTTP ${response.status}: ${errText}`;
         }
-      ],
-      generationConfig: {
-        temperature: 0.1,
-        response_mime_type: "application/json"
+      } catch (e) {
+        lastError = e.message;
       }
-    };
-
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiPayload)
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API Error ${response.status}: ${errText}`);
     }
 
-    const data = await response.json();
+    if (!data) {
+      throw new Error(lastError || 'Gemini API call failed across all candidate models.');
+    }
+
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     
     let parsedRows = [];
