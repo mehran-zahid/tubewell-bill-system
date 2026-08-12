@@ -4093,17 +4093,29 @@
             itemizedSec.style.display = 'none';
           }
 
-          // 4. Generate PDF Report
+          // 4. Generate PDF Report via Temporary DOM Clone
           const pdfBtn = document.getElementById('downloadPdfBtn');
           const originalBtnHtml = pdfBtn ? pdfBtn.innerHTML : '📥 Download PDF Report';
           if (pdfBtn) {
             pdfBtn.disabled = true;
-            pdfBtn.innerHTML = '⏳ Generating A4 PDF...';
+            pdfBtn.innerHTML = '⏳ Generating PDF...';
           }
           this.showToast('📄 Generating A4 PDF report...');
 
+          // Create temporary clone for html2pdf capture
+          const clone = template.cloneNode(true);
+          clone.id = 'pdfReportTemplateClone';
+          clone.style.position = 'absolute';
+          clone.style.left = '0';
+          clone.style.top = '0';
+          clone.style.zIndex = '-999';
+          clone.style.opacity = '1';
+          clone.style.display = 'block';
+          clone.style.visibility = 'visible';
+          clone.style.width = '750px';
+          document.body.appendChild(clone);
+
           try {
-            // Ensure html2pdf library is available
             if (!window.html2pdf) {
               await new Promise((resolve) => {
                 const s = document.createElement('script');
@@ -4117,23 +4129,26 @@
             if (window.html2pdf) {
               const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
               const opt = {
-                margin: [6, 6, 6, 6],
+                margin: [5, 5, 5, 5],
                 filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
               };
 
-              await window.html2pdf().set(opt).from(template).save();
+              await window.html2pdf().set(opt).from(clone).save();
               this.showToast('✅ PDF Report downloaded successfully!');
             } else {
               window.print();
             }
           } catch (err) {
             console.error('PDF generation error:', err);
-            this.showToast('⚠️ Opening browser print dialog...');
+            this.showToast('⚠️ Opening print dialog fallback...');
             window.print();
           } finally {
+            if (clone && clone.parentNode) {
+              clone.parentNode.removeChild(clone);
+            }
             if (pdfBtn) {
               pdfBtn.disabled = false;
               pdfBtn.innerHTML = originalBtnHtml;
