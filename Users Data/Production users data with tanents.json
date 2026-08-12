@@ -1,6 +1,6 @@
 {
   "appName": "Turbine Bill & Schedule Manager",
-  "exportDate": "2026-08-12T11:29:54.058Z",
+  "exportDate": "2026-08-12T11:39:19.276Z",
   "version": "1.0",
   "totalMembers": 16,
   "users": [
@@ -19,15 +19,7 @@
       "totalMinutes": 1020,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "02",
@@ -44,15 +36,20 @@
       "totalMinutes": 735,
       "totalLandAcres": 0,
       "isLeased": true,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "Zamaan",
-      "tenantNameUr": "زمان",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 4
+      "tenants": [
+        {
+          "id": "t-1",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Zamaan",
+          "tenantNameUr": "زمان",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 4
+        }
+      ]
     },
     {
       "userCode": "03",
@@ -69,20 +66,49 @@
       "totalMinutes": 1940,
       "totalLandAcres": 12.5,
       "isLeased": true,
-      "tenantType": "existing",
-      "linkedMemberId": "usr-1786523778444-10",
-      "tenantNameEn": "Mumtaz Ahmad",
-      "tenantNameUr": "ممتاز احمد",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 1
+      "tenants": [
+        {
+          "id": "t-1",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Imran",
+          "tenantNameUr": "عمران",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 3.25
+        },
+        {
+          "id": "t-2",
+          "tenantType": "existing",
+          "linkedMemberId": "usr-1786523778444-10",
+          "tenantNameEn": "Mumtaz Ahmad",
+          "tenantNameUr": "ممتاز احمد",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 1
+        },
+        {
+          "id": "t-3",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Sajid Sheikh",
+          "tenantNameUr": "ساجد شیخ",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 5
+        }
+      ]
     },
     {
       "userCode": "04",
       "nameEn": "Husnain Arwar",
-      "nameUr": "حسنین انور",
+      "nameUr": "حسنین اروڑ",
       "phone": "",
       "userType": "internal",
       "startDay": "Tuesday",
@@ -94,20 +120,12 @@
       "totalMinutes": 360,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "Zamaan",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 1,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 60,
-      "tenantLeasedAcres": 4
+      "tenants": []
     },
     {
       "userCode": "05",
       "nameEn": "Ramzan Arwar",
-      "nameUr": "رمضان انور",
+      "nameUr": "رمضان اروڑ",
       "phone": "",
       "userType": "internal",
       "startDay": "Wednesday",
@@ -119,15 +137,7 @@
       "totalMinutes": 360,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "06",
@@ -144,15 +154,7 @@
       "totalMinutes": 385,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "07",
@@ -169,15 +171,7 @@
       "totalMinutes": 810,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "08",
@@ -194,15 +188,7 @@
       "totalMinutes": 600,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "09",
@@ -219,15 +205,7 @@
       "totalMinutes": 360,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "10",
@@ -244,15 +222,7 @@
       "totalMinutes": 900,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "11",
@@ -268,16 +238,8 @@
       "durationMinutes": 0,
       "totalMinutes": 840,
       "totalLandAcres": 0,
-      "isLeased": true,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "Saleem Bhatti",
-      "tenantNameUr": "سلیم بھٹی",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0.5
+      "isLeased": false,
+      "tenants": []
     },
     {
       "userCode": "12",
@@ -294,15 +256,32 @@
       "totalMinutes": 660,
       "totalLandAcres": 0,
       "isLeased": true,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "Riaz Bhatti",
-      "tenantNameUr": "رياض بھٹی",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 5.5
+      "tenants": [
+        {
+          "id": "t-1",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Saleem Bhatti",
+          "tenantNameUr": "سلیم بھٹی",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 0.5
+        },
+        {
+          "id": "t-2",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Riaz Bhatti",
+          "tenantNameUr": "رياض بھٹی",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 5.5
+        }
+      ]
     },
     {
       "userCode": "13",
@@ -319,15 +298,20 @@
       "totalMinutes": 660,
       "totalLandAcres": 0,
       "isLeased": true,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "Saeed Sakhera",
-      "tenantNameUr": "سعید سکھیرہ",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 6
+      "tenants": [
+        {
+          "id": "t-1",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Saeed Sakhera",
+          "tenantNameUr": "سعید سکھیرہ",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 6
+        }
+      ]
     },
     {
       "userCode": "14",
@@ -344,15 +328,7 @@
       "totalMinutes": 150,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     },
     {
       "userCode": "16",
@@ -369,15 +345,20 @@
       "totalMinutes": 150,
       "totalLandAcres": 0,
       "isLeased": true,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "Ramzan Jami Toor",
-      "tenantNameUr": "رمضان جامی تور",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 1
+      "tenants": [
+        {
+          "id": "t-1",
+          "tenantType": "external",
+          "linkedMemberId": null,
+          "tenantNameEn": "Ramzan Jami Toor",
+          "tenantNameUr": "رمضان جامی تور",
+          "tenantPhone": "",
+          "tenantLeasedHours": 0,
+          "tenantLeasedMinutes": 0,
+          "tenantTotalLeasedMins": 0,
+          "tenantLeasedAcres": 1
+        }
+      ]
     },
     {
       "userCode": "15",
@@ -394,15 +375,7 @@
       "totalMinutes": 150,
       "totalLandAcres": 0,
       "isLeased": false,
-      "tenantType": "external",
-      "linkedMemberId": null,
-      "tenantNameEn": "",
-      "tenantNameUr": "",
-      "tenantPhone": "",
-      "tenantLeasedHours": 0,
-      "tenantLeasedMinutes": 0,
-      "tenantTotalLeasedMins": 0,
-      "tenantLeasedAcres": 0
+      "tenants": []
     }
   ]
 }

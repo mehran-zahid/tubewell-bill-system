@@ -1161,7 +1161,7 @@
           </div>
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label">🌱 Total Land Owned / کل زمین (Acres - Optional)</label>
-            <input type="number" step="0.1" min="0" id="userTotalLandAcresInput" class="form-control" placeholder="e.g. 2.5">
+            <input type="number" step="0.01" min="0" id="userTotalLandAcresInput" class="form-control" placeholder="e.g. 2.50">
           </div>
         </div>
 
@@ -3687,7 +3687,24 @@
                 <div style="font-weight: 700; font-size: 0.95rem; line-height: 1.3;">${biliName}</div>
                 ${user.phone ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">📱 ${user.phone}</div>` : ''}
                 ${user.totalLandAcres ? `<div style="font-size: 0.78rem; color: #10b981; font-weight: 700; margin-top: 2px;">🌱 Land: ${user.totalLandAcres} Acres</div>` : ''}
-                ${user.isLeased && (user.tenantNameEn || user.tenantNameUr || user.tenantName) ? `<div style="font-size: 0.78rem; color: #f59e0b; font-weight: 700; margin-top: 2px;">Leased to: ${user.tenantNameEn || user.tenantName || ''} ${user.tenantNameUr ? `(${user.tenantNameUr})` : ''} (${user.tenantLeasedHours || 0} hrs / ${user.tenantLeasedAcres || 0} acres)</div>` : ''}
+                ${(() => {
+                  const tenantsList = Array.isArray(user.tenants) && user.tenants.length > 0 
+                    ? user.tenants 
+                    : (user.isLeased && (user.tenantNameEn || user.tenantNameUr || user.tenantName) 
+                        ? [{ tenantNameEn: user.tenantNameEn || user.tenantName || '', tenantNameUr: user.tenantNameUr || '', tenantLeasedHours: user.tenantLeasedHours || 0, tenantLeasedMinutes: user.tenantLeasedMinutes || 0, tenantLeasedAcres: user.tenantLeasedAcres || 0 }] 
+                        : []);
+                  if (!user.isLeased || tenantsList.length === 0) return '';
+
+                  return tenantsList.map((t, tIdx) => {
+                    const tNameEn = t.tenantNameEn || t.tenantName || '';
+                    const tNameUr = t.tenantNameUr || '';
+                    const tDisplayName = tNameEn && tNameUr ? `${tNameEn} (${tNameUr})` : (tNameEn || tNameUr || `Thekedar #${tIdx + 1}`);
+                    const h = t.tenantLeasedHours || 0;
+                    const m = t.tenantLeasedMinutes || 0;
+                    const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+                    return `<div style="font-size: 0.78rem; color: #f59e0b; font-weight: 700; margin-top: 2px;">🚜 Leased #${tIdx + 1}: ${tDisplayName} (${timeStr} / ${t.tenantLeasedAcres || 0} acres)</div>`;
+                  }).join('');
+                })()}
               </td>
               <td>
                 <div style="display: flex; flex-direction: column; gap: 0.3rem;">
@@ -4019,7 +4036,7 @@
                 </div>
                 <div>
                   <label class="form-label" style="font-size: 0.78rem;">Leased Acres (ایکڑ)</label>
-                  <input type="number" step="0.1" min="0" class="form-control tenant-acres-input" data-index="${idx}" value="${t.tenantLeasedAcres || 0}" placeholder="e.g. 1.0">
+                  <input type="number" step="0.01" min="0" class="form-control tenant-acres-input" data-index="${idx}" value="${t.tenantLeasedAcres || 0}" placeholder="e.g. 1.0">
                 </div>
               </div>
 
