@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('X-Tubewell-Build-Sync', '2026-08-12-v1.1.0');
+  res.setHeader('X-Tubewell-Build-Sync', '2026-08-12-v1.1.2');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -50,9 +50,9 @@ export default async function handler(req, res) {
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`http://ebill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`)}`
   ];
 
-  const fetchWithTimeout = async (url) => {
+  const fetchWithTimeout = async (url, ms = 10000) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), ms);
     try {
       const response = await fetch(url, {
         signal: controller.signal,
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const result = await Promise.any(targetUrls.map(url => fetchWithTimeout(url)));
+    const result = await Promise.any(targetUrls.map(url => fetchWithTimeout(url, 10000)));
     return res.status(200).json(result);
   } catch (err) {
     return res.status(500).json({
