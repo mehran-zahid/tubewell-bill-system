@@ -551,7 +551,6 @@
 
       <div class="flex-center gap-2">
         <button id="themeToggleBtn" class="btn btn-secondary btn-sm">🌙 Theme</button>
-        <button id="settingsBtn" class="btn btn-secondary btn-sm">⚙️ Settings</button>
       </div>
     </div>
   </header>
@@ -2873,15 +2872,6 @@
         async processStagedAiScan() {
           if (this.stagedFiles.length === 0) return;
 
-          const apiKey = store.getGeminiApiKey();
-          if (!apiKey) {
-            this.ocrProgressBox.classList.add('hidden');
-            this.ocrPreviewCard.classList.remove('hidden');
-            this.rawOcrTextarea.value = `💡 Register Reading Extraction requires a Google Gemini API Key!\n\nTo enable instant 100% accurate scanning on all handwritten Urdu photos:\n1. Click ⚙️ Settings at the top right.\n2. Enter your Google Gemini API Key.\n3. Save Settings & upload your photo again!`;
-            this.showToast(`💡 Enter Gemini API Key in Settings (⚙️) for Reading Extraction!`);
-            return;
-          }
-
           this.ocrProgressBox.classList.remove('hidden');
           this.ocrPreviewCard.classList.remove('hidden');
           this.batchProgressBar.style.width = '0%';
@@ -2909,7 +2899,7 @@
 
             if (i > 0) {
               this.ocrProgressSub.textContent = `Processing pages...`;
-              await new Promise(r => setTimeout(r, 1500));
+              await new Promise(r => setTimeout(r, 1000));
             }
 
             const file = filesToProcess[i];
@@ -2928,39 +2918,30 @@
               let rawOutput = '';
               let errorMessage = '';
 
-              if (apiKey) {
-                const rawB64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-                const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+              // Call secure Vercel Serverless Endpoint /api/gemini_ocr
+              try {
+                const response = await fetch('/api/gemini_ocr', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    imageB64: imageBase64,
+                    mimeType: file.type || 'image/jpeg'
+                  })
+                });
 
-                for (const mName of modelsToTry) {
-                  try {
-                    const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        contents: [{
-                          parts: [
-                            { text: "Extract table rows from this handwritten Urdu/English turbine log register image. Return ONLY a valid JSON array of objects with keys: 'date' (YYYY-MM-DD), 'name' (Urdu/English user name), 'startReading' (number), 'endReading' (number), 'confidenceScore' (number 0.0-1.0). No markdown." },
-                            { inlineData: { mimeType: file.type || "image/jpeg", data: rawB64 } }
-                          ]
-                        }]
-                      })
-                    });
-                    const gData = await gResp.json();
-                    if (gData.error) {
-                      errorMessage = gData.error.message || JSON.stringify(gData.error);
-                      continue;
-                    }
-                    if (gData.candidates && gData.candidates[0] && gData.candidates[0].content) {
-                      const textOut = gData.candidates[0].content.parts[0].text;
-                      rawOutput = textOut;
-                      aiRows = JSON.parse(textOut.replace(/^```json\s*/m, '').replace(/```$/m, '').trim());
-                      break;
-                    }
-                  } catch (e) {
-                    errorMessage = e.message;
+                if (response.ok) {
+                  const ocrRes = await response.json();
+                  if (ocrRes && ocrRes.status === 'success') {
+                    aiRows = ocrRes.rows || [];
+                    rawOutput = ocrRes.rawText || '';
+                  } else {
+                    errorMessage = ocrRes.error || 'Failed to parse image';
                   }
+                } else {
+                  errorMessage = `Server status ${response.status}`;
                 }
+              } catch (e) {
+                errorMessage = e.message;
               }
 
               if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {
