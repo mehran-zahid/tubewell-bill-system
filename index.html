@@ -1626,8 +1626,6 @@
             users: JSON.parse(JSON.stringify(defaultUsers)),
             entries: JSON.parse(JSON.stringify(defaultEntries)),
             expenses: JSON.parse(JSON.stringify(defaultExpenses)),
-            geminiApiKey: '',
-            sessionOnlyKey: false,
             activeTab: 'users',
             theme: 'light'
           };
@@ -1635,6 +1633,10 @@
 
         loadState() {
           try {
+            // Security: Purge any legacy API keys stored in local browser storage
+            localStorage.removeItem('gemini_api_key');
+            sessionStorage.removeItem('gemini_api_key');
+
             const keysToTry = [
               STORAGE_KEY,
               'tubewell_bill_system_v25_ai_vision_multiport',
@@ -1653,10 +1655,14 @@
               if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
+                  delete parsed.geminiApiKey;
+                  delete parsed.sessionOnlyKey;
                   const loadedState = {
                     ...this.getDefaultState(),
                     ...parsed
                   };
+                  delete loadedState.geminiApiKey;
+                  delete loadedState.sessionOnlyKey;
                   if (!localStorage.getItem('user_explicit_theme_set')) {
                     loadedState.theme = 'light';
                   }
@@ -1671,9 +1677,8 @@
         saveState() {
           try {
             const toSave = { ...this.state };
-            if (toSave.sessionOnlyKey) {
-              toSave.geminiApiKey = '';
-            }
+            delete toSave.geminiApiKey;
+            delete toSave.sessionOnlyKey;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
           } catch (e) {}
           this.notify();
@@ -1938,22 +1943,6 @@
             localStorage.setItem('user_explicit_theme_set', 'true');
           } catch (e) {}
           this.saveState();
-        }
-
-        setGeminiApiKey(key, sessionOnly = false) {
-          this.state.sessionOnlyKey = sessionOnly;
-          if (sessionOnly) {
-            this.sessionKey = key.trim();
-            this.state.geminiApiKey = '';
-          } else {
-            this.sessionKey = key.trim();
-            this.state.geminiApiKey = key.trim();
-          }
-          this.saveState();
-        }
-
-        getGeminiApiKey() {
-          return this.sessionKey || this.state.geminiApiKey || '';
         }
 
         resetToDefaults() {
@@ -2943,70 +2932,32 @@
               let rawOutput = '';
               let errorMessage = '';
 
-              const viteEnvKey = window.VITE_GEMINI_API_KEY || store.getGeminiApiKey();
+              // Call secure Vercel Serverless Endpoint /api/gemini_ocr exclusively
+              try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-              if (viteEnvKey) {
-                // Direct browser call using VITE_GEMINI_API_KEY baked from Vercel Environment Variables
-                const rawB64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-                const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+                const response = await fetch('/api/gemini_ocr', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    imageB64: imageBase64,
+                    mimeType: 'image/jpeg'
+                  }),
+                  signal: controller.signal
+                });
+                clearTimeout(timeoutId);
 
-                for (const mName of modelsToTry) {
-                  try {
-                    const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${viteEnvKey}`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        contents: [{
-                          parts: [
-                            { text: "Extract table rows from this handwritten Urdu/English turbine log register image. Return ONLY a valid JSON array of objects with keys: 'date' (YYYY-MM-DD), 'name' (Urdu/English user name), 'startReading' (number), 'endReading' (number), 'confidenceScore' (number 0.0-1.0). No markdown." },
-                            { inlineData: { mimeType: "image/jpeg", data: rawB64 } }
-                          ]
-                        }]
-                      })
-                    });
-                    const gData = await gResp.json();
-                    if (gData.error) {
-                      errorMessage = gData.error.message || JSON.stringify(gData.error);
-                      continue;
-                    }
-                    if (gData.candidates && gData.candidates[0] && gData.candidates[0].content) {
-                      const textOut = gData.candidates[0].content.parts[0].text;
-                      rawOutput = textOut;
-                      aiRows = JSON.parse(textOut.replace(/^```json\s*/m, '').replace(/```$/m, '').trim());
-                      break;
-                    }
-                  } catch (e) {
-                    errorMessage = e.message;
-                  }
+                const ocrRes = await response.json().catch(() => null);
+
+                if (response.ok && ocrRes && ocrRes.status === 'success') {
+                  aiRows = ocrRes.rows || [];
+                  rawOutput = ocrRes.rawText || '';
+                } else {
+                  errorMessage = (ocrRes && ocrRes.error) ? ocrRes.error : `Server HTTP ${response.status}`;
                 }
-              } else {
-                // Fallback to /api/gemini_ocr serverless endpoint
-                try {
-                  const controller = new AbortController();
-                  const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-                  const response = await fetch('/api/gemini_ocr', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      imageB64: imageBase64,
-                      mimeType: 'image/jpeg'
-                    }),
-                    signal: controller.signal
-                  });
-                  clearTimeout(timeoutId);
-
-                  const ocrRes = await response.json().catch(() => null);
-
-                  if (response.ok && ocrRes && ocrRes.status === 'success') {
-                    aiRows = ocrRes.rows || [];
-                    rawOutput = ocrRes.rawText || '';
-                  } else {
-                    errorMessage = (ocrRes && ocrRes.error) ? ocrRes.error : `Server HTTP ${response.status}`;
-                  }
-                } catch (e) {
-                  errorMessage = e.name === 'AbortError' ? 'Network timeout after 25s. Please retry.' : e.message;
-                }
+              } catch (e) {
+                errorMessage = e.name === 'AbortError' ? 'Network timeout after 25s. Please retry.' : e.message;
               }
 
               if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {

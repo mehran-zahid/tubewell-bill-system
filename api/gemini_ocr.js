@@ -20,11 +20,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ status: 'error', error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
       status: 'error',
-      error: 'GEMINI_API_KEY is missing on Vercel environment. Please set GEMINI_API_KEY under Vercel Project Settings -> Environment Variables.'
+      error: 'GEMINI_API_KEY environment variable is not configured on Vercel backend. Please go to Vercel Project Settings -> Environment Variables, add GEMINI_API_KEY or VITE_GEMINI_API_KEY, select Production, and redeploy.'
     });
   }
 
