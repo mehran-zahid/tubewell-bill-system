@@ -17,71 +17,75 @@ export default async function handler(req, res) {
 
   const candidateUrls = [
     `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
-    `https://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
     `http://ebill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
     `https://api.allorigins.win/get?url=${encodeURIComponent(`http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`)}`
   ];
 
-  let lastError = null;
-
-  for (const url of candidateUrls) {
+  const fetchOne = async (url) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9'
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         }
       });
       clearTimeout(timeoutId);
 
-      if (response.ok) {
-        let htmlText = '';
-        if (url.includes('allorigins')) {
-          const json = await response.json();
-          htmlText = json.contents || '';
-        } else {
-          htmlText = await response.text();
-        }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        if (htmlText.length > 300) {
-          const amountMatch = htmlText.match(/DUE\s*DATE[^\d]*([\d,]+)/i) || 
-                              htmlText.match(/PAYABLE\s*WITHIN\s*DUE\s*DATE[^\d]*([\d,]+)/i) ||
-                              htmlText.match(/Net\s*Amount[^\d]*([\d,]+)/i) ||
-                              htmlText.match(/Rs\.?\s*([\d,]{4,})/i) ||
-                              htmlText.match(/Amount\s*Due[^\d]*([\d,]+)/i);
+      let htmlText = '';
+      if (url.includes('allorigins')) {
+        const json = await response.json();
+        htmlText = json.contents || '';
+      } else {
+        htmlText = await response.text();
+      }
 
-          const dueDateMatch = htmlText.match(/DUE\s*DATE[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{2,4})/i) ||
-                               htmlText.match(/(\d{2}[-\/]\d{2}[-\/]\d{4})/);
+      if (htmlText.length > 300) {
+        const amountMatch = htmlText.match(/DUE\s*DATE[^\d]*([\d,]+)/i) || 
+                            htmlText.match(/PAYABLE\s*WITHIN\s*DUE\s*DATE[^\d]*([\d,]+)/i) ||
+                            htmlText.match(/Net\s*Amount[^\d]*([\d,]+)/i) ||
+                            htmlText.match(/Rs\.?\s*([\d,]{4,})/i) ||
+                            htmlText.match(/Amount\s*Due[^\d]*([\d,]+)/i);
 
-          const nameMatch = htmlText.match(/NAME[:\s]*([A-Z\s]{4,30})/i);
+        const dueDateMatch = htmlText.match(/DUE\s*DATE[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{2,4})/i) ||
+                             htmlText.match(/(\d{2}[-\/]\d{2}[-\/]\d{4})/);
 
-          const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+        const nameMatch = htmlText.match(/NAME[:\s]*([A-Z\s]{4,30})/i);
 
-          if (amount > 0) {
-            return res.status(200).json({
-              status: 'success',
-              bill: {
-                referenceNo: cleanRef,
-                name: nameMatch ? nameMatch[1].trim() : 'MEPCO Consumer',
-                totalAmount: amount,
-                amountWithinDueDate: amount,
-                dueDate: dueDateMatch ? dueDateMatch[1] : '—'
-              }
-            });
-          }
+        const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+
+        if (amount > 0) {
+          return {
+            status: 'success',
+            bill: {
+              referenceNo: cleanRef,
+              name: nameMatch ? nameMatch[1].trim() : 'MEPCO Consumer',
+              totalAmount: amount,
+              amountWithinDueDate: amount,
+              dueDate: dueDateMatch ? dueDateMatch[1] : '—'
+            }
+          };
         }
       }
+      throw new Error('Could not parse valid bill amount');
     } catch (err) {
-      lastError = err.message;
+      clearTimeout(timeoutId);
+      throw err;
     }
-  }
+  };
 
-  return res.status(500).json({
-    status: 'error',
-    error: `Could not fetch bill from MEPCO endpoints. ${lastError || ''}`
-  });
+  try {
+    // Try candidates in parallel or race first successful result
+    const result = await Promise.any(candidateUrls.map(url => fetchOne(url)));
+    return res.status(200).json(result);
+  } catch (err) {
+    return res.status(500).json({
+      status: 'error',
+      error: 'Could not fetch bill from MEPCO PITC servers.'
+    });
+  }
 }
