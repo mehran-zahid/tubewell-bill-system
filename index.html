@@ -981,8 +981,8 @@
       </div>
     </section>
 
-    <!-- Hidden A4 PDF Report Template -->
-    <div id="pdfReportTemplate" style="display: none; width: 800px; padding: 2.5rem; background: #ffffff; color: #0f172a; font-family: 'Inter', system-ui, sans-serif; line-height: 1.4; box-sizing: border-box;">
+    <!-- Hidden A4 PDF Report Template (Rendered Off-Screen for html2pdf capture) -->
+    <div id="pdfReportTemplate" style="position: fixed; left: -9999px; top: 0; width: 800px; padding: 2.5rem; background: #ffffff; color: #0f172a; font-family: 'Inter', system-ui, sans-serif; line-height: 1.4; box-sizing: border-box; z-index: -9999; display: block; visibility: visible;">
       <!-- Header -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #059669; padding-bottom: 1rem; margin-bottom: 1.5rem;">
         <div>
@@ -4093,41 +4093,51 @@
             itemizedSec.style.display = 'none';
           }
 
-          // 4. Generate PDF or Print
+          // 4. Generate PDF Report
+          const pdfBtn = document.getElementById('downloadPdfBtn');
+          const originalBtnHtml = pdfBtn ? pdfBtn.innerHTML : '📥 Download PDF Report';
+          if (pdfBtn) {
+            pdfBtn.disabled = true;
+            pdfBtn.innerHTML = '⏳ Generating A4 PDF...';
+          }
           this.showToast('📄 Generating A4 PDF report...');
 
-          template.style.display = 'block';
-          template.style.position = 'fixed';
-          template.style.left = '0';
-          template.style.top = '0';
-          template.style.zIndex = '999999';
-          template.style.background = '#ffffff';
-
           try {
+            // Ensure html2pdf library is available
+            if (!window.html2pdf) {
+              await new Promise((resolve) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                s.onload = resolve;
+                s.onerror = resolve;
+                document.head.appendChild(s);
+              });
+            }
+
             if (window.html2pdf) {
               const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
               const opt = {
                 margin: [6, 6, 6, 6],
                 filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
+                html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
               };
 
               await window.html2pdf().set(opt).from(template).save();
-              template.style.display = 'none';
-              template.style.position = 'static';
               this.showToast('✅ PDF Report downloaded successfully!');
             } else {
-              template.style.display = 'none';
-              template.style.position = 'static';
               window.print();
             }
           } catch (err) {
             console.error('PDF generation error:', err);
-            template.style.display = 'none';
-            template.style.position = 'static';
+            this.showToast('⚠️ Opening browser print dialog...');
             window.print();
+          } finally {
+            if (pdfBtn) {
+              pdfBtn.disabled = false;
+              pdfBtn.innerHTML = originalBtnHtml;
+            }
           }
         }
 
