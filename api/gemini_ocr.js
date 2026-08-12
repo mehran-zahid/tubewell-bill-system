@@ -55,13 +55,6 @@ RULES:
 No markdown codeblocks, no explanatory text outside JSON.
 `;
 
-    const candidateUrls = [
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`
-    ];
-
     const geminiPayload = {
       contents: [
         {
@@ -78,11 +71,38 @@ No markdown codeblocks, no explanatory text outside JSON.
       ]
     };
 
+    // 1. First, dynamically list all models available for this API Key
+    let availableModels = [];
+    let listModelsError = null;
+
+    try {
+      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (listResp.ok) {
+        const listData = await listResp.json();
+        if (listData && Array.isArray(listData.models)) {
+          availableModels = listData.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace(/^models\//, ''));
+        }
+      } else {
+        const errTxt = await listResp.text();
+        listModelsError = `ListModels HTTP ${listResp.status}: ${errTxt}`;
+      }
+    } catch (e) {
+      listModelsError = e.message;
+    }
+
+    // 2. Fallback candidate list if ListModels didn't return any
+    const candidateModels = (availableModels.length > 0)
+      ? availableModels
+      : ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.5-flash', 'gemini-1.0-pro'];
+
     let data = null;
     let errorsList = [];
 
-    for (const url of candidateUrls) {
+    for (const modelName of candidateModels) {
       try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -94,18 +114,18 @@ No markdown codeblocks, no explanatory text outside JSON.
           break;
         } else {
           const errText = await response.text();
-          const cleanUrl = url.replace(apiKey, 'API_KEY_HIDDEN');
-          errorsList.push(`[${cleanUrl}] HTTP ${response.status}: ${errText}`);
+          errorsList.push(`[${modelName}] HTTP ${response.status}: ${errText}`);
         }
       } catch (e) {
-        errorsList.push(e.message);
+        errorsList.push(`[${modelName}] ${e.message}`);
       }
     }
 
     if (!data) {
+      const activeListStr = availableModels.length > 0 ? availableModels.join(', ') : 'None found';
       return res.status(500).json({
         status: 'error',
-        error: `Gemini API Endpoints failed. Detailed log:\n${errorsList.join('\n')}`
+        error: `Gemini OCR failed for key.\nAvailable Key Models: [${activeListStr}]\n\nDebug Logs:\n${errorsList.join('\n')}\n${listModelsError ? `\nListModels Error: ${listModelsError}` : ''}`
       });
     }
 
