@@ -3769,11 +3769,17 @@
                   <div style="display: flex; align-items: center; gap: 4px;">
                     <select class="tbl-member-select" data-id="${entry.id}">
                       <option value="">-- Select Member / نام منتخب کریں --</option>
-                      ${users.map(u => {
+                      ${users.flatMap(u => {
                         const uCode = u.userCode || u.code || '01';
                         const nameStr = u.fullName || `${u.nameEn || u.name} (${u.nameUr || ''})`;
                         const isSel = u.id === entry.userId ? 'selected' : '';
-                        return `<option value="${u.id}" ${isSel}>[${uCode}] ${nameStr}</option>`;
+                        const opts = [`<option value="${u.id}" ${isSel}>[${uCode}] ${nameStr}</option>`];
+                        if (u.isLeased && u.tenantName) {
+                          const tenantId = `${u.id}__tenant`;
+                          const isTenantSel = tenantId === entry.userId ? 'selected' : '';
+                          opts.push(`<option value="${tenantId}" ${isTenantSel}>[${uCode}-T] 🚜 ${u.tenantName} (Thekedar for ${u.nameEn || u.name})</option>`);
+                        }
+                        return opts;
                       }).join('')}
                     </select>
                     ${!entry.userId && entry.rawName ? `<button type="button" class="btn btn-secondary btn-sm quick-reg-btn" data-id="${entry.id}" data-name="${(entry.rawName || '').replace(/"/g, '&quot;')}" title="Register this scanned person as a new member" style="padding: 0.25rem 0.45rem; font-size: 0.75rem; white-space: nowrap;">+ Register</button>` : ''}
