@@ -7,6 +7,60 @@ export const config = {
   }
 };
 
+function repairTruncatedJson(jsonStr) {
+  let str = jsonStr.trim();
+  if (!str) return '[]';
+
+  // Find the start of the array
+  const firstBracket = str.indexOf('[');
+  if (firstBracket === -1) return '[]';
+  str = str.substring(firstBracket);
+
+  // Remove trailing commas or incomplete key-value pairs
+  str = str.replace(/,\s*"[^"]*"?\s*:?\s*"?\s*$/, '');
+  str = str.replace(/,\s*$/, '');
+
+  // Balance quotes
+  let quoteCount = 0;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '"' && (i === 0 || str[i - 1] !== '\\')) {
+      quoteCount++;
+    }
+  }
+  if (quoteCount % 2 !== 0) {
+    str += '"';
+  }
+
+  // Count unclosed braces and brackets
+  let openBraces = 0;
+  let openBrackets = 0;
+  let inString = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === '"' && (i === 0 || str[i - 1] !== '\\')) {
+      inString = !inString;
+    } else if (!inString) {
+      if (char === '{') openBraces++;
+      if (char === '}') openBraces = Math.max(0, openBraces - 1);
+      if (char === '[') openBrackets++;
+      if (char === ']') openBrackets = Math.max(0, openBrackets - 1);
+    }
+  }
+
+  // Close open objects and array
+  while (openBraces > 0) {
+    str += '}';
+    openBraces--;
+  }
+  while (openBrackets > 0) {
+    str += ']';
+    openBrackets--;
+  }
+
+  return str;
+}
+
 export default async function handler(req, res) {
   const startTime = Date.now();
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,15 +106,15 @@ INSTRUCTIONS:
 [
   {
     "userCode": "01",
-    "nameEn": "Munir Ahmad",
-    "nameUr": "منیر احمد",
+    "nameEn": "Munir Ahmad Fauzi",
+    "nameUr": "منیر احمد فوزی",
     "startReading": 1156421,
     "endReading": 1156535,
     "notes": "13-7-26"
   }
 ]
 
-DO NOT wrap in object keys like {"entries": [...]}. Return ONLY the JSON array.
+DO NOT wrap in object keys like {"entries": [...]}. Return ONLY the JSON array. Keep notes brief.
 `;
 
     const geminiPayload = {
@@ -80,7 +134,7 @@ DO NOT wrap in object keys like {"entries": [...]}. Return ONLY the JSON array.
       generationConfig: {
         temperature: 0.1,
         responseMimeType: 'application/json',
-        maxOutputTokens: 2000
+        maxOutputTokens: 8192
       }
     };
 
@@ -153,7 +207,8 @@ DO NOT wrap in object keys like {"entries": [...]}. Return ONLY the JSON array.
     let parsedRows = [];
     try {
       const cleanJson = rawText.replace(/^```json\s*/m, '').replace(/^```\s*/m, '').replace(/```$/m, '').trim();
-      const parsed = JSON.parse(cleanJson);
+      const repaired = repairTruncatedJson(cleanJson);
+      const parsed = JSON.parse(repaired);
       
       if (Array.isArray(parsed)) {
         parsedRows = parsed;
@@ -165,7 +220,8 @@ DO NOT wrap in object keys like {"entries": [...]}. Return ONLY the JSON array.
       const match = rawText.match(/\[[\s\S]*\]/);
       if (match) {
         try {
-          parsedRows = JSON.parse(match[0]);
+          const repairedMatch = repairTruncatedJson(match[0]);
+          parsedRows = JSON.parse(repairedMatch);
         } catch (e2) {}
       }
     }
