@@ -3935,14 +3935,17 @@
           window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
         }
 
-        generatePdfReport() {
+        async generatePdfReport() {
           const users = store.getUsers();
           const entries = store.getEntries();
           const expenses = store.getExpenses();
           const calc = calculateBilling(users, entries, expenses);
 
           const template = document.getElementById('pdfReportTemplate');
-          if (!template) return window.print();
+          if (!template) {
+            window.print();
+            return;
+          }
 
           // 1. Populate Headers & Banner
           const monthLabel = calc.billingMonthLabel || 'August 2026';
@@ -4004,7 +4007,7 @@
             }
           }
 
-          // 3. Populate Itemized Expenses (If Any)
+          // 3. Populate Itemized Expenses
           const itemizedSec = document.getElementById('pdfItemizedExpensesSection');
           const itemizedBody = document.getElementById('pdfItemizedTableBody');
           if (itemizedBody) itemizedBody.innerHTML = '';
@@ -4024,28 +4027,40 @@
             itemizedSec.style.display = 'none';
           }
 
-          // 4. Trigger html2pdf export or fallback print
-          if (window.html2pdf) {
-            this.showToast('📄 Generating high-resolution A4 PDF document...');
-            template.style.display = 'block';
-            
-            const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
-            const opt = {
-              margin: [8, 8, 8, 8],
-              filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true, logging: false },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+          // 4. Generate PDF or Print
+          this.showToast('📄 Generating A4 PDF report...');
 
-            window.html2pdf().set(opt).from(template).save().then(() => {
+          template.style.display = 'block';
+          template.style.position = 'fixed';
+          template.style.left = '0';
+          template.style.top = '0';
+          template.style.zIndex = '999999';
+          template.style.background = '#ffffff';
+
+          try {
+            if (window.html2pdf) {
+              const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
+              const opt = {
+                margin: [6, 6, 6, 6],
+                filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+              };
+
+              await window.html2pdf().set(opt).from(template).save();
               template.style.display = 'none';
+              template.style.position = 'static';
               this.showToast('✅ PDF Report downloaded successfully!');
-            }).catch(err => {
+            } else {
               template.style.display = 'none';
+              template.style.position = 'static';
               window.print();
-            });
-          } else {
+            }
+          } catch (err) {
+            console.error('PDF generation error:', err);
+            template.style.display = 'none';
+            template.style.position = 'static';
             window.print();
           }
         }
