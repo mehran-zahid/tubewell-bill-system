@@ -1877,6 +1877,28 @@
           this.saveState();
         }
 
+        moveUserUp(id) {
+          const idx = this.state.users.findIndex(u => u.id === id);
+          if (idx > 0) {
+            const temp = this.state.users[idx];
+            this.state.users[idx] = this.state.users[idx - 1];
+            this.state.users[idx - 1] = temp;
+            this.autoRechainSchedule();
+            this.saveState();
+          }
+        }
+
+        moveUserDown(id) {
+          const idx = this.state.users.findIndex(u => u.id === id);
+          if (idx !== -1 && idx < this.state.users.length - 1) {
+            const temp = this.state.users[idx];
+            this.state.users[idx] = this.state.users[idx + 1];
+            this.state.users[idx + 1] = temp;
+            this.autoRechainSchedule();
+            this.saveState();
+          }
+        }
+
         getEntries() { return this.state.entries; }
 
         addEntry(entry) {
@@ -2036,7 +2058,8 @@
         entries.forEach(entry => {
           const start = parseFloat(entry.startReading) || 0;
           const end = parseFloat(entry.endReading) || 0;
-          const units = Math.max(0, end - start);
+          const meterDiff = Math.max(0, end - start);
+          const units = meterDiff / 100; // 100 points = 1 Hour
 
           const originalUserId = entry.userId;
           const transferUserId = entry.transferToUserId;
@@ -3368,8 +3391,10 @@
                 </div>
               </td>
               <td style="text-align: center;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                  <button class="btn btn-secondary btn-sm edit-user-btn" data-id="${user.id}" title="Edit Full Details">✏️ Edit</button>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                  <button class="btn btn-secondary btn-sm move-up-user-btn" data-id="${user.id}" title="Move Up" ${idx === 0 ? 'disabled' : ''}>⬆️</button>
+                  <button class="btn btn-secondary btn-sm move-down-user-btn" data-id="${user.id}" title="Move Down" ${idx === users.length - 1 ? 'disabled' : ''}>⬇️</button>
+                  <button class="btn btn-secondary btn-sm edit-user-btn" data-id="${user.id}" title="Edit Full Details">✏️</button>
                   <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}" title="Delete Member">🗑️</button>
                 </div>
               </td>
@@ -3411,6 +3436,22 @@
                 } catch (err) {
                   console.error('Failed to update inline user schedule:', err);
                 }
+              });
+            });
+
+            this.usersTableBody.querySelectorAll('.move-up-user-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const userId = btn.dataset.id;
+                store.moveUserUp(userId);
+                this.showToast('Member order updated & schedule auto-chained! ⬆️');
+              });
+            });
+
+            this.usersTableBody.querySelectorAll('.move-down-user-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const userId = btn.dataset.id;
+                store.moveUserDown(userId);
+                this.showToast('Member order updated & schedule auto-chained! ⬇️');
               });
             });
 
