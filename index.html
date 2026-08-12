@@ -3655,6 +3655,9 @@
                 }
               });
             });
+          }
+        }
+
         populateTenantExistingDropdown(selectedId = null) {
           if (!this.tenantExistingMemberSelect) return;
           const users = store.getUsers().filter(u => u.id !== this.currentEditingUserId);
