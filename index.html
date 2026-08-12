@@ -2657,40 +2657,36 @@
           this.userTotalLandAcresInput = document.getElementById('userTotalLandAcresInput');
           this.userIsLeasedCheckbox = document.getElementById('userIsLeasedCheckbox');
           this.tenantDetailsContainer = document.getElementById('tenantDetailsContainer');
-          this.tenantTypeSelect = document.getElementById('tenantTypeSelect');
-          this.tenantExistingSelectGroup = document.getElementById('tenantExistingSelectGroup');
-          this.tenantExistingMemberSelect = document.getElementById('tenantExistingMemberSelect');
-          this.tenantNameEnInput = document.getElementById('tenantNameEnInput');
-          this.tenantNameUrInput = document.getElementById('tenantNameUrInput');
-          this.tenantPhoneInput = document.getElementById('tenantPhoneInput');
+          this.tenantsListContainer = document.getElementById('tenantsListContainer');
+          this.addTenantRowBtn = document.getElementById('addTenantRowBtn');
 
-          if (this.tenantTypeSelect) {
-            this.tenantTypeSelect.addEventListener('change', () => {
-              const isExisting = this.tenantTypeSelect.value === 'existing';
-              if (this.tenantExistingSelectGroup) this.tenantExistingSelectGroup.style.display = isExisting ? 'block' : 'none';
-              if (isExisting) this.populateTenantExistingDropdown();
+          if (this.addTenantRowBtn) {
+            this.addTenantRowBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const currentTenants = this.getTenantsFromUI();
+              currentTenants.push({
+                id: 't-' + Date.now() + '-' + currentTenants.length,
+                tenantType: 'external',
+                linkedMemberId: null,
+                tenantNameEn: '',
+                tenantNameUr: '',
+                tenantPhone: '',
+                tenantLeasedHours: 1,
+                tenantLeasedMinutes: 0,
+                tenantLeasedAcres: 1
+              });
+              this.renderTenantsList(currentTenants);
             });
           }
-
-          if (this.tenantExistingMemberSelect) {
-            this.tenantExistingMemberSelect.addEventListener('change', () => {
-              const selId = this.tenantExistingMemberSelect.value;
-              if (selId) {
-                const u = store.getUserById(selId);
-                if (u) {
-                  if (this.tenantNameEnInput) this.tenantNameEnInput.value = u.nameEn || u.name || '';
-                  if (this.tenantNameUrInput) this.tenantNameUrInput.value = u.nameUr || '';
-                  if (this.tenantPhoneInput) this.tenantPhoneInput.value = u.phone || '';
-                }
-              }
-            });
-          }
-          this.tenantLeasedHoursInput = document.getElementById('tenantLeasedHoursInput');
-          this.tenantLeasedAcresInput = document.getElementById('tenantLeasedAcresInput');
 
           if (this.userIsLeasedCheckbox && this.tenantDetailsContainer) {
             this.userIsLeasedCheckbox.addEventListener('change', () => {
-              this.tenantDetailsContainer.style.display = this.userIsLeasedCheckbox.checked ? 'block' : 'none';
+              const isChecked = this.userIsLeasedCheckbox.checked;
+              this.tenantDetailsContainer.style.display = isChecked ? 'block' : 'none';
+              if (isChecked && this.tenantsListContainer && this.tenantsListContainer.children.length === 0) {
+                this.renderTenantsList([]);
+              }
             });
           }
 
