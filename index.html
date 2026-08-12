@@ -915,7 +915,15 @@
             <h2 class="card-title">📋 Member Bill Breakdown Table</h2>
             <p class="card-subtitle">Calculated according to exact proportional usage & effective time slot hours formulas.</p>
           </div>
-          <button id="printReportBtn" class="btn btn-primary btn-sm" style="font-size: 0.9rem; font-weight: 700; gap: 0.4rem; padding: 0.5rem 0.85rem;">📄 Download PDF Report</button>
+          <div class="flex-center gap-2" style="flex-wrap: wrap;">
+            <label class="form-label" style="margin: 0; font-weight: 700;">🌐 Language:</label>
+            <select id="tab3LangSelect" class="form-control" style="width: auto; font-weight: 600;">
+              <option value="roman">Roman Urdu (Default)</option>
+              <option value="urdu">Urdu Script (اردو)</option>
+              <option value="english">English</option>
+            </select>
+            <button id="printReportBtn" class="btn btn-primary btn-sm" style="font-size: 0.9rem; font-weight: 700; gap: 0.4rem; padding: 0.5rem 0.85rem;">📄 Download PDF Report</button>
+          </div>
         </div>
 
         <div class="table-responsive">
@@ -2144,11 +2152,13 @@
 
           // Tenant entity
           if (hasTenant) {
-            const tenantDisplayNameEn = tEn ? `${tEn} (Tenant) — Owner: ${ownerNameStrEn}` : `Tenant — Owner: ${ownerNameStrEn}`;
-            const tenantDisplayNameUr = tUr ? `${tUr} (ٹھیکے دار) — مالک: ${ownerNameStrUr || ownerNameStrEn}` : `ٹھیکے دار — مالک: ${ownerNameStrUr || ownerNameStrEn}`;
+            const ownerNameEn = ownerNameStrEn;
+            const ownerNameUr = ownerNameStrUr || ownerNameStrEn;
+            const tenantDisplayNameEn = tEn ? `${tEn} (Tenant — Owner: ${ownerNameEn})` : `Tenant — Owner: ${ownerNameEn}`;
+            const tenantDisplayNameUr = tUr ? `${tUr} (ٹھیکے دار — مالک: ${ownerNameUr})` : `ٹھیکے دار — مالک: ${ownerNameUr}`;
             const tenantFullName = tEn && tUr 
-              ? `${tEn} (${tUr}) [ٹھیکے دار — مالک: ${ownerNameStrEn}]` 
-              : `${tEn || tUr || 'Thekedar'} [ٹھیکے دار — مالک: ${ownerNameStrEn}]`;
+              ? `${tEn} (${tUr}) (ٹھیکے دار — مالک: ${ownerNameUr})` 
+              : `${tEn || tUr || 'Thekedar'} (ٹھیکے دار — مالک: ${ownerNameUr})`;
 
             billableEntities.push({
               id: user.id + '__tenant',
@@ -2165,8 +2175,8 @@
               totalMinutes: user.totalMinutes,
               allocatedHours: tenantLeasedHours > 0 ? tenantLeasedHours : totalSlotHours,
               isTenant: true,
-              ownerNameEn: ownerNameStrEn,
-              ownerNameUr: ownerNameStrUr,
+              ownerNameEn: ownerNameEn,
+              ownerNameUr: ownerNameUr,
               leasedHours: tenantLeasedHours
             });
           }
@@ -2302,8 +2312,12 @@
             const typeLabel = user.userType === 'external' ? ' (خریدار)' : '';
             const displayName = user.nameUr || user.fullName || user.nameEn || 'ممبر';
             msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
-            msg += `   • باری وقت: ${user.effectiveHours} گھنٹے | یونٹ: ${user.unitsConsumed} (${user.unitsPercentage}%)\n`;
-            msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            msg += `   • باری وقت: ${user.effectiveHours} گھنٹے | یونٹ: ${user.unitsConsumed} گھنٹے (${user.unitsPercentage}%)\n`;
+            if (user.isTenant) {
+              msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات (${user.ownerNameUr || user.ownerNameEn} کی باری حصہ): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            } else {
+              msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            }
             msg += `   👉 *کل واجب الادا بل: Rs. ${Math.round(user.grandTotalBill).toLocaleString()}*\n\n`;
           });
 
@@ -2338,8 +2352,12 @@
             const typeLabel = user.userType === 'external' ? ' (Customer)' : '';
             const displayName = user.nameEn || user.fullName || 'Member';
             msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
-            msg += `   • Bari Hours: ${user.effectiveHours} hrs | Units: ${user.unitsConsumed} (${user.unitsPercentage}%)\n`;
-            msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            msg += `   • Bari Hours: ${user.effectiveHours} hrs | Usage: ${user.unitsConsumed} hrs (${user.unitsPercentage}%)\n`;
+            if (user.isTenant) {
+              msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses (${user.ownerNameEn || 'Owner'} Bari Share): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            } else {
+              msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+            }
             msg += `   👉 *TOTAL DUE: Rs. ${Math.round(user.grandTotalBill).toLocaleString()}*\n\n`;
           });
 
@@ -2386,7 +2404,7 @@
       }
 
       function generateSingleUserWhatsAppMessage(user, dateHeader, entries = []) {
-        const displayName = user.fullName || user.nameUr || user.nameEn || 'Member';
+        const displayName = user.nameUr || user.fullName || user.nameEn || 'Member';
         const isExternal = user.userType === 'external';
 
         const userEntries = entries.filter(e => {
@@ -2399,28 +2417,38 @@
         msg += `📅 *بلنگ مہینہ:* ${dateHeader}\n`;
         msg += `====================================\n\n`;
 
-        msg += `🕒 *باری کا وقت (Time Slot):*\n`;
-        msg += `• 🟢 چالو: ${DAY_NAMES_BILINGUAL[user.startDay] || user.startDay} ${formatTime12h(user.startTime)}\n`;
-        msg += `• 🔴 بند: ${DAY_NAMES_BILINGUAL[user.endDay] || user.endDay} ${formatTime12h(user.endTime)}\n`;
-        msg += `• کل وقت: *${user.effectiveHours} گھنٹے*\n\n`;
+        if (user.isTenant) {
+          msg += `📜 *ٹھیکہ تفصیل:* ${user.ownerNameUr || user.ownerNameEn || 'مالک'} کی ${user.effectiveHours} گھنٹے باری پر ٹھیکے دار\n\n`;
+        } else {
+          msg += `🕒 *باری کا وقت (Time Slot):*\n`;
+          msg += `• 🟢 چالو: ${DAY_NAMES_BILINGUAL[user.startDay] || user.startDay} ${formatTime12h(user.startTime)}\n`;
+          msg += `• 🔴 بند: ${DAY_NAMES_BILINGUAL[user.endDay] || user.endDay} ${formatTime12h(user.endTime)}\n`;
+          msg += `• کل وقت: *${user.effectiveHours} گھنٹے*\n\n`;
+        }
 
         if (userEntries.length > 0) {
           msg += `📖 *میٹر ریڈنگ و یونٹ تفصیل:* \n`;
           userEntries.forEach(e => {
             const start = parseFloat(e.startReading) || 0;
             const end = parseFloat(e.endReading) || 0;
-            const u = Math.max(0, end - start);
-            msg += `• *${e.date}:* 🟢 چالو ${start} — 🔴 بند ${end} = *${u} یونٹ*\n`;
+            const runH = Math.max(0, end - start) / 100;
+            msg += `• *${e.date}:* 🟢 چالو ${start} — 🔴 بند ${end} = *${runH.toFixed(2)} گھنٹے*\n`;
           });
           msg += `------------------------------------\n`;
-          msg += `⚡ *کل استعمال شدہ یونٹ:* *${user.unitsConsumed} یونٹ (${user.unitsPercentage}%)*\n\n`;
+          msg += `⚡ *کل استعمال شدہ گھنٹے:* *${user.unitsConsumed} گھنٹے (${user.unitsPercentage}%)*\n\n`;
         } else {
-          msg += `⚡ *کل استعمال شدہ یونٹ:* *${user.unitsConsumed} یونٹ (${user.unitsPercentage}%)*\n\n`;
+          msg += `⚡ *کل استعمال شدہ گھنٹے:* *${user.unitsConsumed} گھنٹے (${user.unitsPercentage}%)*\n\n`;
         }
 
         msg += `💰 *بل کی مکمل تفصیل:* \n`;
-        msg += `• بجلی بل (MEPCO Share): *Rs. ${Math.round(user.usageBillShare).toLocaleString()}/-*\n`;
-        msg += `• دیگر اخراجات (Repair Share): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-* ${isExternal ? '(مستثنیٰ)' : ''}\n`;
+        msg += `• بجلی بل (MEPCO Usage Share): *Rs. ${Math.round(user.usageBillShare).toLocaleString()}/-*\n`;
+        
+        if (user.isTenant) {
+          msg += `• مرمت و دیگر اخراجات (${user.ownerNameUr || user.ownerNameEn || 'مالک'} کی ${user.effectiveHours} گھنٹے باری کا حصہ): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-*\n`;
+        } else {
+          msg += `• دیگر اخراجات (Repair Share): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-* ${isExternal ? '(مستثنیٰ)' : ''}\n`;
+        }
+
         msg += `====================================\n`;
         msg += `👉 *کل واجب الادا بل:* *Rs. ${Math.round(user.grandTotalBill).toLocaleString()}/-*\n`;
         msg += `====================================\n\n`;
@@ -2693,6 +2721,7 @@
           this.userCardsContainer = document.getElementById('userCardsContainer');
 
           this.whatsappLangSelect = document.getElementById('whatsappLangSelect');
+          this.tab3LangSelect = document.getElementById('tab3LangSelect');
           this.whatsappPreviewBox = document.getElementById('whatsappPreviewBox');
           this.copyWhatsappBtn = document.getElementById('copyWhatsappBtn');
           this.sendWhatsappBtn = document.getElementById('sendWhatsappBtn');
@@ -2883,6 +2912,22 @@
             const lines = text.split('\n').filter(l => l.includes('startReading'));
             this.showToast(`Reparsing not fully implemented for manual text; please use AI scanner.`);
           });
+
+          if (this.whatsappLangSelect) {
+            this.whatsappLangSelect.addEventListener('change', () => {
+              if (this.tab3LangSelect) this.tab3LangSelect.value = this.whatsappLangSelect.value;
+              this.updateWhatsappPreview();
+              this.renderSummaryTab();
+            });
+          }
+
+          if (this.tab3LangSelect) {
+            this.tab3LangSelect.addEventListener('change', () => {
+              if (this.whatsappLangSelect) this.whatsappLangSelect.value = this.tab3LangSelect.value;
+              this.updateWhatsappPreview();
+              this.renderSummaryTab();
+            });
+          }
 
           this.wapdaBillInput.addEventListener('input', (e) => {
             store.updateWapdaBill(e.target.value);
