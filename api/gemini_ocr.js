@@ -55,8 +55,12 @@ RULES:
 No markdown codeblocks, no explanatory text outside JSON.
 `;
 
-    // Official Google Gemini 1.5 Flash Vision Endpoint
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const candidateUrls = [
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`
+    ];
 
     const geminiPayload = {
       contents: [
@@ -74,29 +78,37 @@ No markdown codeblocks, no explanatory text outside JSON.
       ]
     };
 
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiPayload)
-    });
+    let data = null;
+    let errorsList = [];
 
-    if (!response.ok) {
-      const errText = await response.text();
-      let msg = `Google Gemini API Error (HTTP ${response.status}): ${errText}`;
+    for (const url of candidateUrls) {
       try {
-        const errObj = JSON.parse(errText);
-        if (errObj && errObj.error && errObj.error.message) {
-          msg = `Google Gemini Error (${errObj.error.status || response.status}): ${errObj.error.message}`;
-        }
-      } catch (e) {}
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiPayload)
+        });
 
+        if (response.ok) {
+          data = await response.json();
+          break;
+        } else {
+          const errText = await response.text();
+          const cleanUrl = url.replace(apiKey, 'API_KEY_HIDDEN');
+          errorsList.push(`[${cleanUrl}] HTTP ${response.status}: ${errText}`);
+        }
+      } catch (e) {
+        errorsList.push(e.message);
+      }
+    }
+
+    if (!data) {
       return res.status(500).json({
         status: 'error',
-        error: msg
+        error: `Gemini API Endpoints failed. Detailed log:\n${errorsList.join('\n')}`
       });
     }
 
-    const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     
     let parsedRows = [];
