@@ -2,13 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    {
-      "source": "/api/fetch_mepco",
-      "destination": "/api/fetch_mepco.js"
-    },
-    {
-      "source": "/fetch_mepco",
-      "destination": "/api/fetch_mepco.js"
-    }
+    { "source": "/api/fetch_mepco", "destination": "/api/fetch_mepco.js" },
+    { "source": "/fetch_mepco", "destination": "/api/fetch_mepco.js" },
+    { "source": "/api/gemini_ocr", "destination": "/api/gemini_ocr.js" },
+    { "source": "/api/users", "destination": "/api/users.js" },
+    { "source": "/api/admin_auth", "destination": "/api/admin_auth.js" }
   ]
 }

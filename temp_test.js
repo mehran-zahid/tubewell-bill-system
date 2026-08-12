@@ -1,1313 +1,4 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Turbine Bill Management System — Shared Water Pump Billing | اشتراکی ٹربائن بلنگ سسٹم</title>
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- html2pdf.js for A4 PDF Document Generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <style>
-    @media print {
-      body * {
-        visibility: hidden !important;
-      }
-      #pdfReportTemplate, #pdfReportTemplate * {
-        visibility: visible !important;
-      }
-      #pdfReportTemplate {
-        display: block !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 1.5rem !important;
-        background: #ffffff !important;
-        color: #000000 !important;
-      }
-    }
-
-    :root {
-      --bg-primary: #0b1329;
-      --bg-secondary: #131d38;
-      --bg-card: rgba(22, 33, 62, 0.85);
-      --bg-card-hover: rgba(30, 44, 80, 0.95);
-      --bg-glass: rgba(255, 255, 255, 0.05);
-      --border-glass: rgba(255, 255, 255, 0.12);
-      --border-focus: #3b82f6;
-
-      --accent-green: #10b981;
-      --accent-green-glow: rgba(16, 185, 129, 0.3);
-      --accent-blue: #3b82f6;
-      --accent-blue-glow: rgba(59, 130, 246, 0.3);
-      --accent-amber: #f59e0b;
-      --accent-red: #ef4444;
-
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-
-      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-urdu: 'Noto Naskh Arabic', serif;
-
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --radius-full: 9999px;
-
-      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
-      --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    [data-theme="light"] {
-      --bg-primary: #f1f5f9;
-      --bg-secondary: #ffffff;
-      --bg-card: rgba(255, 255, 255, 0.95);
-      --bg-card-hover: #ffffff;
-      --bg-glass: rgba(0, 0, 0, 0.04);
-      --border-glass: rgba(0, 0, 0, 0.12);
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #94a3b8;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 16px; scroll-behavior: smooth; }
-    body {
-      font-family: var(--font-sans);
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      line-height: 1.5;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-header {
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-glass);
-      padding: 1rem 1.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-container {
-      max-width: 1280px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-
-    .app-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-decoration: none;
-    }
-
-    .logo-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius-md);
-      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .logo-text h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
-    .logo-text p { font-size: 0.75rem; color: var(--text-secondary); }
-
-    .main-content {
-      flex: 1;
-      max-width: 1280px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-
-    .nav-steps {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-card);
-      border: 1px solid var(--border-glass);
-      border-radius: var(--radius-lg);
-      padding: 0.5rem;
-      margin-bottom: 2rem;
-      gap: 0.5rem;
-    }
-
-    .step-btn {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-md);
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text-secondary);
-      font-family: var(--font-sans);
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .step-label {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      line-height: 1.25;
-    }
-
-    .step-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .step-sub {
-      font-size: 0.8rem;
-      font-family: var(--font-urdu);
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-
-    .step-btn.active {
-      background: linear-gradient(135deg, #1e293b, #0f172a);
-      color: var(--accent-green);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }
-
-    [data-theme="light"] .step-btn.active {
-      background: #ffffff;
-      color: #059669;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .step-btn.active .step-title {
-      color: var(--accent-green);
-    }
-
-    [data-theme="light"] .step-btn.active .step-title {
-      color: #059669;
-    }
-
-    .step-btn.active .step-sub {
-      color: var(--accent-green);
-      opacity: 0.9;
-    }
-
-    [data-theme="light"] .step-btn.active .step-sub {
-      color: #047857;
-      opacity: 0.9;
-    }
-
-    .step-number {
-      width: 28px;
-      height: 28px;
-      flex-shrink: 0;
-      border-radius: var(--radius-full);
-      background: rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
-
-    [data-theme="light"] .step-number {
-      background: #e2e8f0;
-      color: #475569;
-    }
-
-    .step-btn.active .step-number {
-      background: var(--accent-green);
-      color: #ffffff;
-    }
-
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-glass);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: var(--shadow-md);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border-glass);
-    }
-
-    .card-title { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
-    .card-subtitle { font-size: 0.85rem; color: var(--text-secondary); }
-
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.25rem;
-      border-radius: var(--radius-md);
-      border: none;
-      font-family: var(--font-sans);
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .btn-primary { background: linear-gradient(135deg, var(--accent-green), #059669); color: #ffffff; }
-    .btn-blue { background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: #ffffff; }
-    .btn-secondary { background: var(--bg-glass); border: 1px solid var(--border-glass); color: var(--text-primary); }
-    .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
-    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: var(--radius-sm); }
-    .btn-full { width: 100%; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.25rem 0.6rem;
-      border-radius: var(--radius-full);
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
-
-    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
-    .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
-    .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
-
-    .form-group { margin-bottom: 1.25rem; }
-    .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; }
-    .form-control {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-glass);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font-sans);
-      font-size: 0.95rem;
-    }
-
-    .time-picker-12h-group {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      background: var(--bg-secondary);
-      padding: 0.25rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-glass);
-    }
-    .time-picker-12h-group select {
-      border: none;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-primary);
-      padding: 0.45rem 0.5rem;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      outline: none;
-    }
-    .time-picker-12h-group select.ampm-select {
-      background: var(--accent-blue);
-      color: #ffffff;
-    }
-
-    .table-responsive { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-glass); }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; }
-    .data-table th { background: #1e293b; padding: 0.85rem 0.75rem; font-size: 0.85rem; font-weight: 700; color: #ffffff !important; border-bottom: 1px solid var(--border-glass); white-space: nowrap; }
-    [data-theme="light"] .data-table th { background: #334155; color: #ffffff !important; }
-    .data-table td { padding: 0.75rem 0.65rem; font-size: 0.95rem; border-bottom: 1px solid var(--border-glass); vertical-align: middle; }
-
-    /* Enhanced Table Inline Inputs & Controls */
-    .tbl-input-num {
-      width: 58px !important;
-      height: 34px !important;
-      padding: 0.2rem 0.25rem !important;
-      font-size: 0.9rem !important;
-      font-weight: 700 !important;
-      text-align: center !important;
-      border: 1px solid var(--border-glass) !important;
-      border-radius: var(--radius-sm) !important;
-      background: var(--bg-secondary) !important;
-      color: var(--text-primary) !important;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-      box-sizing: border-box !important;
-    }
-    .tbl-input-num:focus {
-      border-color: var(--accent-blue) !important;
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
-    }
-    .tbl-select-day {
-      height: 34px !important;
-      padding: 0.2rem 0.4rem !important;
-      font-size: 0.825rem !important;
-      font-weight: 600 !important;
-      border-radius: var(--radius-sm) !important;
-      border: 1px solid var(--border-glass) !important;
-      background: var(--bg-secondary) !important;
-      color: var(--text-primary) !important;
-      width: 100%;
-      max-width: 140px;
-      box-sizing: border-box !important;
-    }
-    .tbl-time-pick {
-      height: 34px !important;
-      padding: 0.2rem 0.4rem !important;
-      font-size: 0.825rem !important;
-      font-weight: 600 !important;
-      border-radius: var(--radius-sm) !important;
-      border: 1px solid var(--border-glass) !important;
-      background: var(--bg-secondary) !important;
-      color: var(--text-primary) !important;
-      width: 100%;
-      max-width: 130px;
-      box-sizing: border-box !important;
-    }
-    .duration-input-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      background: rgba(0, 0, 0, 0.04);
-      padding: 0.25rem 0.45rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-glass);
-      white-space: nowrap;
-    }
-    [data-theme="dark"] .duration-input-group {
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .duration-unit-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-    }
-
-    /* Drag & Drop Upload Dropzone */
-    .dropzone-box {
-      border: 2px dashed var(--accent-blue);
-      border-radius: var(--radius-lg);
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-      background: rgba(59, 130, 246, 0.05);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .dropzone-box:hover {
-      background: rgba(59, 130, 246, 0.12);
-      border-color: var(--accent-green);
-    }
-
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
-    }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-card {
-      position: relative;
-      background: var(--bg-secondary); border: 1px solid var(--border-glass);
-      border-radius: var(--radius-lg); width: 92%; max-width: 680px;
-      max-height: 90vh; overflow-y: auto;
-      padding: 1.75rem; box-shadow: var(--shadow-lg);
-    }
-    .modal-close {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 1.6rem;
-      line-height: 1;
-      width: 38px;
-      height: 38px;
-      border-radius: var(--radius-full);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .modal-close:hover {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--accent-red);
-    }
-
-    .stat-card {
-      background: var(--bg-glass); border: 1px solid var(--border-glass);
-      border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
-    }
-    .stat-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: rgba(255, 255, 255, 0.05); }
-    .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); }
-    .stat-lbl { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; }
-
-    .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.75rem; }
-    .toast { background: #1e293b; color: #ffffff; border: 1px solid var(--accent-green); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; }
-
-    .whatsapp-preview-box { background: #0d1418; color: #e9edef; font-family: monospace, var(--font-urdu); padding: 1.25rem; border-radius: var(--radius-md); border-left: 4px solid #25d366; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; max-height: 420px; overflow-y: auto; }
-
-    .tbl-hdr-ur {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      font-weight: 600;
-      margin-top: 2px;
-      line-height: 1.2;
-      font-family: var(--font-urdu), sans-serif;
-      opacity: 0.9;
-    }
-    th .tbl-hdr-ur {
-      color: inherit;
-      opacity: 0.85;
-    }
-    .row-error {
-      background-color: rgba(239, 68, 68, 0.14) !important;
-      border-left: 4px solid var(--accent-red) !important;
-    }
-    .row-warning {
-      background-color: rgba(245, 158, 11, 0.14) !important;
-      border-left: 4px solid var(--accent-amber) !important;
-    }
-    .row-verified {
-      background-color: transparent;
-    }
-    .tbl-reading-input {
-      width: 110px;
-      padding: 0.35rem 0.5rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-glass);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-weight: 700;
-      font-size: 0.95rem;
-    }
-    .tbl-member-select {
-      max-width: 220px;
-      width: 100%;
-      padding: 0.35rem 0.5rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-glass);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 0.88rem;
-    }
-    .tbl-date-input {
-      padding: 0.35rem 0.5rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-glass);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-weight: 700;
-      font-size: 0.88rem;
-    }
-
-    .hidden { display: none !important; }
-    .flex-between { display: flex; align-items: center; justify-content: space-between; }
-    .flex-center { display: flex; align-items: center; justify-content: center; }
-    .gap-1 { gap: 0.5rem; } .gap-2 { gap: 1rem; }
-    .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; } .mb-2 { margin-bottom: 1rem; } .mb-3 { margin-bottom: 1.5rem; }
-
-    @media (max-width: 900px) {
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-      .nav-steps { overflow-x: auto; }
-      .main-content { padding: 1rem; }
-      .time-picker-12h-group select { padding: 0.35rem 0.3rem; font-size: 0.85rem; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- App Header -->
-  <header class="app-header">
-    <div class="header-container">
-      <a href="#" class="app-logo">
-        <div class="logo-icon">💧</div>
-        <div class="logo-text">
-          <h1>Turbine Bill Manager</h1>
-          <p>Shared Water Pump Billing & Time Slot System | اشتراکی ٹربائن بلنگ سسٹم</p>
-        </div>
-      </a>
-
-      <div class="flex-center gap-2">
-        <button id="themeToggleBtn" class="btn btn-secondary btn-sm">🌙 Theme</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="main-content">
-    <nav class="nav-steps">
-      <button class="step-btn active" data-tab="users">
-        <span class="step-number">1</span>
-        <div class="step-label">
-          <span class="step-title">👥 Members & Schedule</span>
-          <span class="step-sub">ممبران اور شیڈول</span>
-        </div>
-      </button>
-      <button class="step-btn" data-tab="register">
-        <span class="step-number">2</span>
-        <div class="step-label">
-          <span class="step-title">📖 Register Readings</span>
-          <span class="step-sub">رجسٹر ریڈنگز</span>
-        </div>
-      </button>
-      <button class="step-btn" data-tab="expenses">
-        <span class="step-number">3</span>
-        <div class="step-label">
-          <span class="step-title">💸 Expenses & Bill</span>
-          <span class="step-sub">اخراجات اور بل</span>
-        </div>
-      </button>
-      <button class="step-btn" data-tab="summary">
-        <span class="step-number">4</span>
-        <div class="step-label">
-          <span class="step-title">📲 Summary & WhatsApp</span>
-          <span class="step-sub">خلاصہ اور واٹس ایپ</span>
-        </div>
-      </button>
-    </nav>
-
-    <!-- Tab 1: Turbine Members & Continuous Weekly Time Slots (Bari Turns) -->
-    <section id="tab-users" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">👥 Turbine Members & Weekly Schedule</h2>
-            <p class="card-subtitle">ٹربائن ممبران اور ہفتہ وار باری کا جدول</p>
-          </div>
-          <div class="flex-center gap-2" style="flex-wrap: wrap;">
-            <button id="importScheduleBtn" class="btn btn-secondary btn-sm">📥 Import Schedule / امپورٹ</button>
-            <button id="exportScheduleBtn" class="btn btn-secondary btn-sm">📤 Export Schedule / ایکسپورٹ</button>
-            <button id="addUserBtn" class="btn btn-primary">+ Add New Member & Slot / نیا ممبر شامل کریں</button>
-            <input type="file" id="importScheduleFileInput" accept=".json,.csv" style="display: none;">
-          </div>
-        </div>
-
-        <div class="table-responsive mb-3">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>User ID / شناختی نمبر</th>
-                <th>Member Name (English / اردو)</th>
-                <th>Start (Day & Time) / آغاز</th>
-                <th>End (Day & Time) / اختتام</th>
-                <th>Total Duration / کل وقت</th>
-                <th>Actions / اقدامات</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody"></tbody>
-          </table>
-        </div>
-
-        <!-- WhatsApp Friendly Schedule Sharing Card -->
-        <div class="card" style="background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(37, 211, 102, 0.3); padding: 1.25rem;">
-          <div class="flex-between mb-2">
-            <div>
-              <h3 class="card-title" style="color: #25d366; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>💬 Share Schedule on WhatsApp (شیڈول واٹس ایپ پر شیئر کریں)</span>
-              </h3>
-              <p class="card-subtitle">Formatted schedule with English & Urdu names and turn slots.</p>
-            </div>
-            <div class="flex-center gap-2">
-              <button id="copyScheduleWaBtn" class="btn btn-primary btn-sm" style="background: #25d366; border: none; color: #fff;">📋 Copy Schedule</button>
-              <button id="sendScheduleWaBtn" class="btn btn-blue btn-sm">🚀 Share on WhatsApp</button>
-            </div>
-          </div>
-
-          <div class="whatsapp-preview-box" id="scheduleWhatsappPreviewBox"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tab 2: Register & Photo Scanner -->
-    <section id="tab-register" class="tab-content hidden">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">📷 Upload Register Photos to Extract Readings</h2>
-            <p class="card-subtitle">ریڈنگ حاصل کرنے کے لیے رجسٹر کی تصویر اپ لوڈ کریں۔ Select or drag handwritten register photos to automatically extract readings.</p>
-          </div>
-          <div class="flex-center gap-2">
-            <button id="triggerUploadBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">
-              📷 Upload Photo to Extract Readings
-            </button>
-            <button id="addEntryBtn" class="btn btn-secondary">+ Manual Entry / دستی اینٹری</button>
-            <button id="clearEntriesBtn" class="btn btn-danger btn-sm">Clear All Entries</button>
-          </div>
-        </div>
-
-        <!-- Hidden File Input -->
-        <input type="file" id="registerImageUpload" accept="image/*" multiple style="display: none;">
-
-        <!-- Drag & Drop Dropzone Box -->
-        <div id="dropzoneBox" class="dropzone-box mb-3">
-          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">📷</div>
-          <h3 style="font-size: 1.25rem; color: var(--text-primary); font-weight: 700;">Drag & Drop Register Photos to Extract Readings</h3>
-          <p class="card-subtitle" style="font-size: 0.95rem; margin-top: 0.25rem;">ریڈنگ حاصل کرنے کے لیے تصویر منتخب کریں یا ڈریگ کر کے شامل کریں۔ Click inside to browse photos.</p>
-        </div>
-
-        <!-- Multi-Image Staging Gallery Card -->
-        <div id="imageGalleryCard" class="card mb-3 hidden" style="background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.3);">
-          <div class="card-header flex-between">
-            <div>
-              <h3 class="card-title" style="font-size: 1.1rem; color: var(--accent-blue); display: flex; align-items: center; gap: 0.5rem;">
-                <span>🖼️ Selected Register Photos Gallery</span>
-                <span id="stagedCountBadge" class="badge badge-info">0 Photos</span>
-              </h3>
-              <p class="card-subtitle">Review, add more pages, or delete photos before extracting readings.</p>
-            </div>
-            <div class="flex-center gap-2">
-              <button id="addMorePhotosBtn" class="btn btn-secondary btn-sm">➕ Add More Photos</button>
-              <button id="clearGalleryBtn" class="btn btn-danger btn-sm">🗑️ Clear All</button>
-            </div>
-          </div>
-
-          <!-- Thumbnails Container Grid -->
-          <div id="stagedThumbnailsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;"></div>
-
-          <!-- Large Action Button -->
-          <button id="startAiScanBtn" class="btn btn-primary btn-full" style="padding: 0.95rem; font-size: 1.1rem; background: linear-gradient(135deg, #10b981, #059669);">
-            📷 Extract Readings From All Selected Photos
-          </button>
-        </div>
-
-        <!-- Scanning Progress Box with Visual Progress Bar -->
-        <div id="ocrProgressBox" class="card hidden mb-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.4);">
-          <div class="flex-between mb-2">
-            <div class="flex-center gap-2">
-              <div class="logo-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);">📄</div>
-              <div>
-                <strong id="ocrProgressText" style="color: var(--accent-green); font-size: 1.1rem; font-weight: 700;">Extracting Readings From Photos...</strong>
-                <p class="card-subtitle" id="ocrProgressSub">Reading handwritten Urdu script & meter numbers sequentially...</p>
-              </div>
-            </div>
-            <div class="flex-center gap-2">
-              <span id="batchPercentBadge" class="badge badge-success" style="font-size: 1rem; padding: 0.4rem 0.8rem;">0%</span>
-              <div id="ocrSpinner" style="font-size: 1.8rem; animation: spin 1s linear infinite;">⏳</div>
-            </div>
-          </div>
-
-          <!-- Animated Progress Bar Track -->
-          <div style="width: 100%; height: 12px; background: rgba(0, 0, 0, 0.1); border-radius: 6px; overflow: hidden; margin-top: 0.5rem; position: relative;">
-            <div id="batchProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #3b82f6); border-radius: 6px; transition: width 0.4s ease-in-out;"></div>
-          </div>
-        </div>
-
-        <!-- Uploaded Image Preview & Extracted Output -->
-        <div id="ocrPreviewCard" class="card hidden mb-3">
-          <div class="card-header flex-between mb-2">
-            <div>
-              <h3 class="card-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>📷 Scanned Register Image & Output</span>
-              </h3>
-              <p class="card-subtitle">Visual preview & extracted output for scanned pages.</p>
-            </div>
-            <button id="closePreviewBtn" class="btn btn-secondary btn-sm">✖ Close Preview</button>
-          </div>
-
-          <!-- Page Switcher Tabs -->
-          <div id="pageSelectorTabs" class="flex-center gap-2 mb-3" style="justify-content: flex-start; flex-wrap: wrap;"></div>
-
-          <div class="grid-2 gap-2">
-            <div style="text-align: center;">
-              <img id="uploadedImageDisplay" style="max-width: 100%; max-height: 380px; border-radius: var(--radius-md); border: 1px solid var(--border-glass); object-fit: contain;">
-            </div>
-            <div>
-              <label class="form-label">Extracted Text Output:</label>
-              <textarea id="rawOcrTextarea" class="form-control" rows="10" style="font-family: var(--font-urdu), monospace; font-size: 0.95rem;" placeholder="Extracted output will appear here..."></textarea>
-              <div class="flex-between mt-2">
-                <button id="reparseOcrBtn" class="btn btn-blue btn-sm">🔄 Reparse Text Into Rows</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Register Entries Table -->
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>
-                  <div>Date</div>
-                  <div class="tbl-hdr-ur">تاریخ</div>
-                </th>
-                <th>
-                  <div>Member ID & Name</div>
-                  <div class="tbl-hdr-ur">شناختی نمبر و نام</div>
-                </th>
-                <th>
-                  <div>Start Reading</div>
-                  <div class="tbl-hdr-ur">ابتدائی ریڈنگ</div>
-                </th>
-                <th>
-                  <div>End Reading</div>
-                  <div class="tbl-hdr-ur">آخری ریڈنگ</div>
-                </th>
-                <th>
-                  <div>Units Used</div>
-                  <div class="tbl-hdr-ur">استعمال شدہ یونٹ</div>
-                </th>
-                <th style="text-align: center;">
-                  <div>Actions</div>
-                  <div class="tbl-hdr-ur">اقدامات</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="registerTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tab 3: Bills & Expenses -->
-    <section id="tab-expenses" class="tab-content hidden">
-      <div class="grid-2 mb-3">
-        <!-- Card 1: WAPDA Electricity Bill -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">⚡ WAPDA Electricity Bill (واپڈا بجلی بل)</h2>
-              <p class="card-subtitle">Monthly electricity bill divided proportionally by units consumed.</p>
-            </div>
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label">Billing Period / Month (بلنگ مہینہ)</label>
-            <input type="month" id="billingMonthInput" class="form-control" value="2026-08">
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label">Total WAPDA Bill Amount (PKR / کل بل رقم)</label>
-            <input type="number" id="wapdaBillInput" class="form-control" placeholder="Enter actual monthly bill amount in Rs. (e.g. 336275)" value="" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-green);">
-            <p class="card-subtitle mt-1" style="font-size: 0.82rem;">Enter the total electricity bill amount from your MEPCO bill statement.</p>
-          </div>
-
-          <div class="grid-2 gap-2 mt-3">
-            <button id="saveWapdaBillBtn" type="button" class="btn btn-primary btn-full" style="padding: 0.85rem; font-size: 1rem; font-weight: 700;">
-              💾 Save Bill Amount
-            </button>
-            <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); border: 1px solid var(--accent-green); color: var(--accent-green); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
-              <span>🌐 Open MEPCO Portal</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Card 2: Fixed & Repair Expenses -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">🔧 Fixed & Repair Expenses (دیگر اخراجات)</h2>
-              <p class="card-subtitle">Motor repairs, oiling, and maintenance divided by assigned time slot hours.</p>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Add Itemized Repair Expense</label>
-            <div class="grid-2 gap-1 mb-2">
-              <input type="text" id="fixedDescInput" class="form-control" placeholder="Expense description (e.g. Motor Repair)">
-              <input type="number" id="fixedAmountInput" class="form-control" placeholder="Amount Rs.">
-            </div>
-            <button id="addFixedExpenseBtn" class="btn btn-secondary btn-full">+ Add Fixed Expense Item</button>
-          </div>
-
-          <div id="fixedExpensesList" class="mt-2"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tab 4: Summary & WhatsApp -->
-    <section id="tab-summary" class="tab-content hidden">
-      <div class="grid-4 mb-3">
-        <div class="stat-card">
-          <div class="stat-icon" style="color: var(--accent-blue);">⚡</div>
-          <div>
-            <div class="stat-val" id="summaryTotalUnits">0 Units</div>
-            <div class="stat-lbl">Total Electricity Consumed</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon" style="color: var(--accent-amber);">💡</div>
-          <div>
-            <div class="stat-val" id="summaryWapdaBill">Rs. 0</div>
-            <div class="stat-lbl">WAPDA Electricity Bill</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon" style="color: var(--accent-red);">🔧</div>
-          <div>
-            <div class="stat-val" id="summaryFixedExpenses">Rs. 0</div>
-            <div class="stat-lbl">Fixed / Repair Expenses</div>
-          </div>
-        </div>
-
-        <div class="stat-card" style="border-color: var(--accent-green);">
-          <div class="stat-icon" style="color: var(--accent-green);">💰</div>
-          <div>
-            <div class="stat-val" style="color: var(--accent-green);" id="summaryGrandTotal">Rs. 0</div>
-            <div class="stat-lbl">Total Collection Amount</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Professional Clean Table Card for Farmers WhatsApp Group Screenshots -->
-      <div id="screenshotListCard" class="card mb-3" style="background: var(--bg-secondary); border: 2px solid var(--border-glass); padding: 0; overflow: hidden;">
-        <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 1.25rem; border-bottom: 2px solid var(--accent-green);">
-          <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem;">
-            ⚡ <span>ٹربائن بل خلاصہ</span> — <span id="screenshotMonthBadge" style="color: #4ade80;">Current Month</span>
-          </h2>
-          <div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 0.25rem; font-weight: 500;">
-            Turbine Electricity & Maintenance Bill Summary
-          </div>
-        </div>
-
-        <div class="table-responsive" style="padding: 0.5rem 1rem 1rem 1rem;">
-          <table class="data-table" style="width: 100%;">
-            <thead>
-              <tr style="background: #1e293b; color: #ffffff; border-bottom: 2px solid var(--border-glass);">
-                <th style="width: 45px; text-align: center; color: #ffffff; padding: 0.75rem 0.5rem;">#</th>
-                <th style="color: #ffffff; padding: 0.75rem 0.5rem;">
-                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Member Name</div>
-                  <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">ممبر کا نام</div>
-                </th>
-                <th style="text-align: center; color: #ffffff; padding: 0.75rem 0.5rem;">
-                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Units Consumed</div>
-                  <div style="font-size: 0.82rem; color: #cbd5e1; font-family: var(--font-urdu); font-weight: 600;">استعمال شدہ یونٹ</div>
-                </th>
-                <th style="text-align: right; color: #ffffff; padding: 0.75rem 0.5rem;">
-                  <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Total Payable</div>
-                  <div style="font-size: 0.82rem; color: #86efac; font-family: var(--font-urdu); font-weight: 700;">کل واجب الادا بل</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="screenshotListContainer"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">📋 Member Bill Breakdown Table</h2>
-            <p class="card-subtitle">Calculated according to exact proportional usage & effective time slot hours formulas.</p>
-          </div>
-          <button id="printReportBtn" class="btn btn-primary btn-sm" style="font-size: 0.9rem; font-weight: 700; gap: 0.4rem; padding: 0.5rem 0.85rem;">📄 Download PDF Report</button>
-        </div>
-
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>
-                  <div>Member Name</div>
-                  <div class="tbl-hdr-ur">ممبر کا نام</div>
-                </th>
-                <th>
-                  <div>Allocated Hours</div>
-                  <div class="tbl-hdr-ur">باری کے گھنٹے</div>
-                </th>
-                <th>
-                  <div>Units Consumed</div>
-                  <div class="tbl-hdr-ur">استعمال شدہ یونٹ</div>
-                </th>
-                <th>
-                  <div>Electricity Bill (Rs.)</div>
-                  <div class="tbl-hdr-ur">بجلی کا بل</div>
-                </th>
-                <th>
-                  <div>Extra Expenses (Rs.)</div>
-                  <div class="tbl-hdr-ur">دیگر اخراجات</div>
-                </th>
-                <th style="text-align: right;">
-                  <div>Total Bill (Rs.)</div>
-                  <div class="tbl-hdr-ur">کل واجب الادا بل</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="summaryTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="userCardsContainer" class="grid-2 mb-3"></div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">💬 WhatsApp Bill Summary Generator</h2>
-            <p class="card-subtitle">Ready-to-send formatted text for group or individual messages.</p>
-          </div>
-          <div class="flex-center gap-2">
-            <label class="form-label" style="margin: 0;">Language:</label>
-            <select id="whatsappLangSelect" class="form-control" style="width: auto;">
-              <option value="roman">Roman Urdu (Default)</option>
-              <option value="urdu">Urdu Script (اردو)</option>
-              <option value="english">English</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="whatsapp-preview-box" id="whatsappPreviewBox"></div>
-
-        <div class="flex-between mt-3">
-          <button id="copyWhatsappBtn" class="btn btn-primary" style="padding: 0.85rem 1.5rem;">📋 Copy WhatsApp Message</button>
-          <button id="sendWhatsappBtn" class="btn btn-blue" style="padding: 0.85rem 1.5rem;">🚀 Open in WhatsApp</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Hidden A4 PDF Report Template (Rendered Off-Screen for html2pdf capture) -->
-    <div id="pdfReportTemplate" style="position: fixed; left: -9999px; top: 0; width: 800px; padding: 2.5rem; background: #ffffff; color: #0f172a; font-family: 'Inter', system-ui, sans-serif; line-height: 1.4; box-sizing: border-box; z-index: -9999; display: block; visibility: visible;">
-      <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #059669; padding-bottom: 1rem; margin-bottom: 1.5rem;">
-        <div>
-          <div style="font-size: 1.6rem; font-weight: 900; color: #059669; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em;">
-            ⚡ <span>TUBEWELL BILL SYSTEM</span>
-          </div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0.25rem; font-family: 'Noto Naskh Arabic', serif;">
-            ٹربائن بجلی و مرمت بل کی تفصیلی رپورٹ
-          </div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 1.15rem; font-weight: 900; color: #0284c7;" id="pdfBillingMonth">August 2026</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem; font-weight: 600;">Date: <span id="pdfGenDate">12 Aug 2026</span></div>
-          <div style="font-weight: 800; color: #059669; font-size: 0.78rem; margin-top: 0.2rem; text-transform: uppercase;">Status: Verified Final</div>
-        </div>
-      </div>
-
-      <!-- Summary Metric Cards Banner -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Units Consumed</div>
-          <div style="font-size: 1.15rem; font-weight: 900; color: #0284c7; margin-top: 0.2rem;" id="pdfTotalUnits">0 Units</div>
-        </div>
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">WAPDA Electricity Bill</div>
-          <div style="font-size: 1.15rem; font-weight: 900; color: #d97706; margin-top: 0.2rem;" id="pdfWapdaBill">Rs. 0</div>
-        </div>
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fixed / Repair Expenses</div>
-          <div style="font-size: 1.15rem; font-weight: 900; color: #dc2626; margin-top: 0.2rem;" id="pdfFixedExpenses">Rs. 0</div>
-        </div>
-        <div style="background: #ecfdf5; border: 2px solid #059669; border-radius: 8px; padding: 0.75rem; text-align: center;">
-          <div style="font-size: 0.72rem; color: #047857; font-weight: 800; text-transform: uppercase;">Grand Collection Total</div>
-          <div style="font-size: 1.25rem; font-weight: 900; color: #059669; margin-top: 0.2rem;" id="pdfGrandTotal">Rs. 0</div>
-        </div>
-      </div>
-
-      <!-- Member Breakdown Table -->
-      <div style="margin-bottom: 1.5rem;">
-        <div style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3rem;">
-          📋 Member Bill Breakdown (تفصیلی ممبر بل خلاصہ)
-        </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-          <thead>
-            <tr style="background: #0f172a; color: #ffffff;">
-              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155; width: 35px;">#</th>
-              <th style="padding: 0.5rem; text-align: left; border: 1px solid #334155;">
-                <div>Member Name</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">ممبر کا نام</div>
-              </th>
-              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
-                <div>Allocated Hours</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">باری گھنٹے</div>
-              </th>
-              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
-                <div>Units Consumed</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">استعمال شدہ یونٹ</div>
-              </th>
-              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
-                <div>Electricity Share (Rs.)</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">بجلی بل</div>
-              </th>
-              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
-                <div>Fixed Expenses (Rs.)</div>
-                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">دیگر اخراجات</div>
-              </th>
-              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155; background: #047857;">
-                <div>Total Payable (Rs.)</div>
-                <div style="font-size: 0.75rem; color: #ecfdf5; font-family: 'Noto Naskh Arabic', serif;">کل واجب الادا بل</div>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="pdfTableBody"></tbody>
-          <tfoot id="pdfTableFoot"></tfoot>
-        </table>
-      </div>
-
-      <!-- Itemized Expenses Section (If Any) -->
-      <div id="pdfItemizedExpensesSection" style="margin-bottom: 1.5rem;">
-        <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.2rem;">
-          🔧 Itemized Fixed & Maintenance Expenses (اخراجات تفصیل)
-        </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
-          <thead>
-            <tr style="background: #f1f5f9; color: #334155;">
-              <th style="padding: 0.4rem 0.6rem; text-align: left; border: 1px solid #cbd5e1;">Expense Description</th>
-              <th style="padding: 0.4rem 0.6rem; text-align: right; border: 1px solid #cbd5e1; width: 150px;">Amount (Rs.)</th>
-            </tr>
-          </thead>
-          <tbody id="pdfItemizedTableBody"></tbody>
-        </table>
-      </div>
-
-      <!-- Footer -->
-      <div style="border-top: 2px solid #cbd5e1; padding-top: 0.75rem; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #64748b;">
-        <div>
-          <div>📌 <strong>Notice:</strong> Please clear your respective bill amount before the due date.</div>
-          <div>Generated automatically by <strong>Tubewell Bill System</strong></div>
-        </div>
-        <div style="text-align: right;">
-          <div style="border-top: 1px dashed #94a3b8; padding-top: 0.2rem; margin-top: 1rem; width: 140px; font-weight: 700; color: #334155;">Authorized Signature</div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- User Modal for Time Slot Management -->
-  <div id="userModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="flex-between mb-2">
-        <h3 id="userModalTitle" class="card-title">Add New Member & Weekly Slot / نیا ممبر شامل کریں</h3>
-        <button type="button" class="modal-close" aria-label="Close">&times;</button>
-      </div>
-      <form id="userForm">
-        <input type="hidden" id="userIdInput">
-        
-        <!-- User ID & Category Row -->
-        <div class="grid-2 mb-2">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">User ID / شناختی نمبر (e.g. 01, 02, 03)</label>
-            <div style="display: flex; gap: 0.4rem; align-items: center;">
-              <input type="text" id="userCodeInput" class="form-control" placeholder="e.g. 01" required style="font-weight: 800; font-size: 1.1rem; flex: 1;">
-              <button type="button" id="autoNextCodeBtn" class="btn btn-secondary btn-sm" style="white-space: nowrap; font-size: 0.78rem; padding: 0.55rem 0.65rem;" title="Auto-fill next available unique ID">⚡ Auto ID</button>
-            </div>
-            <div id="userCodeValidationMsg" style="font-size: 0.78rem; margin-top: 0.25rem; font-weight: 700; min-height: 1.2rem;"></div>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Member Category / ممبر کی قسم</label>
-            <select id="userTypeSelect" class="form-control" required style="font-weight: 600;">
-              <option value="internal">Internal Shareholder / شریک مالک (Pays units + fixed repair)</option>
-              <option value="external">External Buyer / بیرونی خریدار (Pays units ONLY, no fixed repair)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- English & Urdu Name Row -->
-        <div class="grid-2 mb-2">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">English Name (انگریزی نام)</label>
-            <input type="text" id="userNameEnInput" class="form-control" placeholder="e.g. Zahid Javed" required>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Urdu Name (اردو نام)</label>
-            <input type="text" id="userNameUrInput" class="form-control" placeholder="e.g. زاہد جاوید" required style="font-family: var(--font-urdu);">
-          </div>
-        </div>
-
-        <div class="form-group mb-2">
-          <label class="form-label">📱 WhatsApp Phone Number (Optional)</label>
-          <input type="text" id="userPhoneInput" class="form-control" placeholder="e.g. 03001234567">
-        </div>
-
-        <!-- Start Day & 12-Hour Touch Picker -->
-        <div class="grid-2 mb-2">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Start Day (آغاز کا دن)</label>
-            <select id="userStartDaySelect" class="form-control" required>
-              <option value="Sunday">Sunday (اتوار)</option>
-              <option value="Monday">Monday (پیر)</option>
-              <option value="Tuesday">Tuesday (منگل)</option>
-              <option value="Wednesday">Wednesday (بدھ)</option>
-              <option value="Thursday">Thursday (جمعرات)</option>
-              <option value="Friday">Friday (جمعہ)</option>
-              <option value="Saturday">Saturday (ہفتہ)</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Start Time (12-Hour AM/PM)</label>
-            <div class="time-picker-12h-group">
-              <select id="userStartHourSelect"></select>
-              <span>:</span>
-              <select id="userStartMinSelect"></select>
-              <select id="userStartAmpmSelect" class="ampm-select">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Duration Input in Hours and Minutes -->
-        <div class="grid-2 mb-2">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Duration Hours (گھنٹے)</label>
-            <input type="number" id="userDurationHoursInput" class="form-control" min="0" max="168" placeholder="17" required style="font-weight: 700;">
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Duration Minutes (منٹ)</label>
-            <input type="number" id="userDurationMinutesInput" class="form-control" min="0" max="59" placeholder="0" required style="font-weight: 700;">
-          </div>
-        </div>
-
-        <!-- Auto-Calculated End Day & Time -->
-        <div class="form-group mt-2" style="background: rgba(59, 130, 246, 0.08); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(59, 130, 246, 0.3);">
-          <div class="flex-between mb-1">
-            <span style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase;">🏁 AUTO-CALCULATED END TIME (خودکار اختتامی وقت)</span>
-            <span id="calculatedEndDayTimeBadge" style="font-size: 0.95rem; font-weight: 800; color: var(--accent-blue);">Monday 01:00 AM</span>
-          </div>
-          <div class="flex-between">
-            <div>
-              <div style="font-size: 0.75rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase;">⏱️ TOTAL DURATION</div>
-              <div id="userCalculatedDurationDisplay" style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">17 Hours 00 Minutes</div>
-            </div>
-            <div id="validationBadge" class="badge badge-success">Valid Time Slot</div>
-          </div>
-        </div>
-
-        <div class="flex-between mt-3">
-          <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
-          <button type="submit" id="saveUserSubmitBtn" class="btn btn-primary">Save Member & Chain Schedule</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Register Entry Modal -->
-  <div id="entryModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="flex-between mb-2">
-        <h3 class="card-title">Register Reading Entry / میٹر ریڈنگ اینٹری</h3>
-        <button type="button" class="modal-close" aria-label="Close">&times;</button>
-      </div>
-      <form id="entryForm">
-        <input type="hidden" id="entryIdInput">
-        <div class="form-group">
-          <label class="form-label">Date / تاریخ</label>
-          <input type="date" id="entryDateInput" class="form-control" required>
-        </div>
-        
-        <div class="form-group">
-          <div class="flex-between mb-1">
-            <label class="form-label" style="margin: 0;">Member Name / ممبر کا نام</label>
-            <button type="button" id="quickAddUserBtn" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">
-              + Add New Member / نیا ممبر
-            </button>
-          </div>
-          <select id="entryUserSelect" class="form-control" required></select>
-        </div>
-
-        <div class="grid-2">
-          <div class="form-group">
-            <label class="form-label">Start Reading (پہلی ریڈنگ)</label>
-            <input type="number" id="entryStartInput" class="form-control" placeholder="e.g. 1156421" required style="font-weight: 700;">
-          </div>
-          <div class="form-group">
-            <label class="form-label">End Reading (آخری ریڈنگ)</label>
-            <input type="number" id="entryEndInput" class="form-control" placeholder="e.g. 1156535" required style="font-weight: 700;">
-          </div>
-        </div>
-
-        <!-- Live Validation Alert Box inside Entry Modal -->
-        <div id="entryModalErrorBox" class="card hidden mb-2" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.75rem 1rem;">
-          <div style="color: var(--accent-red); font-weight: 700; font-size: 0.9rem;" id="entryModalErrorText">
-            ⚠️ Reading Error: End reading cannot be less than start reading!
-          </div>
-        </div>
-
-
-        <div class="form-group">
-          <label class="form-label">Notes / تفصیل (Optional)</label>
-          <input type="text" id="entryNotesInput" class="form-control" placeholder="Optional session notes">
-        </div>
-        <div class="flex-between mt-3">
-          <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Entry / اینٹری محفوظ کریں</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="settingsModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="flex-between mb-2">
-        <h3 class="card-title">⚙️ Confidential App & Security Settings</h3>
-        <button type="button" class="modal-close" aria-label="Close">&times;</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">🔑 Google Gemini API Key (For AI Vision OCR)</label>
-        <input type="password" id="geminiKeyInput" class="form-control" placeholder="AIzaSy..." style="font-family: monospace; font-size: 1rem;">
-        <div class="flex-between mt-1">
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size: 0.8rem; color: var(--accent-blue); font-weight: 700; text-decoration: none;">
-            👉 Click here to get a 100% Free Gemini API Key (aistudio.google.com)
-          </a>
-        </div>
-        <div style="background: rgba(16, 185, 129, 0.08); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.3); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
-          🔒 <strong>100% Security & Privacy Guarantee:</strong><br>
-          • Your API Key stays <strong>ONLY on your computer / device</strong> in browser storage.<br>
-          • It is <strong>NEVER sent to any third-party server or external database</strong>.<br>
-          • It is used <strong>ONLY for direct browser-to-Google AI Vision calls</strong> when you upload a photo.
-        </div>
-      </div>
-
-      <div class="form-group mb-2">
-        <label class="flex-center gap-1" style="justify-content: flex-start; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
-          <input type="checkbox" id="sessionOnlyKeyCheckbox">
-          <span>🔒 In-Memory Only (Do NOT save Key to disk. Delete key when tab closes)</span>
-        </label>
-      </div>
-
-      <hr style="border-color: var(--border-glass); margin: 1.25rem 0;">
-
-      <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 1rem;" class="mb-3">
-        <h4 style="color: var(--accent-red); margin-top: 0; font-size: 0.95rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem;">
-          <span>⚠️ System Data Controls / ڈیٹا ری سیٹ</span>
-        </h4>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem; margin-top: 0;">
-          Reset all members, readings, and bill data to fresh state. <strong>Your saved Gemini API Key will be preserved.</strong>
-        </p>
-        <button id="resetSampleDataBtn" class="btn btn-danger btn-sm" style="width: 100%;">
-          🔄 Reset All System Data / تمام ڈیٹا ختم کریں
-        </button>
-      </div>
-
-      <div class="flex-between mt-3">
-        <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
-        <button id="clearKeyBtn" class="btn btn-danger btn-sm">🗑️ Remove API Key Only</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toastContainer" class="toast-container"></div>
-
-  <!-- Embedded Engine Script -->
-  <script>
     (function() {
       'use strict';
 
@@ -1556,8 +247,6 @@
       };
 
       const STORAGE_KEY = 'turbine_bill_system_v36_clean_import_test';
-      const USERS_API = '/api/users';
-      const AUTH_API = '/api/admin_auth';
 
       function timeToMinutes(timeStr) {
         if (!timeStr) return 0;
@@ -1620,47 +309,9 @@
         constructor() {
           this.listeners = [];
           this.sessionKey = '';
-          this._adminSessionExpiry = 0;  // timestamp ms
           this.sanitizeLocalStorage();
           this.state = this.loadState();
           this.saveState();
-          // Sync master users from server in background
-          this.syncUsersFromServer();
-        }
-
-        // ── Server Sync ──────────────────────────────────────────────────────
-        async syncUsersFromServer() {
-          try {
-            const res = await fetch(USERS_API);
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json.success && Array.isArray(json.users) && json.users.length > 0) {
-              this.state.users = json.users;
-              this.saveState();
-              console.log(`[Server Sync] Loaded ${json.users.length} users from server`);
-            }
-          } catch (e) {
-            console.warn('[Server Sync] Offline or server unreachable — using local copy');
-          }
-        }
-
-        async pushUsersToServer(password) {
-          const res = await fetch(USERS_API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password, users: this.state.users })
-          });
-          const json = await res.json();
-          if (!res.ok) throw new Error(json.error || 'Server rejected update');
-          return json;
-        }
-
-        // Admin session: stays authenticated for 15 min
-        isAdminAuthenticated() {
-          return Date.now() < this._adminSessionExpiry;
-        }
-        setAdminAuthenticated() {
-          this._adminSessionExpiry = Date.now() + 15 * 60 * 1000; // 15 min
         }
 
         sanitizeLocalStorage() {
@@ -1754,8 +405,49 @@
           this.listeners.push(listener);
         }
 
-        notify() {
-          this.listeners.forEach(l => l(this.state));
+        async syncUsersWithServer() {
+          try {
+            const res = await fetch('/api/users');
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.status === 'success' && Array.isArray(data.users) && data.users.length > 0) {
+                this.state.users = data.users.map(u => ({
+                  ...u,
+                  userCode: u.userCode || u.code || '01',
+                  nameEn: u.nameEn || u.name || 'Member',
+                  nameUr: u.nameUr || u.nameUrdu || '',
+                  phone: u.phone || '',
+                  defaultHoursPerWeek: u.defaultHoursPerWeek !== undefined ? u.defaultHoursPerWeek : (u.durationHours || 12)
+                }));
+                this.autoRechainSchedule();
+                this.saveState();
+              }
+            }
+          } catch (e) {
+            console.warn('Server users sync error:', e.message);
+          }
+        }
+
+        async saveUsersToServer(adminPassword) {
+          if (!adminPassword) return { success: false, error: 'Password required' };
+          try {
+            const res = await fetch('/api/users', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                password: adminPassword,
+                users: this.state.users
+              })
+            });
+            const data = await res.json().catch(() => null);
+            if (res.ok && data && data.status === 'success') {
+              return { success: true };
+            } else {
+              return { success: false, error: data?.error || `Server HTTP ${res.status}` };
+            }
+          } catch (e) {
+            return { success: false, error: e.message };
+          }
         }
 
         getUsers() { return this.state.users; }
@@ -1915,16 +607,6 @@
           this.state.users = this.state.users.filter(u => u.id !== id);
           this.autoRechainSchedule();
           this.saveState();
-        }
-
-        // Called after any user mutation with valid password to push to server
-        async _syncAfterMutation(password) {
-          try {
-            await this.pushUsersToServer(password);
-            console.log('[Server Sync] Users saved to server successfully');
-          } catch (e) {
-            console.warn('[Server Sync] Could not push to server:', e.message);
-          }
         }
 
         getEntries() { return this.state.entries; }
@@ -2435,10 +1117,12 @@
 
       class App {
         constructor() {
+          this.adminSessionAuth = null;
           this.initElements();
           this.bindEvents();
           this.subscribeStore();
           this.render();
+          store.syncUsersWithServer().then(() => this.render());
         }
 
         initElements() {
@@ -2570,14 +1254,114 @@
           this.userStartAmpmSelect.value = ampm;
         }
 
-        bindEvents() {
-          this.navBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-              store.setActiveTab(btn.dataset.tab);
-            });
-          });
+        async requestAdminAuth() {
+          if (this.adminSessionAuth) {
+            return true;
+          }
 
-          this.addUserBtn.addEventListener('click', () => this.openUserModal());
+          const modal = document.getElementById('adminAuthModal');
+          const form = document.getElementById('adminAuthForm');
+          const passInput = document.getElementById('adminAuthPasswordInput');
+          const errorBox = document.getElementById('adminAuthErrorBox');
+          const submitBtn = document.getElementById('adminAuthSubmitBtn');
+
+          if (!modal || !form || !passInput) return true;
+
+          passInput.value = '';
+          if (errorBox) {
+            errorBox.textContent = '';
+            errorBox.classList.add('hidden');
+          }
+
+          this.openModal(modal);
+          setTimeout(() => passInput.focus(), 100);
+
+          return new Promise((resolve) => {
+            let handled = false;
+
+            const cleanup = () => {
+              form.removeEventListener('submit', onSubmit);
+              const cancelBtns = modal.querySelectorAll('.modal-close, .modal-cancel');
+              cancelBtns.forEach(btn => btn.removeEventListener('click', onCancel));
+            };
+
+            const onCancel = () => {
+              if (handled) return;
+              handled = true;
+              cleanup();
+              this.closeModal(modal);
+              resolve(false);
+            };
+
+            const onSubmit = async (e) => {
+              e.preventDefault();
+              const pwd = passInput.value.trim();
+              if (!pwd) return;
+
+              if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '⏳ Verifying...';
+              }
+
+              try {
+                const res = await fetch('/api/admin_auth', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ password: pwd })
+                });
+
+                const data = await res.json().catch(() => null);
+
+                if (res.ok && data && data.status === 'success') {
+                  this.adminSessionAuth = pwd;
+                  handled = true;
+                  cleanup();
+                  this.closeModal(modal);
+                  this.showToast('🔓 Admin Authorized!');
+                  resolve(true);
+                } else {
+                  if (errorBox) {
+                    errorBox.textContent = data?.error || 'Invalid Admin Password';
+                    errorBox.classList.remove('hidden');
+                  }
+                  passInput.select();
+                }
+              } catch (err) {
+                if (errorBox) {
+                  errorBox.textContent = 'Server verification failed: ' + err.message;
+                  errorBox.classList.remove('hidden');
+                }
+              } finally {
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = '🔓 Verify & Continue';
+                }
+              }
+            };
+
+            form.addEventListener('submit', onSubmit);
+            const cancelBtns = modal.querySelectorAll('.modal-close, .modal-cancel');
+            cancelBtns.forEach(btn => btn.addEventListener('click', onCancel));
+          });
+        }
+
+        bindEvents() {
+          if (this.navBtns) {
+            this.navBtns.forEach(btn => {
+              btn.addEventListener('click', () => {
+                store.setActiveTab(btn.dataset.tab);
+              });
+            });
+          }
+
+          if (this.addUserBtn) {
+            this.addUserBtn.addEventListener('click', async () => {
+              if (await this.requestAdminAuth()) {
+                this.openUserModal();
+              }
+            });
+          }
+
           if (this.exportScheduleBtn) {
             this.exportScheduleBtn.addEventListener('click', () => this.exportSchedule());
           }
@@ -2600,7 +1384,9 @@
             });
           }
 
-          this.userForm.addEventListener('submit', (e) => this.handleUserFormSubmit(e));
+          if (this.userForm) {
+            this.userForm.addEventListener('submit', (e) => this.handleUserFormSubmit(e));
+          }
 
           if (this.quickAddUserBtn) {
             this.quickAddUserBtn.addEventListener('click', () => {
@@ -2609,21 +1395,26 @@
             });
           }
 
-          this.copyScheduleWaBtn.addEventListener('click', () => {
-            const txt = this.scheduleWhatsappPreviewBox.textContent;
-            navigator.clipboard.writeText(txt).then(() => {
-              this.showToast('Schedule copied to clipboard!');
-            }).catch(() => {
-              alert('Copied to clipboard');
+          if (this.copyScheduleWaBtn) {
+            this.copyScheduleWaBtn.addEventListener('click', () => {
+              const txt = this.scheduleWhatsappPreviewBox ? this.scheduleWhatsappPreviewBox.textContent : '';
+              navigator.clipboard.writeText(txt).then(() => {
+                this.showToast('Schedule copied to clipboard!');
+              }).catch(() => {
+                alert('Copied to clipboard');
+              });
             });
-          });
+          }
 
-          this.sendScheduleWaBtn.addEventListener('click', () => {
-            const txt = encodeURIComponent(this.scheduleWhatsappPreviewBox.textContent);
-            window.open(`https://api.whatsapp.com/send?text=${txt}`, '_blank');
-          });
+          if (this.sendScheduleWaBtn) {
+            this.sendScheduleWaBtn.addEventListener('click', () => {
+              const txt = encodeURIComponent(this.scheduleWhatsappPreviewBox ? this.scheduleWhatsappPreviewBox.textContent : '');
+              window.open(`https://api.whatsapp.com/send?text=${txt}`, '_blank');
+            });
+          }
 
           const updateModalDurationAndEndTimeCalc = () => {
+            if (!this.userStartDaySelect || !this.userDurationHoursInput) return;
             const sd = this.userStartDaySelect.value;
             const st = this.getModalStartTime24();
             const h = parseInt(this.userDurationHoursInput.value, 10) || 0;
@@ -2631,15 +1422,17 @@
             const totalMins = (h * 60) + m;
 
             if (totalMins <= 0) {
-              this.userCalculatedDurationDisplay.textContent = '0 Minutes';
-              this.calculatedEndDayTimeBadge.textContent = 'Invalid Duration';
-              this.validationBadge.className = 'badge badge-danger';
-              this.validationBadge.textContent = '❌ Duration Must Be > 0 Mins';
-              this.saveUserSubmitBtn.disabled = true;
+              if (this.userCalculatedDurationDisplay) this.userCalculatedDurationDisplay.textContent = '0 Minutes';
+              if (this.calculatedEndDayTimeBadge) this.calculatedEndDayTimeBadge.textContent = 'Invalid Duration';
+              if (this.validationBadge) {
+                this.validationBadge.className = 'badge badge-danger';
+                this.validationBadge.textContent = '❌ Duration Must Be > 0 Mins';
+              }
+              if (this.saveUserSubmitBtn) this.saveUserSubmitBtn.disabled = true;
               return;
             }
 
-            this.userCalculatedDurationDisplay.textContent = formatDurationText(totalMins);
+            if (this.userCalculatedDurationDisplay) this.userCalculatedDurationDisplay.textContent = formatDurationText(totalMins);
 
             const DAYS_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const startOffset = (DAYS_ORDER.indexOf(sd) * 1440) + timeToMinutes(st);
@@ -2652,115 +1445,135 @@
             const endTimeStr = minutesToTimeStr(minsInDay);
 
             const endDayBili = DAY_NAMES_BILINGUAL[endDayName] || endDayName;
-            this.calculatedEndDayTimeBadge.textContent = `${endDayBili} ${formatTime12h(endTimeStr)}`;
+            if (this.calculatedEndDayTimeBadge) this.calculatedEndDayTimeBadge.textContent = `${endDayBili} ${formatTime12h(endTimeStr)}`;
 
-            this.validationBadge.className = 'badge badge-success';
-            this.validationBadge.textContent = '✅ Valid Time Slot';
-            this.saveUserSubmitBtn.disabled = false;
+            if (this.validationBadge) {
+              this.validationBadge.className = 'badge badge-success';
+              this.validationBadge.textContent = '✅ Valid Time Slot';
+            }
+            if (this.saveUserSubmitBtn) this.saveUserSubmitBtn.disabled = false;
           };
 
           ['change', 'input'].forEach(evt => {
-            this.userStartDaySelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
-            this.userStartHourSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
-            this.userStartMinSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
-            this.userStartAmpmSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
-            this.userDurationHoursInput.addEventListener(evt, updateModalDurationAndEndTimeCalc);
-            this.userDurationMinutesInput.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            if (this.userStartDaySelect) this.userStartDaySelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            if (this.userStartHourSelect) this.userStartHourSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            if (this.userStartMinSelect) this.userStartMinSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            if (this.userStartAmpmSelect) this.userStartAmpmSelect.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            if (this.userDurationHoursInput) this.userDurationHoursInput.addEventListener(evt, updateModalDurationAndEndTimeCalc);
+            if (this.userDurationMinutesInput) this.userDurationMinutesInput.addEventListener(evt, updateModalDurationAndEndTimeCalc);
           });
 
-          this.addEntryBtn.addEventListener('click', () => this.openEntryModal());
-          this.entryForm.addEventListener('submit', (e) => this.handleEntryFormSubmit(e));
-          this.clearEntriesBtn.addEventListener('click', () => {
-            if (confirm('Clear all register entries?')) {
-              store.clearAllEntries();
-              this.showToast('All register entries cleared.');
-            }
-          });
+          if (this.addEntryBtn) this.addEntryBtn.addEventListener('click', () => this.openEntryModal());
+          if (this.entryForm) this.entryForm.addEventListener('submit', (e) => this.handleEntryFormSubmit(e));
+          if (this.clearEntriesBtn) {
+            this.clearEntriesBtn.addEventListener('click', () => {
+              if (confirm('Clear all register entries?')) {
+                store.clearAllEntries();
+                this.showToast('All register entries cleared.');
+              }
+            });
+          }
 
           const validateEntryModalReadings = () => {
+            if (!this.entryStartInput || !this.entryEndInput) return;
             const startVal = parseFloat(this.entryStartInput.value) || 0;
             const endVal = parseFloat(this.entryEndInput.value) || 0;
 
             if (endVal > 0 && endVal < startVal) {
-              this.entryModalErrorBox.classList.remove('hidden');
-              this.entryModalErrorText.innerHTML = `⚠️ <strong>Reading Error:</strong> End reading (${endVal}) is less than start reading (${startVal})!<br><span style="font-family: var(--font-urdu);">غلط ریڈنگ: آخری ریڈنگ پچھلی ریڈنگ سے کم نہیں ہو سکتی۔</span>`;
+              if (this.entryModalErrorBox) this.entryModalErrorBox.classList.remove('hidden');
+              if (this.entryModalErrorText) this.entryModalErrorText.innerHTML = `⚠️ <strong>Reading Error:</strong> End reading (${endVal}) is less than start reading (${startVal})!<br><span style="font-family: var(--font-urdu);">غلط ریڈنگ: آخری ریڈنگ پچھلی ریڈنگ سے کم نہیں ہو سکتی۔</span>`;
             } else {
-              this.entryModalErrorBox.classList.add('hidden');
+              if (this.entryModalErrorBox) this.entryModalErrorBox.classList.add('hidden');
             }
           };
 
           ['input', 'change'].forEach(evt => {
-            this.entryStartInput.addEventListener(evt, validateEntryModalReadings);
-            this.entryEndInput.addEventListener(evt, validateEntryModalReadings);
+            if (this.entryStartInput) this.entryStartInput.addEventListener(evt, validateEntryModalReadings);
+            if (this.entryEndInput) this.entryEndInput.addEventListener(evt, validateEntryModalReadings);
           });
 
-          this.triggerUploadBtn.addEventListener('click', () => this.registerImageUpload.click());
-          this.addMorePhotosBtn.addEventListener('click', () => this.registerImageUpload.click());
-          this.dropzoneBox.addEventListener('click', () => this.registerImageUpload.click());
+          if (this.triggerUploadBtn && this.registerImageUpload) this.triggerUploadBtn.addEventListener('click', () => this.registerImageUpload.click());
+          if (this.addMorePhotosBtn && this.registerImageUpload) this.addMorePhotosBtn.addEventListener('click', () => this.registerImageUpload.click());
+          if (this.dropzoneBox && this.registerImageUpload) this.dropzoneBox.addEventListener('click', () => this.registerImageUpload.click());
 
-          ['dragenter', 'dragover'].forEach(eventName => {
-            this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-green)'; }, false);
-          });
-          ['dragleave', 'drop'].forEach(eventName => {
-            this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-blue)'; }, false);
-          });
+          if (this.dropzoneBox) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+              this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-green)'; }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+              this.dropzoneBox.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); this.dropzoneBox.style.borderColor = 'var(--accent-blue)'; }, false);
+            });
 
-          this.dropzoneBox.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files && files.length > 0) {
-              this.addFilesToStaging(files);
-            }
-          });
+            this.dropzoneBox.addEventListener('drop', (e) => {
+              const dt = e.dataTransfer;
+              const files = dt.files;
+              if (files && files.length > 0) {
+                this.addFilesToStaging(files);
+              }
+            });
+          }
 
-          this.registerImageUpload.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              this.addFilesToStaging(e.target.files);
-              this.registerImageUpload.value = '';
-            }
-          });
+          if (this.registerImageUpload) {
+            this.registerImageUpload.addEventListener('change', (e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                this.addFilesToStaging(e.target.files);
+                this.registerImageUpload.value = '';
+              }
+            });
+          }
 
-          this.clearGalleryBtn.addEventListener('click', () => {
-            this.stagedFiles = [];
-            this.renderStagedGallery();
-            this.showToast('Cleared all staged photos.');
-          });
+          if (this.clearGalleryBtn) {
+            this.clearGalleryBtn.addEventListener('click', () => {
+              this.stagedFiles = [];
+              this.renderStagedGallery();
+              this.showToast('Cleared all staged photos.');
+            });
+          }
 
-          this.startAiScanBtn.addEventListener('click', () => {
-            if (this.stagedFiles.length === 0) {
-              alert('Please select at least one register photo first.');
-              return;
-            }
-            this.processStagedAiScan();
-          });
+          if (this.startAiScanBtn) {
+            this.startAiScanBtn.addEventListener('click', () => {
+              if (this.stagedFiles.length === 0) {
+                alert('Please select at least one register photo first.');
+                return;
+              }
+              this.processStagedAiScan();
+            });
+          }
 
-          this.closePreviewBtn.addEventListener('click', () => this.ocrPreviewCard.classList.add('hidden'));
-          this.reparseOcrBtn.addEventListener('click', () => {
-            const text = this.rawOcrTextarea.value;
-            const lines = text.split('\n').filter(l => l.includes('startReading'));
-            this.showToast(`Reparsing not fully implemented for manual text; please use AI scanner.`);
-          });
+          if (this.closePreviewBtn && this.ocrPreviewCard) {
+            this.closePreviewBtn.addEventListener('click', () => this.ocrPreviewCard.classList.add('hidden'));
+          }
 
-          this.wapdaBillInput.addEventListener('input', (e) => {
-            store.updateWapdaBill(e.target.value);
-            this.renderSummaryTab();
-          });
+          if (this.reparseOcrBtn) {
+            this.reparseOcrBtn.addEventListener('click', () => {
+              this.showToast(`Reparsing not fully implemented for manual text; please use AI scanner.`);
+            });
+          }
 
-          this.billingMonthInput.addEventListener('change', (e) => {
-            const dateVal = e.target.value;
-            if (dateVal) {
-              const [year, month] = dateVal.split('-');
-              const dateObj = new Date(year, parseInt(month) - 1, 1);
-              const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-              store.updateBillingMonth(dateVal, monthLabel);
+          if (this.wapdaBillInput) {
+            this.wapdaBillInput.addEventListener('input', (e) => {
+              store.updateWapdaBill(e.target.value);
               this.renderSummaryTab();
-            }
-          });
+            });
+          }
+
+          if (this.billingMonthInput) {
+            this.billingMonthInput.addEventListener('change', (e) => {
+              const dateVal = e.target.value;
+              if (dateVal) {
+                const [year, month] = dateVal.split('-');
+                const dateObj = new Date(year, parseInt(month) - 1, 1);
+                const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                store.updateBillingMonth(dateVal, monthLabel);
+                this.renderSummaryTab();
+              }
+            });
+          }
 
           if (this.saveWapdaBillBtn) {
             this.saveWapdaBillBtn.addEventListener('click', () => {
-              const amt = parseFloat(this.wapdaBillInput.value) || 0;
-              const dateVal = this.billingMonthInput.value;
+              const amt = parseFloat(this.wapdaBillInput ? this.wapdaBillInput.value : 0) || 0;
+              const dateVal = this.billingMonthInput ? this.billingMonthInput.value : '';
               store.updateWapdaBill(amt);
               if (dateVal) {
                 const [year, month] = dateVal.split('-');
@@ -2779,7 +1592,69 @@
             });
           }
 
-          this.addFixedExpenseBtn.addEventListener('click', () => {
+          if (this.addFixedExpenseBtn) {
+            this.addFixedExpenseBtn.addEventListener('click', () => {
+              const desc = this.fixedDescInput ? this.fixedDescInput.value : '';
+              const amt = this.fixedAmountInput ? this.fixedAmountInput.value : '';
+              if (desc && amt) {
+                store.addFixedExpense(desc, amt);
+                if (this.fixedDescInput) this.fixedDescInput.value = '';
+                if (this.fixedAmountInput) this.fixedAmountInput.value = '';
+                this.showToast('Fixed maintenance expense added');
+              } else {
+                alert('Please enter description and amount.');
+              }
+            });
+          }
+
+          if (this.whatsappLangSelect) {
+            this.whatsappLangSelect.addEventListener('change', () => this.renderWhatsAppPreview());
+          }
+          if (this.copyWhatsappBtn) {
+            this.copyWhatsappBtn.addEventListener('click', () => this.copyWhatsAppToClipboard());
+          }
+          if (this.sendWhatsappBtn) {
+            this.sendWhatsappBtn.addEventListener('click', () => this.openWhatsAppDirect());
+          }
+          if (this.printReportBtn) {
+            this.printReportBtn.addEventListener('click', () => this.generatePdfReport());
+          }
+
+          if (this.resetSampleDataBtn) {
+            this.resetSampleDataBtn.addEventListener('click', () => {
+              if (confirm('Are you sure you want to reset all system data to defaults?')) {
+                store.resetToDefaults();
+                if (this.wapdaBillInput) this.wapdaBillInput.value = '';
+                this.showToast('Cleared all data. Ready for fresh inputs!');
+              }
+            });
+          }
+
+          if (this.themeToggleBtn) {
+            this.themeToggleBtn.addEventListener('click', () => {
+              const current = store.state.theme;
+              const next = current === 'dark' ? 'light' : 'dark';
+              store.setTheme(next);
+              this.applyTheme(next);
+            });
+          }
+
+          document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+              if (e.target === overlay) {
+                this.closeModal(overlay);
+              }
+            });
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                this.closeModal(modal);
+              });
+            }
+          });
+        }EventListener('click', () => {
             const desc = this.fixedDescInput.value;
             const amt = this.fixedAmountInput.value;
             if (desc && amt) {
@@ -3429,10 +2304,15 @@
 
           if (this.usersTableBody) {
             this.usersTableBody.querySelectorAll('.tbl-start-day, .tbl-start-time, .tbl-end-day, .tbl-end-time, .tbl-dur-hours, .tbl-dur-mins').forEach(input => {
-              input.addEventListener('change', () => {
+              input.addEventListener('change', async () => {
                 const userId = input.dataset.id;
                 const row = input.closest('tr');
                 if (!userId || !row) return;
+
+                if (!(await this.requestAdminAuth())) {
+                  this.renderUsersTab();
+                  return;
+                }
 
                 const startDay = row.querySelector('.tbl-start-day')?.value;
                 const startTime = row.querySelector('.tbl-start-time')?.value;
@@ -3457,29 +2337,32 @@
 
                 try {
                   store.updateUser(userId, updatedFields);
-                  this.showToast('Schedule updated & auto-chained ✅');
+                  await store.saveUsersToServer(this.adminSessionAuth);
+                  this.showToast('Schedule updated & synced to server ✅');
                 } catch (err) {
-                  console.error('Failed to update inline user schedule:', err);
+                  console.error('Failed to update user schedule:', err);
                 }
               });
             });
 
             this.usersTableBody.querySelectorAll('.edit-user-btn').forEach(btn => {
-              btn.addEventListener('click', () => {
+              btn.addEventListener('click', async () => {
                 const user = store.getUserById(btn.dataset.id);
-                if (user) this.openUserModal(user);
+                if (user && (await this.requestAdminAuth())) {
+                  this.openUserModal(user);
+                }
               });
             });
 
             this.usersTableBody.querySelectorAll('.delete-user-btn').forEach(btn => {
-              btn.addEventListener('click', () => {
+              btn.addEventListener('click', async () => {
                 const user = store.getUserById(btn.dataset.id);
-                if (user && confirm(`Delete member "${user.name}"?`)) {
-                  this.requireAdminPassword((password) => {
+                if (user && (await this.requestAdminAuth())) {
+                  if (confirm(`Delete member "${user.name}"?`)) {
                     store.deleteUser(user.id);
-                    this.showToast(`Member ${user.name} deleted.`);
-                    store._syncAfterMutation(password);
-                  });
+                    await store.saveUsersToServer(this.adminSessionAuth);
+                    this.showToast(`Member ${user.name} deleted & synced to server.`);
+                  }
                 }
               });
             });
@@ -3610,31 +2493,38 @@
             return alert(`User ID "${userCode}" is already assigned to another member. User ID has automatically been updated to the next available ID "${nextFree}". Click Save again!`);
           }
 
-          this.requireAdminPassword((password) => {
-            try {
-              if (id) {
-                store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
-                this.showToast(`Member updated & schedule aligned`);
-              } else {
-                const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
-                this.showToast(`Member added & schedule chained`);
+          try {
+            if (id) {
+              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
+            } else {
+              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, startDay, startTime, durationHours, durationMinutes });
 
-                if (this.pendingQuickUserSelectForEntry) {
-                  store.updateEntry(this.pendingQuickUserSelectForEntry, { userId: newUser.id, isReviewed: true });
-                  this.pendingQuickUserSelectForEntry = null;
-                  this.showToast('New member registered & linked to entry! ✅');
-                } else if (this.pendingQuickUserSelect) {
-                  this.pendingQuickUserSelect = false;
-                  this.openEntryModal();
-                  this.entryUserSelect.value = newUser.id;
-                }
+              if (this.pendingQuickUserSelectForEntry) {
+                store.updateEntry(this.pendingQuickUserSelectForEntry, { userId: newUser.id, isReviewed: true });
+                this.pendingQuickUserSelectForEntry = null;
+              } else if (this.pendingQuickUserSelect) {
+                this.pendingQuickUserSelect = false;
+                this.openEntryModal();
+                this.entryUserSelect.value = newUser.id;
               }
-              this.closeModal(this.userModal);
-              store._syncAfterMutation(password);
-            } catch (err) {
-              alert(err.message);
             }
-          });
+
+            if (this.adminSessionAuth) {
+              store.saveUsersToServer(this.adminSessionAuth).then((res) => {
+                if (res.success) {
+                  this.showToast(`Member saved & synchronized to server ✅`);
+                } else {
+                  this.showToast(`Saved locally (Server sync warning: ${res.error}) ⚠️`);
+                }
+              });
+            } else {
+              this.showToast(`Member saved ✅`);
+            }
+
+            this.closeModal(this.userModal);
+          } catch (err) {
+            alert(err.message);
+          }
         }
 
         renderRegisterTab() {
@@ -4220,118 +3110,6 @@
             setTimeout(() => toast.remove(), 300);
           }, 2800);
         }
-
-        // ── Admin Password Modal ─────────────────────────────────────────────
-        requireAdminPassword(onSuccess) {
-          // If already authenticated in this session, skip modal
-          if (store.isAdminAuthenticated()) {
-            onSuccess('__session__');
-            return;
-          }
-
-          // Build/show modal
-          let modal = document.getElementById('adminPasswordModal');
-          if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'adminPasswordModal';
-            modal.style.cssText = `
-              position:fixed;inset:0;z-index:99999;
-              background:rgba(0,0,0,0.7);
-              display:flex;align-items:center;justify-content:center;
-              backdrop-filter:blur(6px);
-            `;
-            modal.innerHTML = `
-              <div style="
-                background:var(--bg-card,#1a2744);
-                border:1px solid var(--border-glass,rgba(255,255,255,0.12));
-                border-radius:16px;padding:2rem;width:90%;max-width:380px;
-                box-shadow:0 24px 64px rgba(0,0,0,0.5);
-                text-align:center;
-              ">
-                <div style="font-size:2.5rem;margin-bottom:0.5rem">🔐</div>
-                <h3 style="margin:0 0 0.25rem;color:var(--text-primary,#fff);font-size:1.2rem">Admin Access Required</h3>
-                <p style="color:var(--text-muted,#94a3b8);font-size:0.85rem;margin:0 0 1.25rem">
-                  Enter the admin password to modify the member list.
-                </p>
-                <input id="adminPwdInput" type="password" placeholder="Admin Password"
-                  style="
-                    width:100%;box-sizing:border-box;padding:0.75rem 1rem;
-                    border-radius:8px;border:1px solid var(--border-glass,rgba(255,255,255,0.15));
-                    background:rgba(255,255,255,0.06);color:var(--text-primary,#fff);
-                    font-size:1rem;margin-bottom:0.5rem;outline:none;
-                  "
-                />
-                <div id="adminPwdError" style="color:#ef4444;font-size:0.8rem;min-height:1.2rem;margin-bottom:0.75rem"></div>
-                <div style="display:flex;gap:0.75rem">
-                  <button id="adminPwdCancelBtn" style="
-                    flex:1;padding:0.7rem;border-radius:8px;border:1px solid var(--border-glass,rgba(255,255,255,0.15));
-                    background:transparent;color:var(--text-muted,#94a3b8);cursor:pointer;font-size:0.9rem;
-                  ">Cancel</button>
-                  <button id="adminPwdSubmitBtn" style="
-                    flex:2;padding:0.7rem;border-radius:8px;border:none;
-                    background:linear-gradient(135deg,#3b82f6,#6366f1);
-                    color:#fff;cursor:pointer;font-size:0.9rem;font-weight:600;
-                  ">✓ Confirm</button>
-                </div>
-              </div>
-            `;
-            document.body.appendChild(modal);
-          }
-
-          modal.style.display = 'flex';
-          const input = document.getElementById('adminPwdInput');
-          const errDiv = document.getElementById('adminPwdError');
-          const submitBtn = document.getElementById('adminPwdSubmitBtn');
-          const cancelBtn = document.getElementById('adminPwdCancelBtn');
-          input.value = '';
-          errDiv.textContent = '';
-          setTimeout(() => input.focus(), 100);
-
-          const cleanup = () => {
-            modal.style.display = 'none';
-            input.removeEventListener('keydown', onKey);
-          };
-
-          const onKey = (e) => { if (e.key === 'Enter') doSubmit(); };
-          input.addEventListener('keydown', onKey);
-
-          cancelBtn.onclick = cleanup;
-
-          const doSubmit = async () => {
-            const pwd = input.value.trim();
-            if (!pwd) { errDiv.textContent = 'Please enter the password.'; return; }
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Verifying...';
-            errDiv.textContent = '';
-
-            try {
-              const res = await fetch(AUTH_API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pwd })
-              });
-              const json = await res.json();
-
-              if (res.ok && json.success) {
-                store.setAdminAuthenticated();
-                cleanup();
-                onSuccess(pwd);
-              } else {
-                errDiv.textContent = json.error || 'Incorrect password. Access denied.';
-                input.value = '';
-                input.focus();
-              }
-            } catch (e) {
-              errDiv.textContent = 'Network error. Please try again.';
-            } finally {
-              submitBtn.disabled = false;
-              submitBtn.textContent = '✓ Confirm';
-            }
-          };
-
-          submitBtn.onclick = doSubmit;
-        }
       }
 
       if (document.readyState === 'loading') {
@@ -4342,6 +3120,4 @@
         window.app = new App();
       }
     })();
-  </script>
-</body>
-</html>
+  
