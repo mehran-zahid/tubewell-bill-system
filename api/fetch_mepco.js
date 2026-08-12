@@ -15,15 +15,18 @@ export default async function handler(req, res) {
 
   const cleanRef = String(rawRef).replace(/\D/g, '');
 
+  const targetUrl = `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`;
+
   const candidateUrls = [
-    `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
-    `http://ebill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
-    `https://api.allorigins.win/get?url=${encodeURIComponent(`http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`)}`
+    targetUrl,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+    `http://ebill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`
   ];
 
   const fetchOne = async (url) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
     try {
       const response = await fetch(url, {
         signal: controller.signal,
@@ -79,7 +82,6 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Try candidates in parallel or race first successful result
     const result = await Promise.any(candidateUrls.map(url => fetchOne(url)));
     return res.status(200).json(result);
   } catch (err) {
