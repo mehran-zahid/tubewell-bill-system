@@ -8,9 +8,30 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- html2pdf.js for A4 PDF Document Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #pdfReportTemplate, #pdfReportTemplate * {
+        visibility: visible !important;
+      }
+      #pdfReportTemplate {
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+    }
+
     :root {
       --bg-primary: #0b1329;
       --bg-secondary: #131d38;
@@ -895,7 +916,7 @@
             <h2 class="card-title">📋 Member Bill Breakdown Table</h2>
             <p class="card-subtitle">Calculated according to exact proportional usage & effective time slot hours formulas.</p>
           </div>
-          <button id="printReportBtn" class="btn btn-secondary btn-sm">🖨️ Print Report</button>
+          <button id="printReportBtn" class="btn btn-primary btn-sm" style="font-size: 0.9rem; font-weight: 700; gap: 0.4rem; padding: 0.5rem 0.85rem;">📄 Download PDF Report</button>
         </div>
 
         <div class="table-responsive">
@@ -960,6 +981,113 @@
         </div>
       </div>
     </section>
+
+    <!-- Hidden A4 PDF Report Template -->
+    <div id="pdfReportTemplate" style="display: none; width: 800px; padding: 2.5rem; background: #ffffff; color: #0f172a; font-family: 'Inter', system-ui, sans-serif; line-height: 1.4; box-sizing: border-box;">
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #059669; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <div style="font-size: 1.6rem; font-weight: 900; color: #059669; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em;">
+            ⚡ <span>TUBEWELL BILL SYSTEM</span>
+          </div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0.25rem; font-family: 'Noto Naskh Arabic', serif;">
+            ٹربائن بجلی و مرمت بل کی تفصیلی رپورٹ
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 1.15rem; font-weight: 900; color: #0284c7;" id="pdfBillingMonth">August 2026</div>
+          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem; font-weight: 600;">Date: <span id="pdfGenDate">12 Aug 2026</span></div>
+          <div style="font-weight: 800; color: #059669; font-size: 0.78rem; margin-top: 0.2rem; text-transform: uppercase;">Status: Verified Final</div>
+        </div>
+      </div>
+
+      <!-- Summary Metric Cards Banner -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
+          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Units Consumed</div>
+          <div style="font-size: 1.15rem; font-weight: 900; color: #0284c7; margin-top: 0.2rem;" id="pdfTotalUnits">0 Units</div>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
+          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">WAPDA Electricity Bill</div>
+          <div style="font-size: 1.15rem; font-weight: 900; color: #d97706; margin-top: 0.2rem;" id="pdfWapdaBill">Rs. 0</div>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; text-align: center;">
+          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fixed / Repair Expenses</div>
+          <div style="font-size: 1.15rem; font-weight: 900; color: #dc2626; margin-top: 0.2rem;" id="pdfFixedExpenses">Rs. 0</div>
+        </div>
+        <div style="background: #ecfdf5; border: 2px solid #059669; border-radius: 8px; padding: 0.75rem; text-align: center;">
+          <div style="font-size: 0.72rem; color: #047857; font-weight: 800; text-transform: uppercase;">Grand Collection Total</div>
+          <div style="font-size: 1.25rem; font-weight: 900; color: #059669; margin-top: 0.2rem;" id="pdfGrandTotal">Rs. 0</div>
+        </div>
+      </div>
+
+      <!-- Member Breakdown Table -->
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3rem;">
+          📋 Member Bill Breakdown (تفصیلی ممبر بل خلاصہ)
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <thead>
+            <tr style="background: #0f172a; color: #ffffff;">
+              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155; width: 35px;">#</th>
+              <th style="padding: 0.5rem; text-align: left; border: 1px solid #334155;">
+                <div>Member Name</div>
+                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">ممبر کا نام</div>
+              </th>
+              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
+                <div>Allocated Hours</div>
+                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">باری گھنٹے</div>
+              </th>
+              <th style="padding: 0.5rem; text-align: center; border: 1px solid #334155;">
+                <div>Units Consumed</div>
+                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">استعمال شدہ یونٹ</div>
+              </th>
+              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
+                <div>Electricity Share (Rs.)</div>
+                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">بجلی بل</div>
+              </th>
+              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155;">
+                <div>Fixed Expenses (Rs.)</div>
+                <div style="font-size: 0.75rem; color: #cbd5e1; font-family: 'Noto Naskh Arabic', serif;">دیگر اخراجات</div>
+              </th>
+              <th style="padding: 0.5rem; text-align: right; border: 1px solid #334155; background: #047857;">
+                <div>Total Payable (Rs.)</div>
+                <div style="font-size: 0.75rem; color: #ecfdf5; font-family: 'Noto Naskh Arabic', serif;">کل واجب الادا بل</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="pdfTableBody"></tbody>
+          <tfoot id="pdfTableFoot"></tfoot>
+        </table>
+      </div>
+
+      <!-- Itemized Expenses Section (If Any) -->
+      <div id="pdfItemizedExpensesSection" style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.2rem;">
+          🔧 Itemized Fixed & Maintenance Expenses (اخراجات تفصیل)
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+          <thead>
+            <tr style="background: #f1f5f9; color: #334155;">
+              <th style="padding: 0.4rem 0.6rem; text-align: left; border: 1px solid #cbd5e1;">Expense Description</th>
+              <th style="padding: 0.4rem 0.6rem; text-align: right; border: 1px solid #cbd5e1; width: 150px;">Amount (Rs.)</th>
+            </tr>
+          </thead>
+          <tbody id="pdfItemizedTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="border-top: 2px solid #cbd5e1; padding-top: 0.75rem; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #64748b;">
+        <div>
+          <div>📌 <strong>Notice:</strong> Please clear your respective bill amount before the due date.</div>
+          <div>Generated automatically by <strong>Tubewell Bill System</strong></div>
+        </div>
+        <div style="text-align: right;">
+          <div style="border-top: 1px dashed #94a3b8; padding-top: 0.2rem; margin-top: 1rem; width: 140px; font-weight: 700; color: #334155;">Authorized Signature</div>
+        </div>
+      </div>
+    </div>
 
   </main>
 
@@ -2610,7 +2738,7 @@
           this.whatsappLangSelect.addEventListener('change', () => this.renderWhatsAppPreview());
           this.copyWhatsappBtn.addEventListener('click', () => this.copyWhatsAppToClipboard());
           this.sendWhatsappBtn.addEventListener('click', () => this.openWhatsAppDirect());
-          this.printReportBtn.addEventListener('click', () => window.print());
+          this.printReportBtn.addEventListener('click', () => this.generatePdfReport());
 
           this.resetSampleDataBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to reset all system data to defaults?\n\n(Your saved Gemini API Key will NOT be deleted).')) {
@@ -3805,6 +3933,121 @@
         openWhatsAppDirect() {
           const text = encodeURIComponent(this.whatsappPreviewBox.textContent);
           window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        generatePdfReport() {
+          const users = store.getUsers();
+          const entries = store.getEntries();
+          const expenses = store.getExpenses();
+          const calc = calculateBilling(users, entries, expenses);
+
+          const template = document.getElementById('pdfReportTemplate');
+          if (!template) return window.print();
+
+          // 1. Populate Headers & Banner
+          const monthLabel = calc.billingMonthLabel || 'August 2026';
+          const monthElem = document.getElementById('pdfBillingMonth');
+          const dateElem = document.getElementById('pdfGenDate');
+          const totalUnitsElem = document.getElementById('pdfTotalUnits');
+          const wapdaBillElem = document.getElementById('pdfWapdaBill');
+          const fixedExpensesElem = document.getElementById('pdfFixedExpenses');
+          const grandTotalElem = document.getElementById('pdfGrandTotal');
+
+          if (monthElem) monthElem.textContent = monthLabel;
+          if (dateElem) dateElem.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          if (totalUnitsElem) totalUnitsElem.textContent = `${calc.totalUnits.toLocaleString()} Units`;
+          if (wapdaBillElem) wapdaBillElem.textContent = `Rs. ${Math.round(calc.wapdaBill).toLocaleString()}`;
+          if (fixedExpensesElem) fixedExpensesElem.textContent = `Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}`;
+          if (grandTotalElem) grandTotalElem.textContent = `Rs. ${Math.round(calc.grandTotal).toLocaleString()}`;
+
+          // 2. Populate Member Table
+          const tbody = document.getElementById('pdfTableBody');
+          const tfoot = document.getElementById('pdfTableFoot');
+          if (tbody) tbody.innerHTML = '';
+          if (tfoot) tfoot.innerHTML = '';
+
+          if (tbody) {
+            if (calc.userBreakdowns.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: #64748b;">No registered members to display.</td></tr>`;
+            } else {
+              calc.userBreakdowns.forEach((u, idx) => {
+                const tr = document.createElement('tr');
+                tr.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                tr.innerHTML = `
+                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700;">${idx + 1}</td>
+                  <td style="padding: 0.45rem; border: 1px solid #e2e8f0;">
+                    <div style="font-weight: 700; color: #0f172a;">${u.fullName || u.nameEn}</div>
+                  </td>
+                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0;">${u.weeklyHours ? u.weeklyHours.toFixed(1) : 0} hrs</td>
+                  <td style="padding: 0.45rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 700; color: #0284c7;">${u.unitsConsumed}</td>
+                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.wapdaShare).toLocaleString()}</td>
+                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0;">Rs. ${Math.round(u.fixedShare).toLocaleString()}</td>
+                  <td style="padding: 0.45rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 800; color: #047857; background: #ecfdf5;">Rs. ${Math.round(u.totalPayable).toLocaleString()}</td>
+                `;
+                tbody.appendChild(tr);
+              });
+
+              if (tfoot) {
+                const footTr = document.createElement('tr');
+                footTr.style.background = '#f1f5f9';
+                footTr.style.fontWeight = '800';
+                footTr.innerHTML = `
+                  <td colspan="2" style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">TOTAL (کل توثیق):</td>
+                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1;">${calc.totalWeeklyHours ? calc.totalWeeklyHours.toFixed(1) : 0} hrs</td>
+                  <td style="padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; color: #0284c7;">${calc.totalUnits.toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.wapdaBill).toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1;">Rs. ${Math.round(calc.totalFixedExpenses).toLocaleString()}</td>
+                  <td style="padding: 0.5rem; text-align: right; border: 1px solid #cbd5e1; color: #059669; background: #d1fae5; font-size: 0.95rem;">Rs. ${Math.round(calc.grandTotal).toLocaleString()}</td>
+                `;
+                tfoot.appendChild(footTr);
+              }
+            }
+          }
+
+          // 3. Populate Itemized Expenses (If Any)
+          const itemizedSec = document.getElementById('pdfItemizedExpensesSection');
+          const itemizedBody = document.getElementById('pdfItemizedTableBody');
+          if (itemizedBody) itemizedBody.innerHTML = '';
+
+          if (expenses.fixedExpenses && expenses.fixedExpenses.length > 0 && itemizedSec && itemizedBody) {
+            itemizedSec.style.display = 'block';
+            expenses.fixedExpenses.forEach((exp, idx) => {
+              const tr = document.createElement('tr');
+              tr.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+              tr.innerHTML = `
+                <td style="padding: 0.4rem 0.6rem; border: 1px solid #e2e8f0; font-weight: 600;">${exp.description}</td>
+                <td style="padding: 0.4rem 0.6rem; text-align: right; border: 1px solid #e2e8f0; font-weight: 700; color: #dc2626;">Rs. ${Math.round(exp.amount).toLocaleString()}</td>
+              `;
+              itemizedBody.appendChild(tr);
+            });
+          } else if (itemizedSec) {
+            itemizedSec.style.display = 'none';
+          }
+
+          // 4. Trigger html2pdf export or fallback print
+          if (window.html2pdf) {
+            this.showToast('📄 Generating high-resolution A4 PDF document...');
+            template.style.display = 'block';
+            
+            const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
+            const opt = {
+              margin: [8, 8, 8, 8],
+              filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2, useCORS: true, logging: false },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            window.html2pdf().set(opt).from(template).save().then(() => {
+              template.style.display = 'none';
+              this.showToast('✅ PDF Report downloaded successfully!');
+            }).catch(err => {
+              template.style.display = 'none';
+              window.print();
+            });
+          } else {
+            window.print();
+          }
         }
 
         openModal(modal) { modal.classList.add('active'); }
