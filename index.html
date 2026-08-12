@@ -1618,7 +1618,36 @@
         constructor() {
           this.listeners = [];
           this.sessionKey = '';
+          this.sanitizeLocalStorage();
           this.state = this.loadState();
+          this.saveState();
+        }
+
+        sanitizeLocalStorage() {
+          try {
+            localStorage.removeItem('gemini_api_key');
+            sessionStorage.removeItem('gemini_api_key');
+
+            const allKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k) allKeys.push(k);
+            }
+
+            for (const key of allKeys) {
+              const raw = localStorage.getItem(key);
+              if (raw && (raw.includes('geminiApiKey') || raw.includes('sessionOnlyKey'))) {
+                try {
+                  const parsed = JSON.parse(raw);
+                  if (parsed && typeof parsed === 'object') {
+                    delete parsed.geminiApiKey;
+                    delete parsed.sessionOnlyKey;
+                    localStorage.setItem(key, JSON.stringify(parsed));
+                  }
+                } catch (e) {}
+              }
+            }
+          } catch (e) {}
         }
 
         getDefaultState() {
@@ -1633,12 +1662,9 @@
 
         loadState() {
           try {
-            // Security: Purge any legacy API keys stored in local browser storage
-            localStorage.removeItem('gemini_api_key');
-            sessionStorage.removeItem('gemini_api_key');
-
             const keysToTry = [
               STORAGE_KEY,
+              'turbine_bill_system_v36_clean_import_test',
               'tubewell_bill_system_v25_ai_vision_multiport',
               'tubewell_bill_system_v24_ai_ocr_only',
               'tubewell_bill_system_v23_dynamic_only',
