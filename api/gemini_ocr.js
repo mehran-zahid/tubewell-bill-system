@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({
       status: 'error',
-      error: 'GEMINI_API_KEY environment variable is not configured on Vercel backend. Please go to Vercel Project Settings -> Environment Variables, add GEMINI_API_KEY or VITE_GEMINI_API_KEY, select Production, and redeploy.'
+      error: 'GEMINI_API_KEY environment variable is missing on Vercel backend. Please add GEMINI_API_KEY under Vercel Project Settings -> Environment Variables and redeploy.'
     });
   }
 
@@ -75,31 +75,50 @@ No markdown codeblocks, no explanatory text outside JSON.
       }
     };
 
-    // Direct 1-step call to primary Google Gemini 1.5 Flash Vision Endpoint
-    const primaryUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    // 1. Discover active vision models for this specific API Key
+    let activeModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-pro-vision'];
+    try {
+      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (listResp.ok) {
+        const listData = await listResp.json();
+        if (listData && Array.isArray(listData.models)) {
+          const found = listData.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace(/^models\//, ''));
+          if (found.length > 0) activeModels = found;
+        }
+      }
+    } catch (e) {}
 
-    let response = await fetch(primaryUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiPayload)
-    });
+    let response = null;
+    let lastErrText = '';
 
-    if (!response.ok && response.status === 404) {
-      response = await fetch(fallbackUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(geminiPayload)
-      });
+    for (const mName of activeModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiPayload)
+        });
+
+        if (res.ok) {
+          response = res;
+          break;
+        } else {
+          lastErrText = await res.text();
+        }
+      } catch (e) {
+        lastErrText = e.message;
+      }
     }
 
-    if (!response.ok) {
-      const errText = await response.text();
-      let msg = `Google Gemini API Error (HTTP ${response.status}): ${errText}`;
+    if (!response) {
+      let msg = `Google Gemini Error: ${lastErrText}`;
       try {
-        const errObj = JSON.parse(errText);
+        const errObj = JSON.parse(lastErrText);
         if (errObj && errObj.error && errObj.error.message) {
-          msg = `Google Gemini Error (${errObj.error.status || response.status}): ${errObj.error.message}`;
+          msg = `Google Gemini Error (${errObj.error.status || 'API_ERROR'}): ${errObj.error.message}`;
         }
       } catch (e) {}
 
