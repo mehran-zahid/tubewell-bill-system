@@ -2492,13 +2492,6 @@
 
           this.resetSampleDataBtn = document.getElementById('resetSampleDataBtn');
           this.themeToggleBtn = document.getElementById('themeToggleBtn');
-          this.settingsBtn = document.getElementById('settingsBtn');
-          this.settingsModal = document.getElementById('settingsModal');
-          this.geminiKeyInput = document.getElementById('geminiKeyInput');
-          this.sessionOnlyKeyCheckbox = document.getElementById('sessionOnlyKeyCheckbox');
-          this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
-          this.clearKeyBtn = document.getElementById('clearKeyBtn');
-          this.resetDataBtn = document.getElementById('resetDataBtn');
         }
 
         getModalStartTime24() {
@@ -2739,37 +2732,15 @@
           this.sendWhatsappBtn.addEventListener('click', () => this.openWhatsAppDirect());
           this.printReportBtn.addEventListener('click', () => this.generatePdfReport());
 
-          this.resetSampleDataBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to reset all system data to defaults?\n\n(Your saved Gemini API Key will NOT be deleted).')) {
-              store.resetToDefaults();
-              this.wapdaRefNoInput.value = '';
-              this.wapdaBillInput.value = '';
-              this.billMetadataBox.classList.add('hidden');
-              this.mepcoDynamicCard.classList.add('hidden');
-              this.closeModal(this.settingsModal);
-              this.showToast('Cleared all data. Ready for fresh inputs!');
-            }
-          });
-
-          this.settingsBtn.addEventListener('click', () => {
-            this.geminiKeyInput.value = store.getGeminiApiKey();
-            this.sessionOnlyKeyCheckbox.checked = store.state.sessionOnlyKey || false;
-            this.openModal(this.settingsModal);
-          });
-
-          this.saveSettingsBtn.addEventListener('click', () => {
-            const keyVal = this.geminiKeyInput.value;
-            const isSessionOnly = this.sessionOnlyKeyCheckbox.checked;
-            store.setGeminiApiKey(keyVal, isSessionOnly);
-            this.closeModal(this.settingsModal);
-            this.showToast('Settings saved locally on your device!');
-          });
-
-          this.clearKeyBtn.addEventListener('click', () => {
-            store.setGeminiApiKey('', false);
-            this.geminiKeyInput.value = '';
-            this.showToast('API Key permanently removed.');
-          });
+          if (this.resetSampleDataBtn) {
+            this.resetSampleDataBtn.addEventListener('click', () => {
+              if (confirm('Are you sure you want to reset all system data to defaults?')) {
+                store.resetToDefaults();
+                if (this.wapdaBillInput) this.wapdaBillInput.value = '';
+                this.showToast('Cleared all data. Ready for fresh inputs!');
+              }
+            });
+          }
 
           this.themeToggleBtn.addEventListener('click', () => {
             const current = store.state.theme;
