@@ -81,7 +81,18 @@ RULES:
       }
     };
 
-    // Dynamically query ListModels from Google to discover exact allowed models for this key
+    // Priority Multimodal Vision Models enabled on Google AI Studio
+    const priorityVisionModels = [
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest',
+      'gemini-pro-latest'
+    ];
+
+    // Dynamically query ListModels from Google
     let discoveredModels = [];
     try {
       const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
@@ -90,20 +101,15 @@ RULES:
         if (listData && Array.isArray(listData.models)) {
           discoveredModels = listData.models
             .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-            .map(m => m.name.replace(/^models\//, ''));
-          console.log('[OCR DISCOVERED MODELS]', discoveredModels.join(', '));
+            .map(m => m.name.replace(/^models\//, ''))
+            .filter(m => !m.includes('tts') && !m.includes('clip') && !m.includes('gemma') && !m.includes('research') && !m.includes('robotics'));
+          console.log('[OCR DISCOVERED VISION MODELS]', discoveredModels.join(', '));
         }
-      } else {
-        const listErr = await listRes.text();
-        console.warn('[OCR LIST MODELS WARN]', listRes.status, listErr);
       }
-    } catch (e) {
-      console.warn('[OCR LIST MODELS EXCEPTION]', e.message);
-    }
+    } catch (e) {}
 
-    // Combine discovered models with default Google AI Studio models
-    const fallbackList = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-exp'];
-    const targetModels = Array.from(new Set([...discoveredModels, ...fallbackList]));
+    // Put top priority vision models first, followed by remaining valid vision models
+    const targetModels = Array.from(new Set([...priorityVisionModels, ...discoveredModels]));
 
     let response = null;
     let lastErrText = '';
@@ -113,7 +119,7 @@ RULES:
       try {
         const fetchStart = Date.now();
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
-        console.log(`[OCR FETCH] Calling model: ${mName}...`);
+        console.log(`[OCR FETCH] Calling Vision Model: ${mName}...`);
         
         const res = await fetch(url, {
           method: 'POST',
@@ -122,10 +128,18 @@ RULES:
         });
 
         if (res.ok) {
-          response = res;
-          usedModel = mName;
-          console.log(`[OCR SUCCESS MODEL] Model ${mName} responded OK in ${Date.now() - fetchStart}ms.`);
-          break;
+          const textRes = await res.text();
+          try {
+            const jsonRes = JSON.parse(textRes);
+            const rawPartsText = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            // Verify model actually returned JSON data (not empty 0 rows)
+            if (rawPartsText && rawPartsText.length > 5) {
+              response = jsonRes;
+              usedModel = mName;
+              console.log(`[OCR SUCCESS VISION MODEL] Model ${mName} responded in ${Date.now() - fetchStart}ms.`);
+              break;
+            }
+          } catch (e) {}
         } else {
           lastErrText = await res.text();
           console.warn(`[OCR WARN MODEL] Model ${mName} returned HTTP ${res.status}: ${lastErrText}`);
@@ -152,8 +166,7 @@ RULES:
       });
     }
 
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     
     let parsedRows = [];
     try {
@@ -169,7 +182,7 @@ RULES:
     }
 
     const totalDuration = Date.now() - startTime;
-    console.log(`[OCR COMPLETE] Model: ${usedModel} | Duration: ${totalDuration}ms | Rows Extracted: ${parsedRows.length}`);
+    console.log(`[OCR COMPLETE SUCCESS] Model: ${usedModel} | Duration: ${totalDuration}ms | Rows Extracted: ${parsedRows.length}`);
 
     return res.status(200).json({
       status: 'success',
