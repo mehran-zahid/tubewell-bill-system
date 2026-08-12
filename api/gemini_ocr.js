@@ -42,22 +42,25 @@ export default async function handler(req, res) {
     console.log(`[OCR START] Received image scan request (${estimatedKb} KB).`);
 
     const promptText = `
-You are an expert OCR & Meter Reading Data Assistant for Pakistan Agricultural Tubewell Registers.
-Extract all member reading entries from this register log image into JSON.
+You are an expert OCR & Meter Reading Data Assistant for Pakistan Agricultural Tubewell Registers (مشترکہ ٹربائن).
+Carefully read the handwritten register sheet in the image and extract all member log entries.
 
-RULES:
-1. Identify member names (English or Urdu), User ID/Code if available, and start/end meter readings.
-2. Return ONLY a valid JSON array of objects with the following schema:
+INSTRUCTIONS:
+1. Extract Member Name (Urdu or English transliteration), Start Reading (شروع), End Reading (ختم), and Date (تاریخ) if visible.
+2. Return ONLY a valid JSON array of objects with the exact schema below:
+
 [
   {
     "userCode": "01",
-    "nameEn": "Malik Tariq",
-    "nameUr": "ملک طارق",
-    "startReading": 1240,
-    "endReading": 1350,
-    "notes": "Normal run"
+    "nameEn": "Munir Ahmad",
+    "nameUr": "منیر احمد",
+    "startReading": 1156421,
+    "endReading": 1156535,
+    "notes": "13-7-26"
   }
 ]
+
+DO NOT wrap in object keys like {"entries": [...]}. Return ONLY the JSON array.
 `;
 
     const geminiPayload = {
@@ -77,7 +80,7 @@ RULES:
       generationConfig: {
         temperature: 0.1,
         responseMimeType: 'application/json',
-        maxOutputTokens: 1000
+        maxOutputTokens: 2000
       }
     };
 
@@ -87,35 +90,14 @@ RULES:
       'gemini-3.5-flash',
       'gemini-3.5-flash-lite',
       'gemini-3.1-flash-lite',
-      'gemini-flash-latest',
-      'gemini-flash-lite-latest',
-      'gemini-pro-latest'
+      'gemini-flash-latest'
     ];
-
-    // Dynamically query ListModels from Google
-    let discoveredModels = [];
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        if (listData && Array.isArray(listData.models)) {
-          discoveredModels = listData.models
-            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-            .map(m => m.name.replace(/^models\//, ''))
-            .filter(m => !m.includes('tts') && !m.includes('clip') && !m.includes('gemma') && !m.includes('research') && !m.includes('robotics'));
-          console.log('[OCR DISCOVERED VISION MODELS]', discoveredModels.join(', '));
-        }
-      }
-    } catch (e) {}
-
-    // Put top priority vision models first, followed by remaining valid vision models
-    const targetModels = Array.from(new Set([...priorityVisionModels, ...discoveredModels]));
 
     let response = null;
     let lastErrText = '';
     let usedModel = '';
 
-    for (const mName of targetModels) {
+    for (const mName of priorityVisionModels) {
       try {
         const fetchStart = Date.now();
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
@@ -132,7 +114,6 @@ RULES:
           try {
             const jsonRes = JSON.parse(textRes);
             const rawPartsText = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            // Verify model actually returned JSON data (not empty 0 rows)
             if (rawPartsText && rawPartsText.length > 5) {
               response = jsonRes;
               usedModel = mName;
@@ -167,12 +148,20 @@ RULES:
     }
 
     const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-    
+    console.log('[RAW AI RESPONSE]', rawText);
+
     let parsedRows = [];
     try {
       const cleanJson = rawText.replace(/^```json\s*/m, '').replace(/^```\s*/m, '').replace(/```$/m, '').trim();
-      parsedRows = JSON.parse(cleanJson);
+      const parsed = JSON.parse(cleanJson);
+      
+      if (Array.isArray(parsed)) {
+        parsedRows = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        parsedRows = parsed.entries || parsed.rows || parsed.members || parsed.data || [];
+      }
     } catch (e) {
+      console.warn('[JSON PARSE WARN] Falling back to regex match:', e.message);
       const match = rawText.match(/\[[\s\S]*\]/);
       if (match) {
         try {
@@ -181,14 +170,32 @@ RULES:
       }
     }
 
+    // Normalize property names (startReading / endReading / nameEn / nameUr)
+    const normalizedRows = (Array.isArray(parsedRows) ? parsedRows : []).map((row, idx) => {
+      const start = Number(row.startReading || row.start || row.start_reading || row.from || 0);
+      const end = Number(row.endReading || row.end || row.end_reading || row.to || 0);
+      const nameUr = row.nameUr || row.name_ur || row.nameUrdu || row.name || '';
+      const nameEn = row.nameEn || row.name_en || row.nameEnglish || nameUr || `Member ${idx + 1}`;
+      const userCode = String(row.userCode || row.user_code || row.id || (idx + 1)).padStart(2, '0');
+
+      return {
+        userCode,
+        nameEn,
+        nameUr,
+        startReading: start,
+        endReading: end,
+        notes: row.notes || row.date || ''
+      };
+    });
+
     const totalDuration = Date.now() - startTime;
-    console.log(`[OCR COMPLETE SUCCESS] Model: ${usedModel} | Duration: ${totalDuration}ms | Rows Extracted: ${parsedRows.length}`);
+    console.log(`[OCR COMPLETE SUCCESS] Model: ${usedModel} | Duration: ${totalDuration}ms | Rows Extracted: ${normalizedRows.length}`);
 
     return res.status(200).json({
       status: 'success',
       modelUsed: usedModel,
-      rowsCount: Array.isArray(parsedRows) ? parsedRows.length : 0,
-      rows: Array.isArray(parsedRows) ? parsedRows : [],
+      rowsCount: normalizedRows.length,
+      rows: normalizedRows,
       rawText: rawText
     });
   } catch (err) {
