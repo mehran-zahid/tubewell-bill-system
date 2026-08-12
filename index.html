@@ -5067,46 +5067,47 @@
           try {
             const cleanMonthName = (monthLabel || 'August_2026').replace(/\s+/g, '_');
 
-            // Create temporary clean print container in DOM for html2canvas
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-            container.style.top = '0px';
-            container.style.left = '0px';
-            container.style.width = '730px';
-            container.style.background = '#ffffff';
-            container.style.color = '#0f172a';
-            container.style.zIndex = '9999999';
-            container.style.opacity = '1';
-            container.style.visibility = 'visible';
+            // 1. Create temporary offscreen print wrapper
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'fixed';
+            wrapper.style.left = '0';
+            wrapper.style.top = '0';
+            wrapper.style.width = '100%';
+            wrapper.style.height = '100%';
+            wrapper.style.background = '#ffffff';
+            wrapper.style.zIndex = '99999999';
+            wrapper.style.overflow = 'auto';
+            wrapper.style.padding = '0';
+            wrapper.style.margin = '0';
 
             const clone = template.cloneNode(true);
-            clone.style.position = 'static';
-            clone.style.left = 'auto';
-            clone.style.top = 'auto';
+            clone.style.position = 'relative';
+            clone.style.left = '0';
+            clone.style.top = '0';
             clone.style.width = '100%';
-            clone.style.zIndex = 'auto';
+            clone.style.maxWidth = '800px';
+            clone.style.margin = '0 auto';
+            clone.style.padding = '20px';
+            clone.style.background = '#ffffff';
+            clone.style.boxSizing = 'border-box';
             clone.style.display = 'block';
 
-            container.appendChild(clone);
-            document.body.appendChild(container);
+            wrapper.appendChild(clone);
+            document.body.appendChild(wrapper);
 
             window.scrollTo(0, 0);
 
             if (window.html2pdf) {
               const opt = {
-                margin: [6, 6, 6, 6],
+                margin: [8, 8, 8, 8],
                 filename: `Tubewell_Bill_${cleanMonthName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: {
                   scale: 2,
                   useCORS: true,
-                  logging: false,
-                  scrollX: 0,
-                  scrollY: 0,
-                  windowWidth: 750
+                  logging: false
                 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
               };
 
               // Wait 250ms to ensure DOM layout engine renders clone completely
@@ -5114,13 +5115,13 @@
 
               await window.html2pdf().set(opt).from(clone).save();
 
-              if (document.body.contains(container)) {
-                document.body.removeChild(container);
+              if (document.body.contains(wrapper)) {
+                document.body.removeChild(wrapper);
               }
               this.showToast('✅ PDF Report downloaded successfully!');
             } else {
-              if (document.body.contains(container)) {
-                document.body.removeChild(container);
+              if (document.body.contains(wrapper)) {
+                document.body.removeChild(wrapper);
               }
               window.print();
             }
