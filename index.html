@@ -2842,10 +2842,20 @@
 
         async compressImageForOcr(file, maxDim = 1600, quality = 0.85) {
           return new Promise((resolve) => {
+            if (!file) return resolve('');
+
+            const timer = setTimeout(() => {
+              const r = new FileReader();
+              r.onload = (e) => resolve(e.target.result);
+              r.onerror = () => resolve('');
+              r.readAsDataURL(file);
+            }, 3000);
+
             const reader = new FileReader();
             reader.onload = (e) => {
               const img = new Image();
               img.onload = () => {
+                clearTimeout(timer);
                 let w = img.width;
                 let h = img.height;
                 if (w > maxDim || h > maxDim) {
@@ -2864,8 +2874,15 @@
                 ctx.drawImage(img, 0, 0, w, h);
                 resolve(canvas.toDataURL('image/jpeg', quality));
               };
-              img.onerror = () => resolve(e.target.result);
+              img.onerror = () => {
+                clearTimeout(timer);
+                resolve(e.target.result);
+              };
               img.src = e.target.result;
+            };
+            reader.onerror = () => {
+              clearTimeout(timer);
+              resolve('');
             };
             reader.readAsDataURL(file);
           });
@@ -2873,6 +2890,11 @@
 
         async processStagedAiScan() {
           if (this.stagedFiles.length === 0) return;
+
+          if (this.startAiScanBtn) {
+            this.startAiScanBtn.disabled = true;
+            this.startAiScanBtn.innerHTML = '⏳ Extracting Readings...';
+          }
 
           this.ocrProgressBox.classList.remove('hidden');
           this.ocrPreviewCard.classList.remove('hidden');
@@ -2884,49 +2906,57 @@
           const filesToProcess = [...this.stagedFiles];
           this.rawOcrTextarea.value = '';
 
-          for (let i = 0; i < filesToProcess.length; i++) {
-            const currentPct = Math.round((i / filesToProcess.length) * 100);
-            this.batchProgressBar.style.width = `${currentPct}%`;
-            this.batchPercentBadge.textContent = `${currentPct}%`;
+          try {
+            for (let i = 0; i < filesToProcess.length; i++) {
+              const currentPct = Math.round((i / filesToProcess.length) * 100);
+              this.batchProgressBar.style.width = `${currentPct}%`;
+              this.batchPercentBadge.textContent = `${currentPct}%`;
 
-            const currentCard = document.getElementById(`thumb-card-${i}`);
-            const currentStatus = document.getElementById(`thumb-status-${i}`);
-            if (currentCard) {
-              currentCard.style.borderColor = '#3b82f6';
-            }
-            if (currentStatus) {
-              currentStatus.className = 'badge badge-info';
-              currentStatus.textContent = '🔄 Reading...';
-            }
+              const currentCard = document.getElementById(`thumb-card-${i}`);
+              const currentStatus = document.getElementById(`thumb-status-${i}`);
+              if (currentCard) currentCard.style.borderColor = '#3b82f6';
+              if (currentStatus) {
+                currentStatus.className = 'badge badge-info';
+                currentStatus.textContent = '🔄 Reading...';
+              }
 
-            if (i > 0) {
-              this.ocrProgressSub.textContent = `Processing pages...`;
-              await new Promise(r => setTimeout(r, 1000));
-            }
+              if (i > 0) {
+                this.ocrProgressSub.textContent = `Processing pages...`;
+                await new Promise(r => setTimeout(r, 1000));
+              }
 
-            const file = filesToProcess[i];
-            this.ocrProgressText.textContent = `Scanning Page ${i + 1} of ${filesToProcess.length}: "${file.name}"...`;
+              const file = filesToProcess[i];
+              this.ocrProgressText.textContent = `Scanning Page ${i + 1} of ${filesToProcess.length}: "${file.name}"...`;
 
-            // Compress image client-side to ensure payload fits comfortably within Vercel limits (<500KB)
-            const imageBase64 = await this.compressImageForOcr(file, 1600, 0.85);
+              const imageBase64 = await this.compressImageForOcr(file, 1600, 0.85);
+              if (!imageBase64) {
+                if (currentStatus) {
+                  currentStatus.className = 'badge badge-danger';
+                  currentStatus.textContent = '❌ Invalid Image';
+                }
+                continue;
+              }
 
-            this.uploadedImageDisplay.src = imageBase64;
+              this.uploadedImageDisplay.src = imageBase64;
 
-            try {
               let aiRows = null;
               let rawOutput = '';
               let errorMessage = '';
 
-              // Call secure Vercel Serverless Endpoint /api/gemini_ocr
               try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 35000);
+
                 const response = await fetch('/api/gemini_ocr', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     imageB64: imageBase64,
                     mimeType: 'image/jpeg'
-                  })
+                  }),
+                  signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 const ocrRes = await response.json().catch(() => null);
 
@@ -2937,7 +2967,7 @@
                   errorMessage = (ocrRes && ocrRes.error) ? ocrRes.error : `Server HTTP ${response.status}`;
                 }
               } catch (e) {
-                errorMessage = e.message;
+                errorMessage = e.name === 'AbortError' ? 'Network timeout after 35s. Please retry.' : e.message;
               }
 
               if (aiRows && Array.isArray(aiRows) && aiRows.length > 0) {
@@ -2975,9 +3005,7 @@
                   rawText: rawOutput || JSON.stringify(aiRows, null, 2)
                 });
 
-                if (currentCard) {
-                  currentCard.style.borderColor = '#10b981';
-                }
+                if (currentCard) currentCard.style.borderColor = '#10b981';
                 if (currentStatus) {
                   currentStatus.className = 'badge badge-success';
                   currentStatus.textContent = `✅ ${entriesToInsert.length} Rows`;
@@ -2993,24 +3021,26 @@
                 }
                 this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ❌ Error: ${errorMessage || 'Could not extract rows'}`;
               }
-            } catch (err) {
-              if (currentStatus) {
-                currentStatus.className = 'badge badge-danger';
-                currentStatus.textContent = `❌ Error`;
-              }
-              this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ❌ Error: ${err.message}`;
             }
-          }
+          } catch (globalErr) {
+            console.error('OCR Process Error:', globalErr);
+            this.showToast(`❌ Scan Error: ${globalErr.message}`);
+          } finally {
+            this.batchProgressBar.style.width = '100%';
+            this.batchPercentBadge.textContent = '100%';
+            this.renderPageSelectorTabs();
+            this.ocrProgressBox.classList.add('hidden');
 
-          this.batchProgressBar.style.width = '100%';
-          this.batchPercentBadge.textContent = '100%';
-          this.renderPageSelectorTabs();
+            if (this.startAiScanBtn) {
+              this.startAiScanBtn.disabled = false;
+              this.startAiScanBtn.innerHTML = '⚡ Start AI Reading Extraction';
+            }
 
-          this.ocrProgressBox.classList.add('hidden');
-          if (totalUploadedRows > 0) {
-            this.showToast(`🎉 Added ${totalUploadedRows} entries from ${filesToProcess.length} photo(s)!`);
-          } else {
-            this.showToast(`⚠️ Check API Key or try another register photo.`);
+            if (totalUploadedRows > 0) {
+              this.showToast(`🎉 Added ${totalUploadedRows} entries from ${filesToProcess.length} photo(s)!`);
+            } else {
+              this.showToast(`⚠️ Check API Key or try another register photo.`);
+            }
           }
         }
 
