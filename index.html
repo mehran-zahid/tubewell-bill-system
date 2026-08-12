@@ -1197,18 +1197,24 @@
                 <input type="text" id="tenantNameUrInput" class="form-control" placeholder="e.g. علی رضا" style="font-family: var(--font-urdu);">
               </div>
             </div>
-            <div class="grid-3">
+            <div class="grid-2 mb-2">
               <div>
                 <label class="form-label">Thekedar Phone (فون)</label>
                 <input type="text" id="tenantPhoneInput" class="form-control" placeholder="e.g. 03001234567">
               </div>
               <div>
-                <label class="form-label">Leased Hours (گھنٹے)</label>
-                <input type="number" step="0.1" min="0" id="tenantLeasedHoursInput" class="form-control" placeholder="e.g. 1.0">
-              </div>
-              <div>
                 <label class="form-label">Leased Acres (ایکڑ)</label>
                 <input type="number" step="0.1" min="0" id="tenantLeasedAcresInput" class="form-control" placeholder="e.g. 1.0">
+              </div>
+            </div>
+            <div class="grid-2 mb-2">
+              <div>
+                <label class="form-label">Leased Hours (گھنٹے)</label>
+                <input type="number" min="0" id="tenantLeasedHoursInput" class="form-control" placeholder="e.g. 1">
+              </div>
+              <div>
+                <label class="form-label">Leased Minutes (منٹ)</label>
+                <input type="number" min="0" max="59" step="5" id="tenantLeasedMinutesInput" class="form-control" placeholder="e.g. 30">
               </div>
             </div>
           </div>
@@ -1896,7 +1902,9 @@
             tenantNameEn: (user.tenantNameEn || user.tenantName || '').trim(),
             tenantNameUr: (user.tenantNameUr || '').trim(),
             tenantPhone: (user.tenantPhone || '').trim(),
-            tenantLeasedHours: parseFloat(user.tenantLeasedHours) || 0,
+            tenantLeasedHours: parseInt(user.tenantLeasedHours, 10) || 0,
+            tenantLeasedMinutes: parseInt(user.tenantLeasedMinutes, 10) || 0,
+            tenantTotalLeasedMins: (parseInt(user.tenantLeasedHours, 10) || 0) * 60 + (parseInt(user.tenantLeasedMinutes, 10) || 0),
             tenantLeasedAcres: parseFloat(user.tenantLeasedAcres) || 0,
             userType: user.userType || 'internal',
             startDay: user.startDay || 'Sunday',
@@ -1953,7 +1961,9 @@
               tenantNameEn: updatedFields.tenantNameEn !== undefined ? updatedFields.tenantNameEn.trim() : (current.tenantNameEn || current.tenantName || ''),
               tenantNameUr: updatedFields.tenantNameUr !== undefined ? updatedFields.tenantNameUr.trim() : (current.tenantNameUr || ''),
               tenantPhone: updatedFields.tenantPhone !== undefined ? updatedFields.tenantPhone.trim() : (current.tenantPhone || ''),
-              tenantLeasedHours: updatedFields.tenantLeasedHours !== undefined ? (parseFloat(updatedFields.tenantLeasedHours) || 0) : (current.tenantLeasedHours || 0),
+              tenantLeasedHours: updatedFields.tenantLeasedHours !== undefined ? (parseInt(updatedFields.tenantLeasedHours, 10) || 0) : (current.tenantLeasedHours || 0),
+              tenantLeasedMinutes: updatedFields.tenantLeasedMinutes !== undefined ? (parseInt(updatedFields.tenantLeasedMinutes, 10) || 0) : (current.tenantLeasedMinutes || 0),
+              tenantTotalLeasedMins: ((updatedFields.tenantLeasedHours !== undefined ? (parseInt(updatedFields.tenantLeasedHours, 10) || 0) : (current.tenantLeasedHours || 0)) * 60) + ((updatedFields.tenantLeasedMinutes !== undefined ? (parseInt(updatedFields.tenantLeasedMinutes, 10) || 0) : (current.tenantLeasedMinutes || 0))),
               tenantLeasedAcres: updatedFields.tenantLeasedAcres !== undefined ? (parseFloat(updatedFields.tenantLeasedAcres) || 0) : (current.tenantLeasedAcres || 0),
               userType: updatedFields.userType || current.userType || 'internal',
               durationHours: durationHours,
@@ -2139,7 +2149,8 @@
           const tEn = (user.tenantNameEn || user.tenantName || '').trim();
           const tUr = (user.tenantNameUr || '').trim();
           const hasTenant = !!user.isLeased && (!!tEn || !!tUr || !!user.linkedMemberId);
-          const tenantLeasedHours = hasTenant ? Math.min(totalSlotHours, parseFloat(user.tenantLeasedHours) || 0) : 0;
+          const tMins = user.tenantTotalLeasedMins || ((user.tenantLeasedHours || 0) * 60 + (user.tenantLeasedMinutes || 0));
+          const tenantLeasedHours = hasTenant ? Math.min(totalSlotHours, tMins > 0 ? (tMins / 60) : (parseFloat(user.tenantLeasedHours) || 0)) : 0;
           const ownerNetHours = hasTenant ? Math.max(0, totalSlotHours - tenantLeasedHours) : totalSlotHours;
           const ownerNameStrEn = user.nameEn || user.name || '';
           const ownerNameStrUr = user.nameUr || '';
@@ -3459,26 +3470,41 @@
             exportDate: new Date().toISOString(),
             version: "1.0",
             totalMembers: users.length,
-            users: users.map(u => ({
-              userCode: u.userCode || u.code || '01',
-              nameEn: u.nameEn || u.name || '',
-              nameUr: u.nameUr || '',
-              phone: u.phone || '',
-              userType: u.userType || 'internal',
-              startDay: u.startDay || 'Sunday',
-              startTime: u.startTime || '08:00',
-              endDay: u.endDay || 'Monday',
-              endTime: u.endTime || '01:00',
-              totalLandAcres: u.totalLandAcres || 0,
-            isLeased: !!u.isLeased,
-            tenantNameEn: u.tenantNameEn || u.tenantName || '',
-            tenantNameUr: u.tenantNameUr || '',
-            tenantPhone: u.tenantPhone || '',
-            tenantLeasedHours: u.tenantLeasedHours || 0,
-            tenantLeasedAcres: u.tenantLeasedAcres || 0,
-              durationMinutes: u.durationMinutes !== undefined ? u.durationMinutes : ((u.totalMinutes || 600) % 60),
-              totalMinutes: u.totalMinutes || 600
-            }))
+            users: users.map(u => {
+              const h = u.durationHours !== undefined ? u.durationHours : Math.floor((u.totalMinutes || 600) / 60);
+              const m = u.durationMinutes !== undefined ? u.durationMinutes : ((u.totalMinutes || 600) % 60);
+              const totMins = u.totalMinutes || (h * 60 + m);
+
+              const th = u.tenantLeasedHours !== undefined ? u.tenantLeasedHours : Math.floor((u.tenantTotalLeasedMins || 0) / 60);
+              const tm = u.tenantLeasedMinutes !== undefined ? u.tenantLeasedMinutes : ((u.tenantTotalLeasedMins || 0) % 60);
+              const tTotMins = u.tenantTotalLeasedMins || (th * 60 + tm);
+
+              return {
+                userCode: u.userCode || u.code || '01',
+                nameEn: u.nameEn || u.name || '',
+                nameUr: u.nameUr || '',
+                phone: u.phone || '',
+                userType: u.userType || 'internal',
+                startDay: u.startDay || 'Sunday',
+                startTime: u.startTime || '08:00',
+                endDay: u.endDay || 'Monday',
+                endTime: u.endTime || '01:00',
+                durationHours: h,
+                durationMinutes: m,
+                totalMinutes: totMins,
+                totalLandAcres: u.totalLandAcres || 0,
+                isLeased: !!u.isLeased,
+                tenantType: u.tenantType || 'external',
+                linkedMemberId: u.linkedMemberId || null,
+                tenantNameEn: u.tenantNameEn || u.tenantName || '',
+                tenantNameUr: u.tenantNameUr || '',
+                tenantPhone: u.tenantPhone || '',
+                tenantLeasedHours: th,
+                tenantLeasedMinutes: tm,
+                tenantTotalLeasedMins: tTotMins,
+                tenantLeasedAcres: u.tenantLeasedAcres || 0
+              };
+            })
           };
 
           const jsonStr = JSON.stringify(exportPayload, null, 2);
@@ -3526,6 +3552,11 @@
                   if (totMins <= 0 && u.totalMinutes) totMins = u.totalMinutes;
                   if (totMins <= 0) totMins = 600;
 
+                  const th = parseInt(u.tenantLeasedHours, 10) || 0;
+                  const tm = parseInt(u.tenantLeasedMinutes, 10) || 0;
+                  let tTotMins = (th * 60) + tm;
+                  if (tTotMins <= 0 && u.tenantTotalLeasedMins) tTotMins = u.tenantTotalLeasedMins;
+
                   return {
                     id: 'usr-' + Date.now() + '-' + idx,
                     userCode: uCode,
@@ -3540,15 +3571,20 @@
                     startTime: u.startTime || '08:00',
                     endDay: u.endDay || 'Monday',
                     endTime: u.endTime || '01:00',
+                    durationHours: h || Math.floor(totMins / 60),
+                    durationMinutes: m || (totMins % 60),
+                    totalMinutes: totMins,
                     totalLandAcres: parseFloat(u.totalLandAcres) || 0,
                     isLeased: !!u.isLeased,
+                    tenantType: u.tenantType || 'external',
+                    linkedMemberId: u.linkedMemberId || null,
                     tenantNameEn: (u.tenantNameEn || u.tenantName || '').trim(),
                     tenantNameUr: (u.tenantNameUr || '').trim(),
                     tenantPhone: (u.tenantPhone || '').trim(),
-                    tenantLeasedHours: parseFloat(u.tenantLeasedHours) || 0,
-                    tenantLeasedAcres: parseFloat(u.tenantLeasedAcres) || 0,
-                    durationMinutes: m || (totMins % 60),
-                    totalMinutes: totMins
+                    tenantLeasedHours: th || Math.floor(tTotMins / 60),
+                    tenantLeasedMinutes: tm || (tTotMins % 60),
+                    tenantTotalLeasedMins: tTotMins,
+                    tenantLeasedAcres: parseFloat(u.tenantLeasedAcres) || 0
                   };
                 });
               } else {
@@ -3845,7 +3881,8 @@
             if (this.tenantNameEnInput) this.tenantNameEnInput.value = user.tenantNameEn || user.tenantName || '';
             if (this.tenantNameUrInput) this.tenantNameUrInput.value = user.tenantNameUr || '';
             if (this.tenantPhoneInput) this.tenantPhoneInput.value = user.tenantPhone || '';
-            if (this.tenantLeasedHoursInput) this.tenantLeasedHoursInput.value = user.tenantLeasedHours || '';
+            if (this.tenantLeasedHoursInput) this.tenantLeasedHoursInput.value = user.tenantLeasedHours !== undefined ? user.tenantLeasedHours : '';
+            if (this.tenantLeasedMinutesInput) this.tenantLeasedMinutesInput.value = user.tenantLeasedMinutes !== undefined ? user.tenantLeasedMinutes : '';
             if (this.tenantLeasedAcresInput) this.tenantLeasedAcresInput.value = user.tenantLeasedAcres || '';
             this.userStartDaySelect.value = user.startDay || 'Sunday';
             this.setModalStartTime24(user.startTime || '08:00');
@@ -3872,6 +3909,7 @@
             if (this.tenantNameUrInput) this.tenantNameUrInput.value = '';
             if (this.tenantPhoneInput) this.tenantPhoneInput.value = '';
             if (this.tenantLeasedHoursInput) this.tenantLeasedHoursInput.value = '';
+            if (this.tenantLeasedMinutesInput) this.tenantLeasedMinutesInput.value = '';
             if (this.tenantLeasedAcresInput) this.tenantLeasedAcresInput.value = '';
 
             const users = store.getUsers();
@@ -3930,7 +3968,8 @@
           const tenantNameEn = (this.tenantNameEnInput ? this.tenantNameEnInput.value : '').trim();
           const tenantNameUr = (this.tenantNameUrInput ? this.tenantNameUrInput.value : '').trim();
           const tenantPhone = (this.tenantPhoneInput ? this.tenantPhoneInput.value : '').trim();
-          const tenantLeasedHours = parseFloat(this.tenantLeasedHoursInput ? this.tenantLeasedHoursInput.value : 0) || 0;
+          const tenantLeasedHours = parseInt(this.tenantLeasedHoursInput ? this.tenantLeasedHoursInput.value : 0, 10) || 0;
+          const tenantLeasedMinutes = parseInt(this.tenantLeasedMinutesInput ? this.tenantLeasedMinutesInput.value : 0, 10) || 0;
           const tenantLeasedAcres = parseFloat(this.tenantLeasedAcresInput ? this.tenantLeasedAcresInput.value : 0) || 0;
           const startDay = this.userStartDaySelect.value;
           const startTime = this.getModalStartTime24();
@@ -3950,10 +3989,10 @@
 
           try {
             if (id) {
-              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
+              store.updateUser(id, { userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedMinutes, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
               this.showToast(`Member updated & schedule aligned`);
             } else {
-              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
+              const newUser = store.addUser({ userCode, userType, nameEn, nameUr, phone, totalLandAcres, isLeased, tenantType, linkedMemberId, tenantNameEn, tenantNameUr, tenantPhone, tenantLeasedHours, tenantLeasedMinutes, tenantLeasedAcres, startDay, startTime, durationHours, durationMinutes });
               this.showToast(`Member added & schedule chained`);
 
               if (this.pendingQuickUserSelectForEntry) {
