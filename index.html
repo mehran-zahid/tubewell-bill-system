@@ -2154,11 +2154,11 @@
           if (hasTenant) {
             const ownerNameEn = ownerNameStrEn;
             const ownerNameUr = ownerNameStrUr || ownerNameStrEn;
-            const tenantDisplayNameEn = tEn ? `${tEn} (Tenant — Owner: ${ownerNameEn})` : `Tenant — Owner: ${ownerNameEn}`;
-            const tenantDisplayNameUr = tUr ? `${tUr} (ٹھیکے دار — مالک: ${ownerNameUr})` : `ٹھیکے دار — مالک: ${ownerNameUr}`;
+            const tenantDisplayNameEn = tEn ? `${tEn} Tenant (Owner: ${ownerNameEn})` : `Tenant (Owner: ${ownerNameEn})`;
+            const tenantDisplayNameUr = tUr ? `${tUr} ٹھیکے دار (مالک: ${ownerNameUr})` : `ٹھیکے دار (مالک: ${ownerNameUr})`;
             const tenantFullName = tEn && tUr 
-              ? `${tEn} (${tUr}) (ٹھیکے دار — مالک: ${ownerNameUr})` 
-              : `${tEn || tUr || 'Thekedar'} (ٹھیکے دار — مالک: ${ownerNameUr})`;
+              ? `${tEn} (${tUr}) ٹھیکے دار (مالک: ${ownerNameUr})` 
+              : `${tEn || tUr || 'Thekedar'} ٹھیکے دار (مالک: ${ownerNameUr})`;
 
             billableEntities.push({
               id: user.id + '__tenant',
@@ -2177,7 +2177,9 @@
               isTenant: true,
               ownerNameEn: ownerNameEn,
               ownerNameUr: ownerNameUr,
-              leasedHours: tenantLeasedHours
+              ownerName: ownerNameUr || ownerNameEn,
+              leasedHours: tenantLeasedHours,
+              leasedAcres: parseFloat(user.tenantLeasedAcres) || 0
             });
           }
         });
@@ -2257,14 +2259,18 @@
             formattedDuration: formatDurationText(hours * 60),
             effectiveHours: Math.round(hours * 100) / 100,
             hoursPercentage: Math.round(hoursPercentage * 10) / 10,
-            unitsConsumed: units,
+            unitsConsumed: Math.round(units * 100) / 100,
             unitsPercentage: Math.round(unitsPercentage * 10) / 10,
             transferredInCount: transferredIn,
             usageBillShare: Math.round(usageBillShare),
             fixedBillShare: Math.round(fixedBillShare),
             grandTotalBill: Math.round(grandTotalBill),
             isTenant: entity.isTenant || false,
-            ownerName: entity.ownerName || ''
+            ownerNameEn: entity.ownerNameEn || '',
+            ownerNameUr: entity.ownerNameUr || '',
+            ownerName: entity.ownerNameUr || entity.ownerNameEn || entity.ownerName || 'مالک',
+            leasedHours: entity.leasedHours || 0,
+            leasedAcres: entity.leasedAcres || 0
           };
         });
 
@@ -2279,6 +2285,25 @@
           totalEffectiveHours: Math.round(totalInternalEffectiveHours * 100) / 100,
           userBreakdowns
         };
+      }
+
+      function formatLeasedBariShareText(ownerName, leasedHours, leasedAcres, lang = 'urdu') {
+        const hStr = leasedHours > 0 ? `${leasedHours} گھنٹے` : '';
+        const aStr = leasedAcres > 0 ? `${leasedAcres} ایکڑ` : '';
+        let detailStr = '';
+        if (hStr && aStr) detailStr = `${hStr} / ${aStr}`;
+        else detailStr = hStr || aStr || '';
+
+        if (lang === 'urdu' || lang === 'roman') {
+          return detailStr ? `${ownerName} کی ${detailStr} باری حصہ` : `${ownerName} کی باری حصہ`;
+        } else {
+          const hStrEn = leasedHours > 0 ? `${leasedHours} hrs` : '';
+          const aStrEn = leasedAcres > 0 ? `${leasedAcres} acre` : '';
+          let detailStrEn = '';
+          if (hStrEn && aStrEn) detailStrEn = `${hStrEn} / ${aStrEn}`;
+          else detailStrEn = hStrEn || aStrEn || '';
+          return detailStrEn ? `${ownerName}'s ${detailStrEn} Bari share` : `${ownerName}'s Bari share`;
+        }
       }
 
       function generateWhatsAppMessage(calculatedData, formatLang = 'roman') {
@@ -2314,7 +2339,9 @@
             msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
             msg += `   • باری وقت: ${user.effectiveHours} گھنٹے | یونٹ: ${user.unitsConsumed} گھنٹے (${user.unitsPercentage}%)\n`;
             if (user.isTenant) {
-              msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات (${user.ownerNameUr || user.ownerNameEn} کی باری حصہ): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+              const oName = user.ownerNameUr || user.ownerNameEn || user.ownerName || 'مالک';
+              const shareNote = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'urdu');
+              msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات (${shareNote}): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
             } else {
               msg += `   • بجلی بل: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | اضافی اخراجات: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
             }
@@ -2354,7 +2381,9 @@
             msg += `👤 *${index + 1}. ${displayName}${typeLabel}*\n`;
             msg += `   • Bari Hours: ${user.effectiveHours} hrs | Usage: ${user.unitsConsumed} hrs (${user.unitsPercentage}%)\n`;
             if (user.isTenant) {
-              msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses (${user.ownerNameEn || 'Owner'} Bari Share): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
+              const oName = user.ownerNameEn || user.ownerNameUr || user.ownerName || 'Owner';
+              const shareNote = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'english');
+              msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses (${shareNote}): Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
             } else {
               msg += `   • Electricity Bill: Rs. ${Math.round(user.usageBillShare).toLocaleString()} | Extra Expenses: Rs. ${Math.round(user.fixedBillShare).toLocaleString()}\n`;
             }
@@ -2418,7 +2447,9 @@
         msg += `====================================\n\n`;
 
         if (user.isTenant) {
-          msg += `📜 *ٹھیکہ تفصیل:* ${user.ownerNameUr || user.ownerNameEn || 'مالک'} کی ${user.effectiveHours} گھنٹے باری پر ٹھیکے دار\n\n`;
+          const oName = user.ownerNameUr || user.ownerNameEn || user.ownerName || 'مالک';
+          const leaseDetail = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'urdu');
+          msg += `📜 *ٹھیکہ تفصیل:* ${leaseDetail} پر ٹھیکے دار\n\n`;
         } else {
           msg += `🕒 *باری کا وقت (Time Slot):*\n`;
           msg += `• 🟢 چالو: ${DAY_NAMES_BILINGUAL[user.startDay] || user.startDay} ${formatTime12h(user.startTime)}\n`;
@@ -2444,7 +2475,9 @@
         msg += `• بجلی بل (MEPCO Usage Share): *Rs. ${Math.round(user.usageBillShare).toLocaleString()}/-*\n`;
         
         if (user.isTenant) {
-          msg += `• مرمت و دیگر اخراجات (${user.ownerNameUr || user.ownerNameEn || 'مالک'} کی ${user.effectiveHours} گھنٹے باری کا حصہ): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-*\n`;
+          const oName = user.ownerNameUr || user.ownerNameEn || user.ownerName || 'مالک';
+          const shareNote = formatLeasedBariShareText(oName, user.leasedHours || 0, user.leasedAcres || 0, 'urdu');
+          msg += `• مرمت و دیگر اخراجات (${shareNote}): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-*\n`;
         } else {
           msg += `• دیگر اخراجات (Repair Share): *Rs. ${Math.round(user.fixedBillShare).toLocaleString()}/-* ${isExternal ? '(مستثنیٰ)' : ''}\n`;
         }
