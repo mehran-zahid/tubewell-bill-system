@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/fetch_mepco",
+      "destination": "/api/fetch_mepco.js"
+    },
+    {
+      "source": "/fetch_mepco",
+      "destination": "/api/fetch_mepco.js"
+    }
+  ]
+}
