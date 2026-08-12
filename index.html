@@ -590,6 +590,21 @@
 
     <!-- Tab 1: Turbine Members & Continuous Weekly Time Slots (Bari Turns) -->
     <section id="tab-users" class="tab-content">
+      <div class="grid-3 mb-3">
+        <div class="card" style="padding: 1rem 1.25rem; background: rgba(16, 185, 129, 0.07); border: 1px solid rgba(16, 185, 129, 0.25);">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">👥 TOTAL MEMBERS (کل ممبران)</div>
+          <div id="statTotalMembers" style="font-size: 1.5rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">0</div>
+        </div>
+        <div class="card" style="padding: 1rem 1.25rem; background: rgba(59, 130, 246, 0.07); border: 1px solid rgba(59, 130, 246, 0.25);">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⏱️ TOTAL ASSIGNED HOURS (کل باری گھنٹے)</div>
+          <div id="statAssignedHours" style="font-size: 1.5rem; font-weight: 800; color: var(--accent-blue); margin-top: 2px;">0.00 / 168.00 hrs</div>
+        </div>
+        <div class="card" style="padding: 1rem 1.25rem; background: rgba(245, 158, 11, 0.07); border: 1px solid rgba(245, 158, 11, 0.25);">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">⏳ REMAINING WEEKLY HOURS (بقیہ گھنٹے)</div>
+          <div id="statRemainingHours" style="font-size: 1.5rem; font-weight: 800; color: #f59e0b; margin-top: 2px;">168.00 hrs</div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <div>
@@ -2617,6 +2632,9 @@
           this.tabContents = document.querySelectorAll('.tab-content');
 
           this.usersTableBody = document.getElementById('usersTableBody');
+          this.statTotalMembers = document.getElementById('statTotalMembers');
+          this.statAssignedHours = document.getElementById('statAssignedHours');
+          this.statRemainingHours = document.getElementById('statRemainingHours');
           this.addUserBtn = document.getElementById('addUserBtn');
           this.importScheduleBtn = document.getElementById('importScheduleBtn');
           this.exportScheduleBtn = document.getElementById('exportScheduleBtn');
@@ -3591,6 +3609,26 @@
 
         renderUsersTab() {
           const users = store.getUsers();
+          let totalSlotMins = 0;
+          users.forEach(u => {
+            const m = u.totalMinutes || calculateSlotDurationMinutes(u.startDay, u.startTime, u.endDay, u.endTime);
+            totalSlotMins += m;
+          });
+          const totalAssignedHrs = Math.round((totalSlotMins / 60) * 100) / 100;
+          const remainingHrs = Math.round((168 - totalAssignedHrs) * 100) / 100;
+
+          if (this.statTotalMembers) this.statTotalMembers.textContent = users.length;
+          if (this.statAssignedHours) this.statAssignedHours.textContent = `${totalAssignedHrs.toFixed(2)} hrs / 168.00 hrs`;
+          if (this.statRemainingHours) {
+            if (remainingHrs >= 0) {
+              this.statRemainingHours.textContent = `${remainingHrs.toFixed(2)} hrs`;
+              this.statRemainingHours.style.color = '#f59e0b';
+            } else {
+              this.statRemainingHours.textContent = `⚠️ Over by +${Math.abs(remainingHrs).toFixed(2)} hrs`;
+              this.statRemainingHours.style.color = '#ef4444';
+            }
+          }
+
           if (this.usersTableBody) this.usersTableBody.innerHTML = '';
 
           const waScheduleText = generateBilingualWhatsAppSchedule(users);
@@ -3736,6 +3774,7 @@
                 if (user && confirm(`Delete member "${user.name}"?`)) {
                   store.deleteUser(user.id);
                   this.showToast(`Member ${user.name} deleted.`);
+                  this.updateWhatsappPreview();
                 }
               });
             });
