@@ -1264,15 +1264,20 @@
       };
 
       async function fetchProxyApi(endpoint, options = {}) {
-        const ports = [8997, 8998, 8999];
-        for (const port of ports) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 800);
-            const res = await fetch(`http://localhost:${port}${endpoint}`, { ...options, signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (res.ok) return await res.json();
-          } catch (e) {}
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        // Only probe local ports if user is running locally on their PC
+        if (isLocalhost) {
+          const ports = [8997, 8998, 8999];
+          for (const port of ports) {
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 800);
+              const res = await fetch(`http://localhost:${port}${endpoint}`, { ...options, signal: controller.signal });
+              clearTimeout(timeoutId);
+              if (res.ok) return await res.json();
+            } catch (e) {}
+          }
         }
 
         if (endpoint.includes('fetch_mepco')) {
@@ -1281,6 +1286,21 @@
           if (refNo) {
             const cleanRef = refNo.replace(/\D/g, '');
 
+            // 1. Try Vercel / Cloud Serverless Route /api/fetch_mepco
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000);
+              const res = await fetch(`/api/fetch_mepco?refno=${cleanRef}`, { signal: controller.signal });
+              clearTimeout(timeoutId);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.status === 'success' && data.bill && data.bill.totalAmount > 0) {
+                  return data;
+                }
+              }
+            } catch (e) {}
+
+            // 2. Try Public CORS Proxies
             const targetUrls = [
               `https://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}&ru=R`,
               `http://bill.pitc.com.pk/mepcobill/general?refno=${cleanRef}`
