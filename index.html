@@ -2796,6 +2796,12 @@
             this.showToast('⚠️ Please select valid image files!');
             return;
           }
+          newFiles.forEach(f => {
+            f.scanStatus = f.scanStatus || 'pending';
+            f.rowsCount = f.rowsCount || 0;
+            f.statusText = f.statusText || '⏳ Pending';
+            f.statusClass = f.statusClass || 'badge-secondary';
+          });
           this.stagedFiles.push(...newFiles);
           this.renderStagedGallery();
           this.showToast(`📸 ${newFiles.length} photo(s) added! Total: ${this.stagedFiles.length}`);
@@ -2807,6 +2813,16 @@
             this.renderStagedGallery();
             this.showToast(`🗑️ Removed "${removed[0]?.name || 'Photo'}"`);
           }
+        }
+
+        async scanSingleStagedFile(index) {
+          if (index < 0 || index >= this.stagedFiles.length) return;
+          const file = this.stagedFiles[index];
+          file.scanStatus = 'pending';
+          file.statusText = '⏳ Pending';
+          file.statusClass = 'badge-secondary';
+          this.renderStagedGallery();
+          await this.processStagedAiScan([index]);
         }
 
         renderStagedGallery() {
@@ -2824,14 +2840,15 @@
             card.id = `thumb-card-${index}`;
             card.style.position = 'relative';
             card.style.background = 'var(--bg-card)';
-            card.style.border = '1px solid var(--border-glass)';
+            card.style.border = file.scanStatus === 'success' ? '2px solid #10b981' : (file.scanStatus === 'failed' ? '2px solid #ef4444' : '1px solid var(--border-glass)');
             card.style.borderRadius = 'var(--radius-md)';
             card.style.padding = '0.5rem';
             card.style.textAlign = 'center';
             card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
 
-            const statusText = file.statusText || '⏳ Pending';
-            const statusClass = file.statusClass || 'badge-secondary';
+            const statusText = file.statusText || (file.scanStatus === 'success' ? `✅ ${file.rowsCount || 0} Rows` : (file.scanStatus === 'failed' ? '❌ Failed' : '⏳ Pending'));
+            const statusClass = file.statusClass || (file.scanStatus === 'success' ? 'badge-success' : (file.scanStatus === 'failed' ? 'badge-danger' : 'badge-secondary'));
+            const isFailed = file.scanStatus === 'failed';
 
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -2839,7 +2856,10 @@
                 <button class="remove-thumb-btn" data-index="${index}" title="Remove photo" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; z-index: 10;">&times;</button>
                 <img src="${e.target.result}" style="width: 100%; height: 110px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-glass); margin-bottom: 0.3rem;">
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem;" title="${file.name}">Page ${index + 1}</div>
-                <span id="thumb-status-${index}" class="badge ${statusClass}" style="font-size: 0.68rem; padding: 0.2rem 0.4rem;">${statusText}</span>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.25rem; flex-wrap: wrap;">
+                  <span id="thumb-status-${index}" class="badge ${statusClass}" style="font-size: 0.68rem; padding: 0.2rem 0.4rem;">${statusText}</span>
+                  ${isFailed ? `<button class="retry-thumb-btn" data-index="${index}" title="Retry scan for this photo" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.65rem; font-weight: 600; cursor: pointer;">🔄 Retry</button>` : ''}
+                </div>
               `;
 
               const removeBtn = card.querySelector('.remove-thumb-btn');
@@ -2847,6 +2867,14 @@
                 removeBtn.addEventListener('click', (evt) => {
                   evt.stopPropagation();
                   this.removeStagedFile(index);
+                });
+              }
+
+              const retryBtn = card.querySelector('.retry-thumb-btn');
+              if (retryBtn) {
+                retryBtn.addEventListener('click', (evt) => {
+                  evt.stopPropagation();
+                  this.scanSingleStagedFile(index);
                 });
               }
             };
@@ -2903,8 +2931,24 @@
           });
         }
 
-        async processStagedAiScan() {
+        async processStagedAiScan(targetIndices = null) {
           if (this.stagedFiles.length === 0) return;
+
+          let indicesToScan = [];
+          if (Array.isArray(targetIndices)) {
+            indicesToScan = targetIndices;
+          } else {
+            this.stagedFiles.forEach((file, idx) => {
+              if (file.scanStatus !== 'success') {
+                indicesToScan.push(idx);
+              }
+            });
+          }
+
+          if (indicesToScan.length === 0) {
+            this.showToast('✅ All photos in gallery have already been scanned!');
+            return;
+          }
 
           if (this.startAiScanBtn) {
             this.startAiScanBtn.disabled = true;
@@ -2915,15 +2959,16 @@
           this.ocrPreviewCard.classList.remove('hidden');
           this.batchProgressBar.style.width = '0%';
           this.batchPercentBadge.textContent = '0%';
-          this.scannedPageResults = [];
+          if (!this.scannedPageResults) this.scannedPageResults = [];
 
           let totalUploadedRows = 0;
-          const filesToProcess = [...this.stagedFiles];
-          this.rawOcrTextarea.value = '';
 
           try {
-            for (let i = 0; i < filesToProcess.length; i++) {
-              const currentPct = Math.round((i / filesToProcess.length) * 100);
+            for (let step = 0; step < indicesToScan.length; step++) {
+              const i = indicesToScan[step];
+              const file = this.stagedFiles[i];
+
+              const currentPct = Math.round((step / indicesToScan.length) * 100);
               this.batchProgressBar.style.width = `${currentPct}%`;
               this.batchPercentBadge.textContent = `${currentPct}%`;
 
@@ -2935,20 +2980,23 @@
                 currentStatus.textContent = '🔄 Reading...';
               }
 
-              if (i > 0) {
+              file.scanStatus = 'scanning';
+              file.statusText = '🔄 Reading...';
+              file.statusClass = 'badge-info';
+
+              if (step > 0) {
                 this.ocrProgressSub.textContent = `Processing pages...`;
                 await new Promise(r => setTimeout(r, 1000));
               }
 
-              const file = filesToProcess[i];
-              this.ocrProgressText.textContent = `Scanning Page ${i + 1} of ${filesToProcess.length}: "${file.name}"...`;
+              this.ocrProgressText.textContent = `Scanning Page ${i + 1} of ${this.stagedFiles.length}: "${file.name}"...`;
 
               const imageBase64 = await this.compressImageForOcr(file, 1600, 0.85);
               if (!imageBase64) {
-                if (currentStatus) {
-                  currentStatus.className = 'badge badge-danger';
-                  currentStatus.textContent = '❌ Invalid Image';
-                }
+                file.scanStatus = 'failed';
+                file.statusText = '❌ Invalid Image';
+                file.statusClass = 'badge-danger';
+                this.renderStagedGallery();
                 continue;
               }
 
@@ -2958,7 +3006,6 @@
               let rawOutput = '';
               let errorMessage = '';
 
-              // Call secure Vercel Serverless Endpoint /api/gemini_ocr exclusively
               try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 35000);
@@ -2991,7 +3038,7 @@
                 const currentUsers = store.getUsers();
 
                 aiRows.forEach(row => {
-                  const nameStr = row.name || row.userName || 'Register Member';
+                  const nameStr = row.nameEn || row.name || row.userName || 'Register Member';
                   const matchedUser = findGlobalUserMatch(nameStr, currentUsers);
                   const confScore = row.confidenceScore !== undefined ? parseFloat(row.confidenceScore) : (matchedUser ? 0.95 : 0.60);
                   const confLabel = matchedUser ? (confScore >= 0.85 ? 'high' : 'medium') : 'medium';
@@ -3013,6 +3060,11 @@
                 store.addBulkEntries(entriesToInsert);
                 totalUploadedRows += entriesToInsert.length;
 
+                file.scanStatus = 'success';
+                file.rowsCount = entriesToInsert.length;
+                file.statusText = `✅ ${entriesToInsert.length} Rows`;
+                file.statusClass = 'badge-success';
+
                 this.scannedPageResults.push({
                   pageIndex: i,
                   fileName: file.name,
@@ -3021,22 +3073,15 @@
                   rawText: rawOutput || JSON.stringify(aiRows, null, 2)
                 });
 
-                if (currentCard) currentCard.style.borderColor = '#10b981';
-                if (currentStatus) {
-                  currentStatus.className = 'badge badge-success';
-                  currentStatus.textContent = `✅ ${entriesToInsert.length} Rows`;
-                }
-
                 this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ✅ Extracted ${entriesToInsert.length} entries\n` + (rawOutput || JSON.stringify(aiRows, null, 2));
-                this.showToast(`📷 Page ${i + 1}/${filesToProcess.length} scanned: +${entriesToInsert.length} entries`);
+                this.showToast(`📷 Page ${i + 1} scanned: +${entriesToInsert.length} entries`);
               } else {
-                if (currentCard) currentCard.style.borderColor = '#ef4444';
-                if (currentStatus) {
-                  currentStatus.className = 'badge badge-danger';
-                  currentStatus.textContent = `❌ Failed`;
-                }
+                file.scanStatus = 'failed';
+                file.statusText = `❌ Failed`;
+                file.statusClass = 'badge-danger';
                 this.rawOcrTextarea.value += (this.rawOcrTextarea.value ? '\n\n' : '') + `// Page ${i + 1} ("${file.name}"): ❌ Error: ${errorMessage || 'Could not extract rows'}`;
               }
+              this.renderStagedGallery();
             }
           } catch (globalErr) {
             console.error('OCR Process Error:', globalErr);
@@ -3053,9 +3098,7 @@
             }
 
             if (totalUploadedRows > 0) {
-              this.showToast(`🎉 Added ${totalUploadedRows} entries from ${filesToProcess.length} photo(s)!`);
-            } else {
-              this.showToast(`⚠️ Check API Key or try another register photo.`);
+              this.showToast(`🎉 Added ${totalUploadedRows} new entries!`);
             }
           }
         }
