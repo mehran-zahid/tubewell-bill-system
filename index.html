@@ -3648,7 +3648,8 @@
               const tr = document.createElement('tr');
               const startVal = parseFloat(entry.startReading) || 0;
               const endVal = parseFloat(entry.endReading) || 0;
-              const units = Math.max(0, endVal - startVal);
+              const meterDiff = Math.max(0, endVal - startVal);
+              const runHours = (meterDiff / 100).toFixed(2);
 
               const isError = endVal > 0 && endVal < startVal;
               let isSeqDiscrepancy = false;
