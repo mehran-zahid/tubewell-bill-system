@@ -1454,10 +1454,10 @@
           if (refNo) {
             const cleanRef = refNo.replace(/\D/g, '');
 
-            // 1. Try Vercel / Cloud Serverless Route /api/fetch_mepco with 20s timeout
+            // 1. Try Vercel / Cloud Serverless Route /api/fetch_mepco with 60s timeout
             try {
               const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 20000);
+              const timeoutId = setTimeout(() => controller.abort('Timeout after 60s'), 60000);
               const res = await fetch(`/api/fetch_mepco?refno=${cleanRef}`, { signal: controller.signal });
               clearTimeout(timeoutId);
               if (res.ok) {
