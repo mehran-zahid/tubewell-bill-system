@@ -51,33 +51,31 @@ export default async function handler(req, res) {
   };
 
   try {
-    const apiKey = '319T0AA6I3W24GZ52PE7RHRJ81L2VQ581OHI004UCCOQ12RAD9P5LFAZR3FALVVZ882IU5OH9KPEU3T3';
     const targetUrl = 'http://bill.pitc.com.pk/mepcobill';
     
-    // Step 1: Fetch the PITC search page via ScrapingBee to extract session cookies and hidden tokens
-    const getUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}&render_js=false&premium_proxy=true`;
+    // Step 1: Fetch the PITC search page directly to extract session cookies and hidden tokens
+    const res1 = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+      }
+    });
     
-    const res1 = await fetch(getUrl);
     const html1 = await res1.text();
     
-    // Parse session cookies from the ScrapingBee headers
-    const spbSetCookie = res1.headers.get('spb-set-cookie');
-    let sessionId = '';
-    let rvtCookie = '';
-    
-    if (spbSetCookie) {
-      const parts = spbSetCookie.split(',');
+    // Parse session cookies
+    let cookies = [];
+    const setCookie = res1.headers.get('set-cookie');
+    if (setCookie) {
+      // Vercel/Node.js fetch joins multiple set-cookie headers with commas
+      const parts = setCookie.split(',');
       for (const part of parts) {
-        if (part.includes('ASP.NET_SessionId=')) {
-          const match = part.match(/ASP\.NET_SessionId=([^;]+)/);
-          if (match) sessionId = match[1];
-        }
-        if (part.includes('__RequestVerificationToken=')) {
-          const match = part.match(/__RequestVerificationToken=([^;]+)/);
-          if (match) rvtCookie = match[1];
+        const match = part.match(/([^=]+)=([^;]+)/);
+        if (match && !['path', 'expires', 'httponly'].includes(match[1].trim().toLowerCase())) {
+          cookies.push(`${match[1].trim()}=${match[2].trim()}`);
         }
       }
     }
+    const cookiesStr = cookies.join('; ');
 
     // Parse hidden ASP.NET form fields required for the POST request
     const getHidden = (name) => {
@@ -95,8 +93,6 @@ export default async function handler(req, res) {
     }
 
     // Step 2: Submit the reference number via POST request to retrieve the bill
-    const cookiesStr = `ASP.NET_SessionId=${sessionId};__RequestVerificationToken=${rvtCookie}`;
-
     const formData = new URLSearchParams();
     formData.append('__EVENTTARGET', '');
     formData.append('__EVENTARGUMENT', '');
@@ -107,14 +103,15 @@ export default async function handler(req, res) {
     formData.append('__RequestVerificationToken', rvt);
     formData.append('rbSearchByList', 'refno');
     formData.append('searchTextBox', cleanRef);
+    formData.append('ruCodeTextBox', '');
     formData.append('btnSearch', 'Search');
 
-    const postUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}&render_js=false&premium_proxy=true&forward_headers=true&cookies=${encodeURIComponent(cookiesStr)}`;
-    
-    const res2 = await fetch(postUrl, {
+    const res2 = await fetch(targetUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': cookiesStr,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
       },
       body: formData.toString()
     });
