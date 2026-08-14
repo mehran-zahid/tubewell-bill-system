@@ -61,7 +61,8 @@ export default async function handler(req, res) {
   const tryScraperAPI = async () => {
     const targetUrl = 'http://bill.pitc.com.pk/mepcobill';
     // premium=true forces Residential IPs which bypasses PITC's datacenter firewall!
-    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&session_number=${cleanRef}&keep_headers=true&premium=true`;
+    // country_code=pk ensures it uses Pakistani IPs which PITC trusts!
+    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&session_number=${cleanRef}&keep_headers=true&premium=true&country_code=pk`;
 
     // Step 1: GET to retrieve hidden tokens
     const res1 = await fetch(scraperUrl, {
