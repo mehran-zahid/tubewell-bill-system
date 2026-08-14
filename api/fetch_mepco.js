@@ -60,9 +60,10 @@ export default async function handler(req, res) {
   // are maintained across both the GET and POST requests.
   const tryScraperAPI = async () => {
     const targetUrl = 'http://bill.pitc.com.pk/mepcobill';
-    // premium=true forces Residential IPs which bypasses PITC's datacenter firewall!
-    // country_code=pk ensures it uses Pakistani IPs which PITC trusts!
-    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&session_number=${cleanRef}&keep_headers=true&premium=true&country_code=pk`;
+    // Generate a random session ID for this specific execution to ensure we get a fresh proxy.
+    // Re-using cleanRef caused infinite hangs if the mapped residential IP was offline.
+    const sessionId = Math.floor(Math.random() * 1000000000);
+    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&session_number=${sessionId}&keep_headers=true&premium=true&country_code=pk`;
 
     // Step 1: GET to retrieve hidden tokens
     const res1 = await fetch(scraperUrl, {
