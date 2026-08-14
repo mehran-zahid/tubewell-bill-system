@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('X-Tubewell-Build-Sync', '2026-08-14-v2.0-scrapingbee');
+  res.setHeader('X-Tubewell-Build-Sync', '2026-08-14-v3.0-browserless');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -11,6 +11,10 @@ export default async function handler(req, res) {
   const { refno, ref } = req.query;
   const rawRef = refno || ref || '29153110982900';
   const cleanRef = String(rawRef).replace(/\D/g, '');
+
+  // ── Browserless.io API Key ──────────────────────────────────────────────
+  const BROWSERLESS_TOKEN = '2V4Y6pFNRnjTj2Y9f1c6c98144af9683da441afa2d8aada65';
+  // ───────────────────────────────────────────────────────────────────────
 
   const parseBillHtml = (htmlText) => {
     if (!htmlText || htmlText.includes('anti-forgery')) return null;
@@ -50,80 +54,103 @@ export default async function handler(req, res) {
     return null;
   };
 
-  try {
+  // ── Direct fetch: works reliably (PITC is plain HTTP, Browserless blocks it) ──
+  // Key fix: ASP.NET anti-CSRF requires __RequestVerificationToken sent as
+  // BOTH a cookie AND a form field simultaneously.
+  const tryDirectFetch = async () => {
     const targetUrl = 'http://bill.pitc.com.pk/mepcobill';
-    
-    // Step 1: Fetch the PITC search page directly to extract session cookies and hidden tokens
+
+    // Step 1: GET the search page to collect session cookies + hidden form tokens
     const res1 = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
       }
     });
-    
-    const html1 = await res1.text();
-    
-    // Parse session cookies
-    let cookies = [];
-    const setCookie = res1.headers.get('set-cookie');
-    if (setCookie) {
-      // Vercel/Node.js fetch joins multiple set-cookie headers with commas
-      const parts = setCookie.split(',');
-      for (const part of parts) {
-        const match = part.match(/([^=]+)=([^;]+)/);
-        if (match && !['path', 'expires', 'httponly'].includes(match[1].trim().toLowerCase())) {
-          cookies.push(`${match[1].trim()}=${match[2].trim()}`);
-        }
-      }
-    }
-    const cookiesStr = cookies.join('; ');
 
-    // Parse hidden ASP.NET form fields required for the POST request
+    const html1 = await res1.text();
+    const rawSetCookie = res1.headers.get('set-cookie') || '';
+
+    // Extract ASP.NET session ID
+    const sessionMatch = rawSetCookie.match(/ASP\.NET_SessionId=([a-z0-9]+)/i);
+    const sessionId = sessionMatch ? sessionMatch[1] : '';
+
+    // Extract RequestVerificationToken from Set-Cookie header
+    // PITC sends it as a cookie — it must also be sent back as a cookie on POST
+    const rvtCookieMatch = rawSetCookie.match(/__RequestVerificationToken=([^;,\s]+)/);
+    const rvtFromCookie = rvtCookieMatch ? rvtCookieMatch[1] : '';
+
+    // Extract hidden ASP.NET form fields
     const getHidden = (name) => {
-      const match = html1.match(new RegExp('name="' + name + '"[^>]*value="([^"]*)"'));
-      return match ? match[1] : '';
+      const m = html1.match(new RegExp(`name="${name}"[^>]*value="([^"]*)"`)) ||
+                html1.match(new RegExp(`name="${name}"\\s+value="([^"]*)"`));
+      return m ? m[1] : '';
     };
-    
-    const vs = getHidden('__VIEWSTATE');
+
+    const vs  = getHidden('__VIEWSTATE');
     const vsg = getHidden('__VIEWSTATEGENERATOR');
-    const ev = getHidden('__EVENTVALIDATION');
-    const rvt = getHidden('__RequestVerificationToken');
+    const ev  = getHidden('__EVENTVALIDATION');
+    const rvtForm = getHidden('__RequestVerificationToken') || rvtFromCookie;
 
     if (!vs) {
       throw new Error('PITC firewall blocked the request or the search page is currently down.');
     }
 
-    // Step 2: Submit the reference number via POST request to retrieve the bill
-    const formData = new URLSearchParams();
-    formData.append('__EVENTTARGET', '');
-    formData.append('__EVENTARGUMENT', '');
-    formData.append('__LASTFOCUS', '');
-    formData.append('__VIEWSTATE', vs);
-    formData.append('__VIEWSTATEGENERATOR', vsg);
-    formData.append('__EVENTVALIDATION', ev);
-    formData.append('__RequestVerificationToken', rvt);
-    formData.append('rbSearchByList', 'refno');
-    formData.append('searchTextBox', cleanRef);
-    formData.append('ruCodeTextBox', '');
-    formData.append('btnSearch', 'Search');
+    // Build cookie string: Session + RVT (BOTH required by ASP.NET anti-forgery)
+    const cookieStr = [
+      sessionId ? `ASP.NET_SessionId=${sessionId}` : '',
+      rvtFromCookie ? `__RequestVerificationToken=${rvtFromCookie}` : ''
+    ].filter(Boolean).join('; ');
+
+    // Step 2: POST the search form with all required tokens
+    const formData = new URLSearchParams({
+      __EVENTTARGET: '',
+      __EVENTARGUMENT: '',
+      __LASTFOCUS: '',
+      __VIEWSTATE: vs,
+      __VIEWSTATEGENERATOR: vsg,
+      __EVENTVALIDATION: ev,
+      __RequestVerificationToken: rvtForm,
+      rbSearchByList: 'refno',
+      searchTextBox: cleanRef,
+      ruCodeTextBox: '',
+      btnSearch: 'Search'
+    });
 
     const res2 = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': cookiesStr,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        'Cookie': cookieStr,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Referer': targetUrl,
+        'Origin': 'http://bill.pitc.com.pk',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
       },
       body: formData.toString()
     });
 
+    if (!res2.ok) throw new Error(`PITC POST returned HTTP ${res2.status}`);
+
     const html2 = await res2.text();
-    
-    // Step 3: Parse the final HTML to extract bill details
-    const parsed = parseBillHtml(html2);
+
+    if (html2.includes('anti-forgery')) {
+      throw new Error('PITC anti-forgery validation failed — token mismatch.');
+    }
+
+    return parseBillHtml(html2);
+  };
+
+  // ── Main Handler ───────────────────────────────────────────────────────────
+  try {
+    const parsed = await tryDirectFetch();
+
     if (parsed) {
       return res.status(200).json(parsed);
     }
-    
+
     return res.status(404).json({
       status: 'error',
       error: 'Bill not found. Please ensure the reference number is correct.'
