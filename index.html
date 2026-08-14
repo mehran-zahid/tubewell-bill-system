@@ -849,9 +849,13 @@
             <p class="card-subtitle mt-1" style="font-size: 0.82rem;">Enter the total electricity bill amount from your MEPCO bill statement.</p>
           </div>
 
-          <div class="grid-2 gap-2 mt-3">
+          <div class="grid-3 gap-2 mt-3">
             <button id="saveWapdaBillBtn" type="button" class="btn btn-primary btn-full" style="padding: 0.85rem; font-size: 1rem; font-weight: 700;">
               💾 Save Bill Amount
+            </button>
+            <button id="autoFetchMepcoBtn" type="button" class="btn btn-secondary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: rgba(59, 130, 246, 0.12); border: 1px solid var(--accent-blue); color: var(--accent-blue); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+              <span>⚡ Auto-Fetch (آٹو فیچ)</span>
+              <svg id="autoFetchMepcoSpinner" class="spinner" style="display: none; width: 1.2rem; height: 1.2rem;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </button>
             <button id="openOfficialMepcoPortalBtn" type="button" class="btn btn-secondary" style="padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); border: 1px solid var(--accent-green); color: var(--accent-green); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
               <span>🌐 Open MEPCO Portal</span>
@@ -2943,6 +2947,8 @@
 
           this.imageGalleryCard = document.getElementById('imageGalleryCard');
           this.saveWapdaBillBtn = document.getElementById('saveWapdaBillBtn');
+          this.autoFetchMepcoBtn = document.getElementById('autoFetchMepcoBtn');
+          this.autoFetchMepcoSpinner = document.getElementById('autoFetchMepcoSpinner');
           this.openOfficialMepcoPortalBtn = document.getElementById('openOfficialMepcoPortalBtn');
           this.wapdaBillInput = document.getElementById('wapdaBillInput');
           this.billingMonthInput = document.getElementById('billingMonthInput');
@@ -3244,6 +3250,49 @@
           if (this.openOfficialMepcoPortalBtn) {
             this.openOfficialMepcoPortalBtn.addEventListener('click', () => {
               window.open('http://bill.pitc.com.pk/mepcobill', '_blank');
+            });
+          }
+
+          if (this.autoFetchMepcoBtn) {
+            this.autoFetchMepcoBtn.addEventListener('click', async () => {
+              this.autoFetchMepcoBtn.disabled = true;
+              if (this.autoFetchMepcoSpinner) this.autoFetchMepcoSpinner.style.display = 'block';
+              
+              try {
+                // By default, use the provided tubewell reference number.
+                const refNo = '29153110982900';
+                const data = await fetchProxyApi(`/api/fetch_mepco?refno=${refNo}`);
+                
+                if (data && data.status === 'success' && data.bill) {
+                  this.wapdaBillInput.value = data.bill.totalAmount;
+                  
+                  // Extract month from dueDate if available (e.g. "20 Aug 2026")
+                  if (data.bill.dueDate && data.bill.dueDate !== '—') {
+                    const dateObj = new Date(data.bill.dueDate);
+                    if (!isNaN(dateObj)) {
+                      const yr = dateObj.getFullYear();
+                      const mo = String(dateObj.getMonth() + 1).padStart(2, '0');
+                      this.billingMonthInput.value = `${yr}-${mo}`;
+                      
+                      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                      const urduMonthNames = ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"];
+                      const mIdx = dateObj.getMonth();
+                      store.updateBillingMonth(`${yr}-${mo}`, `${monthNames[mIdx]} ${yr} (${urduMonthNames[mIdx]})`);
+                    }
+                  }
+                  
+                  this.showToast(`✅ Bill Auto-Fetched: Rs. ${Math.round(data.bill.totalAmount).toLocaleString()} for ${data.bill.name}`);
+                  store.updateWapdaBill(data.bill.totalAmount);
+                  this.renderSummaryTab();
+                } else {
+                  throw new Error(data?.error || 'Failed to fetch bill. Please check reference number or try again later.');
+                }
+              } catch (error) {
+                alert('Auto-Fetch Error: ' + error.message);
+              } finally {
+                this.autoFetchMepcoBtn.disabled = false;
+                if (this.autoFetchMepcoSpinner) this.autoFetchMepcoSpinner.style.display = 'none';
+              }
             });
           }
 
