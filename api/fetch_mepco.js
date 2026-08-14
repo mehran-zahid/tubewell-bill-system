@@ -13,7 +13,14 @@ export default async function handler(req, res) {
   const cleanRef = String(rawRef).replace(/\D/g, '');
 
   // ── ScraperAPI Key ──────────────────────────────────────────────
-  const SCRAPER_API_KEY = '21698ab8ec7f367a849f7dcaffb73f79';
+  const SCRAPER_API_KEY = process.env.SCRAPER_API_KEY;
+  
+  if (!SCRAPER_API_KEY) {
+    return res.status(500).json({
+      status: 'error',
+      error: 'Automated fetch failed: Server is missing SCRAPER_API_KEY environment variable.'
+    });
+  }
   // ────────────────────────────────────────────────────────────────
 
   const parseBillHtml = (htmlText) => {
