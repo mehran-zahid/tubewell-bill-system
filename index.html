@@ -1465,8 +1465,17 @@
                 if (data && data.status === 'success' && data.bill && data.bill.totalAmount > 0) {
                   return data;
                 }
+              } else {
+                const errData = await res.json().catch(() => ({}));
+                console.error("Vercel API failed:", res.status, errData);
+                if (errData.error) throw new Error(errData.error);
               }
-            } catch (e) {}
+            } catch (e) {
+              console.error("fetch_mepco error:", e);
+              if (e.message !== 'The user aborted a request.') {
+                throw new Error(`API Error: ${e.message}`);
+              }
+            }
 
             // 2. Try Public CORS Proxies with 12s timeout
             const targetUrls = [
