@@ -3,6 +3,7 @@ import './App.css';
 import MainLayout from './components/MainLayout';
 import ScheduleTab from './pages/ScheduleTab';
 import MembersTab from './pages/MembersTab';
+import RegisterTab from './pages/RegisterTab';
 import ConfirmModal from './components/ConfirmModal';
 import { initFirebaseAsync } from './config/firebase';
 
@@ -86,7 +87,9 @@ function App() {
         handleLogin={handleLogin}
         handleLogout={handleLogout}
       >
-        {activeTab === 'schedule' ? <ScheduleTab isAdmin={isAdmin} /> : <MembersTab isAdmin={isAdmin} />}
+        {activeTab === 'schedule' && <ScheduleTab isAdmin={isAdmin} />}
+        {activeTab === 'members' && <MembersTab isAdmin={isAdmin} />}
+        {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
       </MainLayout>
 
       <ConfirmModal 

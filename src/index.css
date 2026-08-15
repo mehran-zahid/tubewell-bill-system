@@ -139,12 +139,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 select.input-field {
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
-  padding-right: 36px;
+  padding: 10px 36px 10px 16px; /* Custom padding to prevent text overlap with custom arrow */
 }
 
 /* Buttons */
@@ -348,6 +350,15 @@ select.input-field {
 .dropdown-item.danger:hover {
   background: var(--danger-light);
   color: var(--danger);
+}
+
+.dropdown-option:hover {
+  background: var(--bg-surface-hover) !important;
+  color: var(--primary) !important;
+}
+
+.dropdown-option.selected:hover {
+  background: var(--primary-light) !important;
 }
 
 .dropdown-divider {

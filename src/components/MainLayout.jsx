@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarClock, Users, LogIn, LogOut, Shield } from './Icons';
+import { CalendarClock, Users, LogIn, LogOut, Shield, BookText } from './Icons';
 import Logo from './Logo';
 
 export default function MainLayout({ 
@@ -13,7 +13,8 @@ export default function MainLayout({
 }) {
   const navItems = [
     { id: 'schedule', label: 'Weekly Schedule', icon: CalendarClock },
-    { id: 'members', label: 'Members Directory', icon: Users }
+    { id: 'members', label: 'Members Directory', icon: Users },
+    { id: 'register', label: 'Register Readings', icon: BookText }
   ];
 
   return (
