@@ -205,14 +205,14 @@ export default function MembersTab({ isAdmin }) {
       updatedMembers = autoRechainSchedule(updatedMembers);
 
       // Batch write all members to update the schedule atomically
-      const batch = db.batch();
+      const batch = firebase.writeBatch(db);
       
       updatedMembers.forEach(member => {
         let docRef;
         if (member.id && !member.id.startsWith('temp_')) {
-          docRef = db.collection('members').doc(member.id);
+          docRef = firebase.doc(db, 'members', member.id);
         } else {
-          docRef = db.collection('members').doc();
+          docRef = firebase.doc(firebase.collection(db, 'members'));
           // Remove temp id so it doesn't get saved
           delete member.id;
         }
@@ -352,15 +352,15 @@ export default function MembersTab({ isAdmin }) {
       updatedMembers = autoRechainSchedule(updatedMembers);
 
       // Batch write to update the remaining members' schedule and delete the chosen one
-      const batch = db.batch();
+      const batch = firebase.writeBatch(db);
       
       updatedMembers.forEach(member => {
-        const docRef = db.collection('members').doc(member.id);
+        const docRef = firebase.doc(db, 'members', member.id);
         batch.set(docRef, member, { merge: true });
       });
 
       // Delete the chosen member
-      const deleteRef = db.collection('members').doc(memberId);
+      const deleteRef = firebase.doc(db, 'members', memberId);
       batch.delete(deleteRef);
 
       await batch.commit();
