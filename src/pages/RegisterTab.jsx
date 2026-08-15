@@ -483,12 +483,23 @@ export default function RegisterTab({ isAdmin }) {
                           ))}
                         </select>
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>
-                            {entry.userCode || entry.memberName.charAt(0)}
-                          </div>
-                          {entry.memberName}
-                        </div>
+                        (() => {
+                          const mem = members.find(m => 
+                            m.id === String(entry.memberId) || 
+                            String(m.userCode) === String(entry.memberId) ||
+                            (parseInt(m.userCode, 10) === parseInt(entry.memberId, 10) && !isNaN(parseInt(m.userCode, 10)))
+                          );
+                          const safeName = entry.memberName || mem?.nameEn || 'Unknown';
+                          const safeCode = entry.userCode || mem?.userCode || (safeName !== 'Unknown' ? safeName.charAt(0) : 'U');
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>
+                                {safeCode}
+                              </div>
+                              {safeName}
+                            </div>
+                          );
+                        })()
                       )}
                     </td>
                     <td style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', fontFamily: 'Outfit' }}>
