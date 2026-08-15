@@ -68,7 +68,25 @@ export default function RegisterTab({ isAdmin }) {
         if (members.length === 0) {
           const membersSnapshot = await firebase.getDocs(firebase.collection(db, 'members'));
           const membersData = [];
-          membersSnapshot.forEach(doc => membersData.push({ id: doc.id, ...doc.data() }));
+          membersSnapshot.forEach(doc => {
+            const m = { id: doc.id, ...doc.data() };
+            membersData.push(m);
+            // Also push tenants with a tenantCode as unified members
+            if (m.tenants && Array.isArray(m.tenants)) {
+              m.tenants.forEach(t => {
+                if (t.tenantCode) {
+                  membersData.push({
+                    id: t.id || `tenant_${doc.id}_${t.tenantCode}`,
+                    userCode: t.tenantCode.toString(),
+                    nameEn: t.tenantNameEn || `Tenant ${t.tenantCode}`,
+                    isTenant: true,
+                    ownerId: doc.id
+                  });
+                }
+              });
+            }
+          });
+          
           membersData.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
           setMembers(membersData);
         }

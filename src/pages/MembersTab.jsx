@@ -143,7 +143,7 @@ export default function MembersTab({ isAdmin }) {
       ...formData,
       tenants: [
         ...formData.tenants,
-        { tenantNameEn: '', tenantLeasedHours: 0, tenantLeasedMinutes: 0, tenantLeasedAcres: 0, id: Date.now().toString() }
+        { tenantNameEn: '', tenantCode: '', tenantLeasedHours: 0, tenantLeasedMinutes: 0, tenantLeasedAcres: 0, id: Date.now().toString() }
       ]
     });
   };
@@ -167,6 +167,53 @@ export default function MembersTab({ isAdmin }) {
       return;
     }
 
+    // --- Uniqueness Validation ---
+    const allExistingCodes = new Set();
+    members.forEach(m => {
+      if (m.id !== editingMemberId) {
+        if (m.userCode) {
+          const num = parseInt(m.userCode, 10);
+          if (!isNaN(num)) allExistingCodes.add(num);
+        }
+        if (m.tenants && Array.isArray(m.tenants)) {
+          m.tenants.forEach(t => {
+            if (t.tenantCode) {
+              const num = parseInt(t.tenantCode, 10);
+              if (!isNaN(num)) allExistingCodes.add(num);
+            }
+          });
+        }
+      }
+    });
+
+    const submittedCodes = [];
+    const mainNum = parseInt(formData.userCode, 10);
+    if (!isNaN(mainNum)) submittedCodes.push(mainNum);
+
+    if (formData.isLeased && formData.tenants) {
+      formData.tenants.forEach(t => {
+        if (t.tenantCode) {
+          const tNum = parseInt(t.tenantCode, 10);
+          if (!isNaN(tNum)) submittedCodes.push(tNum);
+        }
+      });
+    }
+
+    // Check for duplicates within the submitted form itself
+    if (new Set(submittedCodes).size !== submittedCodes.length) {
+      alert("You have entered duplicate codes within this member's form. Each owner and tenant must have a strictly unique code.");
+      return;
+    }
+
+    // Check against other members/tenants in the database
+    for (const code of submittedCodes) {
+      if (allExistingCodes.has(code)) {
+        alert(`The code '${code}' (or its 0-padded equivalent) is already in use by another owner or tenant. Please use a unique code.`);
+        return;
+      }
+    }
+    // -------------------------------
+
     try {
       const { db, firebase } = await initFirebaseAsync();
       
@@ -179,6 +226,7 @@ export default function MembersTab({ isAdmin }) {
         totalLandAcres: parseFloat(formData.totalLandAcres) || 0,
         tenants: formData.tenants.map(t => ({
           ...t,
+          tenantCode: t.tenantCode ? t.tenantCode.toString() : '',
           tenantLeasedHours: parseInt(t.tenantLeasedHours) || 0,
           tenantLeasedMinutes: parseInt(t.tenantLeasedMinutes) || 0,
           tenantLeasedAcres: parseFloat(t.tenantLeasedAcres) || 0
@@ -397,6 +445,7 @@ export default function MembersTab({ isAdmin }) {
                   tenantNameEn: u.tenantNameEn || u.tenantName || '',
                   tenantNameUr: u.tenantNameUr || '',
                   tenantPhone: u.tenantPhone || '',
+                  tenantCode: u.tenantCode || '',
                   tenantLeasedHours: u.tenantLeasedHours || 0,
                   tenantLeasedMinutes: u.tenantLeasedMinutes || 0,
                   tenantTotalLeasedMins: u.tenantTotalLeasedMins || 0,
@@ -475,6 +524,7 @@ export default function MembersTab({ isAdmin }) {
                       tenantNameEn: (u.tenantNameEn || u.tenantName || '').trim(),
                       tenantNameUr: (u.tenantNameUr || '').trim(),
                       tenantPhone: (u.tenantPhone || '').trim(),
+                      tenantCode: (u.tenantCode || '').trim(),
                       tenantLeasedHours: parseInt(u.tenantLeasedHours, 10) || 0,
                       tenantLeasedMinutes: parseInt(u.tenantLeasedMinutes, 10) || 0,
                       tenantTotalLeasedMins: u.tenantTotalLeasedMins || ((parseInt(u.tenantLeasedHours, 10) || 0) * 60 + (parseInt(u.tenantLeasedMinutes, 10) || 0)),
@@ -508,6 +558,7 @@ export default function MembersTab({ isAdmin }) {
                 tenantNameEn: (t.tenantNameEn || t.tenantName || '').trim(),
                 tenantNameUr: (t.tenantNameUr || '').trim(),
                 tenantPhone: (t.tenantPhone || '').trim(),
+                tenantCode: (t.tenantCode || '').trim(),
                 tenantLeasedHours: parseInt(t.tenantLeasedHours, 10) || 0,
                 tenantLeasedMinutes: parseInt(t.tenantLeasedMinutes, 10) || 0,
                 tenantTotalLeasedMins: t.tenantTotalLeasedMins || ((parseInt(t.tenantLeasedHours, 10) || 0) * 60 + (parseInt(t.tenantLeasedMinutes, 10) || 0)),
@@ -786,7 +837,7 @@ export default function MembersTab({ isAdmin }) {
                   fontSize: '16px',
                   flexShrink: 0
                 }}>
-                  {getInitials(member.nameEn)}
+                  {member.userCode || '?'}
                 </div>
 
                 {/* Name & ID */}
@@ -848,18 +899,25 @@ export default function MembersTab({ isAdmin }) {
                       if (m > 0) timeParts.push(`${m}m`);
                       const timeStr = timeParts.join(' ');
                       
-                      const details = [];
-                      if (timeStr) details.push(timeStr);
-                      if (acres > 0) details.push(`${acres} acres`);
-                      const detailsStr = details.length > 0 ? `(${details.join(' / ')})` : '';
-
+                      const tAvatar = getAvatarColor(tenant.tenantCode || '0');
+                      
                       return (
-                        <div key={tenant.id || tIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--border-default)' }}></div>
-                            <span style={{ fontWeight: 500 }}>{tDisplayName}</span>
+                        <div key={tenant.id || tIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ 
+                              width: '32px', height: '32px', borderRadius: '50%', background: tAvatar.bg, color: tAvatar.text, 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 600, flexShrink: 0 
+                            }}>
+                              {tenant.tenantCode || '?'}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{tDisplayName}</div>
+                              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{timeStr ? `Leased: ${timeStr}` : 'No specific time'}</div>
+                            </div>
                           </div>
-                          {detailsStr && <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>{detailsStr}</span>}
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--success-dark)' }}>{acres > 0 ? `${acres} acres` : ''}</div>
+                          </div>
                         </div>
                       );
                     })}
@@ -955,9 +1013,15 @@ export default function MembersTab({ isAdmin }) {
                   {formData.tenants.map((t, idx) => (
                     <div key={idx} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '12px', background: 'var(--bg-surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Name</label>
-                          <input type="text" placeholder="e.g. Ali Raza" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantNameEn} onChange={e => handleTenantChange(idx, 'tenantNameEn', e.target.value)} required />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <div style={{ flex: 2 }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Name</label>
+                            <input type="text" placeholder="e.g. Ali Raza" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantNameEn} onChange={e => handleTenantChange(idx, 'tenantNameEn', e.target.value)} required />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Code</label>
+                            <input type="number" placeholder="e.g. 17" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantCode} onChange={e => handleTenantChange(idx, 'tenantCode', e.target.value)} required />
+                          </div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>

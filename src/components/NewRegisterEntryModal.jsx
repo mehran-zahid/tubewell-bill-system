@@ -96,7 +96,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
             >
               <option value="" disabled>Select Member</option>
               {members.map(m => (
-                <option key={m.id} value={m.id}>{m.nameEn}</option>
+                <option key={m.id} value={m.id}>{m.nameEn} - {m.userCode}</option>
               ))}
             </select>
           </div>
