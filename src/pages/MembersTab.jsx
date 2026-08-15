@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { autoRechainSchedule } from '../utils/scheduleLogic';
-import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload } from '../components/Icons';
+import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload, GripVertical } from '../components/Icons';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function MembersTab({ isAdmin }) {
@@ -22,6 +22,10 @@ export default function MembersTab({ isAdmin }) {
   // Add Menu State
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const fileInputRef = React.useRef(null);
+  
+  // Drag and Drop State
+  const [dragItemIndex, setDragItemIndex] = useState(null);
+  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -63,8 +67,12 @@ export default function MembersTab({ isAdmin }) {
             membersData.push({ id: doc.id, ...doc.data() });
           });
           
-          // Sort by user code numeric value just to keep them in order
-          membersData.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
+          // Sort by turnOrder, fallback to userCode for old data
+          membersData.sort((a, b) => {
+            const orderA = a.turnOrder !== undefined ? a.turnOrder : parseInt(a.userCode);
+            const orderB = b.turnOrder !== undefined ? b.turnOrder : parseInt(b.userCode);
+            return orderA - orderB;
+          });
           setMembers(membersData);
           setLoading(false);
         }, (error) => {
@@ -186,6 +194,8 @@ export default function MembersTab({ isAdmin }) {
       });
 
       await batch.commit();
+      setFormData(getEmptyForm());
+      setEditingMemberId(null);
       setIsModalOpen(false);
 
     } catch (error) {
@@ -194,8 +204,68 @@ export default function MembersTab({ isAdmin }) {
     }
   };
 
-  const confirmDelete = (memberId) => {
-    setMemberToDelete(memberId);
+  const handleDragStart = (e, index) => {
+    setDragItemIndex(index);
+    // Needed for Firefox
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.parentNode);
+  };
+
+  const handleDragEnter = (e, index) => {
+    setDragOverItemIndex(index);
+    if (dragItemIndex !== null && dragItemIndex !== index) {
+      // Instantly swap in local state for responsive UI
+      const newMembers = [...members];
+      const draggedItem = newMembers.splice(dragItemIndex, 1)[0];
+      newMembers.splice(index, 0, draggedItem);
+      setMembers(newMembers);
+      setDragItemIndex(index);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    if (dragItemIndex === null) {
+      setDragOverItemIndex(null);
+      return;
+    }
+
+    // Since we updated array in handleDragEnter, we just use the current 'members'
+    let updatedMembers = members.map((m, idx) => ({
+      ...m,
+      turnOrder: idx + 1
+    }));
+
+    // Recalculate schedule
+    updatedMembers = autoRechainSchedule(updatedMembers);
+
+    setMembers(updatedMembers); // Optimistic UI update
+    setDragItemIndex(null);
+    setDragOverItemIndex(null);
+
+    try {
+      const { db, firebase } = await initFirebaseAsync();
+      const batch = firebase.writeBatch(db);
+      
+      updatedMembers.forEach(member => {
+        const docRef = firebase.doc(db, 'members', member.id);
+        batch.update(docRef, {
+          turnOrder: member.turnOrder,
+          startDay: member.startDay,
+          startTime: member.startTime,
+          endDay: member.endDay,
+          endTime: member.endTime
+        });
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error("Error saving reordered schedule:", error);
+      alert("Failed to save new schedule order.");
+    }
+  };
+
+  const handleDeleteClick = (member) => {
+    setMemberToDelete(member.id);
   };
 
   const executeDelete = async () => {
@@ -389,17 +459,17 @@ export default function MembersTab({ isAdmin }) {
         importedUsers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
         importedUsers = autoRechainSchedule(importedUsers);
 
-        const batch = db.batch();
+        const batch = firebase.writeBatch(db);
 
         // Delete all current members first
-        const snapshot = await db.collection('members').get();
+        const snapshot = await firebase.getDocs(firebase.collection(db, 'members'));
         snapshot.docs.forEach(doc => {
           batch.delete(doc.ref);
         });
 
         // Set all new imported members
         importedUsers.forEach(member => {
-          const docRef = db.collection('members').doc(member.id);
+          const docRef = firebase.doc(db, 'members', member.id);
           batch.set(docRef, member);
         });
 
@@ -545,14 +615,43 @@ export default function MembersTab({ isAdmin }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-        {members.map(member => {
+        {members.map((member, index) => {
           const avatar = getAvatarColor(member.userCode);
           return (
-            <div key={member.userCode} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <div 
+              key={member.id} 
+              className="card"
+              draggable={isAdmin}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnter={(e) => handleDragEnter(e, index)}
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
+              onDrag={(e) => {
+                if (e.clientY === 0) return;
+                const threshold = 100;
+                if (e.clientY < threshold) {
+                  window.scrollBy(0, -20);
+                } else if (window.innerHeight - e.clientY < threshold) {
+                  window.scrollBy(0, 20);
+                }
+              }}
+              onDragEnd={handleDrop}
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                position: 'relative',
+                opacity: dragItemIndex === index ? 0.5 : 1,
+                transform: dragOverItemIndex === index ? 'scale(1.02)' : 'scale(1)',
+                border: dragOverItemIndex === index ? '2px dashed var(--primary)' : '1px solid var(--border-default)',
+                transition: 'all 0.2s ease',
+                cursor: isAdmin ? 'grab' : 'default'
+              }}
+            >
               
               {/* Admin Actions */}
               {isAdmin && (
-                <div className="context-menu-container" style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                <div className="context-menu-container" style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10 }}>
                   <button 
                     onClick={() => setActiveDropdownId(activeDropdownId === member.id ? null : member.id)}
                     className="btn-icon"
@@ -572,7 +671,7 @@ export default function MembersTab({ isAdmin }) {
                       <div className="dropdown-divider"></div>
                       <button 
                         className="dropdown-item danger"
-                        onClick={() => { confirmDelete(member.id); setActiveDropdownId(null); }}
+                        onClick={() => { handleDeleteClick(member); setActiveDropdownId(null); }}
                       >
                         <Trash2 size={16} /> Delete Member
                       </button>
@@ -583,6 +682,11 @@ export default function MembersTab({ isAdmin }) {
 
               {/* Card Header with Avatar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 'var(--space-4)', paddingRight: isAdmin ? '40px' : '0' }}>
+                {isAdmin && (
+                  <div style={{ color: 'var(--text-tertiary)', cursor: 'grab', marginRight: '-8px' }}>
+                    <GripVertical size={20} />
+                  </div>
+                )}
                 
                 {/* Avatar */}
                 <div style={{ 

@@ -50,9 +50,12 @@ export default function ScheduleTab() {
           snapshot.forEach((doc) => {
             membersData.push({ id: doc.id, ...doc.data() });
           });
-          
-          // Sort by user code numeric value just to keep them in initial order
-          membersData.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
+          // Sort by turnOrder, fallback to userCode for old data
+          membersData.sort((a, b) => {
+            const orderA = a.turnOrder !== undefined ? a.turnOrder : parseInt(a.userCode);
+            const orderB = b.turnOrder !== undefined ? b.turnOrder : parseInt(b.userCode);
+            return orderA - orderB;
+          });
           setMembers(membersData);
           setLoading(false);
         }, (error) => {
