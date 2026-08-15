@@ -2,7 +2,7 @@
 
 :root {
   /* Colors */
-  --bg-canvas: #F4F6F9;
+  --bg-canvas: #EEF2F6;
   --bg-surface: #FFFFFF;
   --bg-surface-hover: #F8FAFC;
   --bg-surface-active: #EEF2F7;
@@ -28,8 +28,8 @@
   --info: #0EA5E9;
   --info-light: #F0F9FF;
 
-  --border-default: #E5E7EB;
-  --border-hover: #D1D5DB;
+  --border-default: #E2E8F0;
+  --border-hover: #CBD5E1;
   --border-focus: #2563EB;
 
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
