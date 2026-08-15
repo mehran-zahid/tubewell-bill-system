@@ -111,8 +111,15 @@ export default function RegisterTab({ isAdmin }) {
   // Client-side Member Filter
   const filteredEntries = useMemo(() => {
     if (selectedMember === 'all') return entries;
-    return entries.filter(entry => entry.memberId === selectedMember);
-  }, [entries, selectedMember]);
+    const mem = members.find(m => m.id === selectedMember);
+    if (!mem) return [];
+    
+    return entries.filter(entry => 
+      String(entry.memberId) === String(mem.id) || 
+      String(entry.memberId) === String(mem.userCode) ||
+      (parseInt(entry.memberId, 10) === parseInt(mem.userCode, 10) && !isNaN(parseInt(mem.userCode, 10)))
+    );
+  }, [entries, selectedMember, members]);
 
   // Max date for non-admins to prevent picking a start date older than 6 months
   const maxAllowedDate = useMemo(() => {
