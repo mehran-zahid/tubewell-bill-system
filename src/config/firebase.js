@@ -26,12 +26,14 @@ export const waitForFirebase = () => {
 
 let app = null;
 export let db = null;
+export let auth = null;
 
 export const initFirebaseAsync = async () => {
   if (!app) {
     const fb = await waitForFirebase();
     app = fb.initializeApp(firebaseConfig);
     db = fb.getFirestore(app);
+    auth = fb.getAuth(app);
   }
-  return { db, firebase: window.firebase };
+  return { db, auth, firebase: window.firebase };
 };

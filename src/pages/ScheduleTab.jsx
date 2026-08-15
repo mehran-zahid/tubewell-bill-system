@@ -133,7 +133,7 @@ export default function ScheduleTab() {
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1>168-Hour Warabandi Schedule</h1>
+          <h1>168-Hour Weekly Schedule</h1>
           <p>
             Continuous weekly tubewell schedule. Current day: <strong style={{ color: 'var(--primary)' }}>{currentDayStr}</strong>
           </p>
@@ -218,8 +218,7 @@ export default function ScheduleTab() {
                     <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {member.tenants.map((t, tIdx) => {
                         const tNameEn = t.tenantNameEn || t.tenantName || '';
-                        const tNameUr = t.tenantNameUr || '';
-                        const tDisplayName = tNameEn || tNameUr || `Thekedar #${tIdx + 1}`;
+                        const tDisplayName = tNameEn || `Tenant #${tIdx + 1}`;
                         const h = t.tenantLeasedHours || 0;
                         const m = t.tenantLeasedMinutes || 0;
                         const acres = t.tenantLeasedAcres || 0;

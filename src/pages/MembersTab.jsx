@@ -1,9 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
+import { autoRechainSchedule } from '../utils/scheduleLogic';
+import { Edit2, Trash2, Plus, X, MoreVertical } from '../components/Icons';
+import ConfirmModal from '../components/ConfirmModal';
 
-export default function MembersTab() {
+export default function MembersTab({ isAdmin }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState(null);
+  const [formData, setFormData] = useState(getEmptyForm());
+  
+  // Confirm Delete Modal State
+  const [memberToDelete, setMemberToDelete] = useState(null);
+  
+  // Context Menu State
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.context-menu-container')) {
+        setActiveDropdownId(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  function getEmptyForm() {
+    return {
+      nameEn: '',
+      userCode: '',
+      durationHours: 0,
+      durationMinutes: 0,
+      totalLandAcres: 0,
+      isLeased: false,
+      tenants: []
+    };
+  }
 
   useEffect(() => {
     let unsubscribe;
@@ -41,8 +77,157 @@ export default function MembersTab() {
     };
   }, []);
 
+  const openAddModal = () => {
+    setFormData(getEmptyForm());
+    setEditingMemberId(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (member) => {
+    setFormData({
+      nameEn: member.nameEn || '',
+      userCode: member.userCode || '',
+      durationHours: member.durationHours || 0,
+      durationMinutes: member.durationMinutes || 0,
+      totalLandAcres: member.totalLandAcres || 0,
+      isLeased: member.isLeased || false,
+      tenants: member.tenants ? JSON.parse(JSON.stringify(member.tenants)) : []
+    });
+    setEditingMemberId(member.id);
+    setIsModalOpen(true);
+  };
+
+  const handleAddTenant = () => {
+    setFormData({
+      ...formData,
+      tenants: [
+        ...formData.tenants,
+        { tenantNameEn: '', tenantLeasedHours: 0, tenantLeasedMinutes: 0, tenantLeasedAcres: 0, id: Date.now().toString() }
+      ]
+    });
+  };
+
+  const handleRemoveTenant = (index) => {
+    const newTenants = [...formData.tenants];
+    newTenants.splice(index, 1);
+    setFormData({ ...formData, tenants: newTenants });
+  };
+
+  const handleTenantChange = (index, field, value) => {
+    const newTenants = [...formData.tenants];
+    newTenants[index][field] = value;
+    setFormData({ ...formData, tenants: newTenants });
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!formData.nameEn || !formData.userCode) {
+      alert("Name and User Code are required.");
+      return;
+    }
+
+    try {
+      const { db, firebase } = await initFirebaseAsync();
+      
+      // Parse numbers
+      const newMemberData = {
+        ...formData,
+        userCode: formData.userCode.toString(),
+        durationHours: parseInt(formData.durationHours) || 0,
+        durationMinutes: parseInt(formData.durationMinutes) || 0,
+        totalLandAcres: parseFloat(formData.totalLandAcres) || 0,
+        tenants: formData.tenants.map(t => ({
+          ...t,
+          tenantLeasedHours: parseInt(t.tenantLeasedHours) || 0,
+          tenantLeasedMinutes: parseInt(t.tenantLeasedMinutes) || 0,
+          tenantLeasedAcres: parseFloat(t.tenantLeasedAcres) || 0
+        }))
+      };
+
+      let updatedMembers = [...members];
+      
+      if (editingMemberId) {
+        const index = updatedMembers.findIndex(m => m.id === editingMemberId);
+        if (index > -1) {
+          updatedMembers[index] = { ...updatedMembers[index], ...newMemberData };
+        }
+      } else {
+        // Just push it, we don't have an ID yet, we'll let Firestore generate it later
+        // But for sorting and auto-rechaining locally before batching, we generate a temp ID
+        updatedMembers.push({ id: `temp_${Date.now()}`, ...newMemberData });
+      }
+
+      // Sort by user code
+      updatedMembers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
+      
+      // Apply Auto-Schedule Rechain
+      updatedMembers = autoRechainSchedule(updatedMembers);
+
+      // Batch write all members to update the schedule atomically
+      const batch = db.batch();
+      
+      updatedMembers.forEach(member => {
+        let docRef;
+        if (member.id && !member.id.startsWith('temp_')) {
+          docRef = db.collection('members').doc(member.id);
+        } else {
+          docRef = db.collection('members').doc();
+          // Remove temp id so it doesn't get saved
+          delete member.id;
+        }
+        batch.set(docRef, member, { merge: true });
+      });
+
+      await batch.commit();
+      setIsModalOpen(false);
+
+    } catch (error) {
+      console.error("Error saving member:", error);
+      alert("Failed to save member.");
+    }
+  };
+
+  const confirmDelete = (memberId) => {
+    setMemberToDelete(memberId);
+  };
+
+  const executeDelete = async () => {
+    if (!memberToDelete) return;
+    const memberId = memberToDelete;
+    
+    try {
+      const { db, firebase } = await initFirebaseAsync();
+      
+      // Remove the member locally
+      let updatedMembers = members.filter(m => m.id !== memberId);
+      
+      // Apply Auto-Schedule Rechain
+      updatedMembers = autoRechainSchedule(updatedMembers);
+
+      // Batch write to update the remaining members' schedule and delete the chosen one
+      const batch = db.batch();
+      
+      updatedMembers.forEach(member => {
+        const docRef = db.collection('members').doc(member.id);
+        batch.set(docRef, member, { merge: true });
+      });
+
+      // Delete the chosen member
+      const deleteRef = db.collection('members').doc(memberId);
+      batch.delete(deleteRef);
+
+      await batch.commit();
+      setMemberToDelete(null);
+
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      alert("Failed to delete member.");
+    }
+  };
+
   // Helper to get initials from a name
   const getInitials = (name) => {
+    if (!name) return '?';
     const parts = name.split(' ');
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
@@ -84,13 +269,19 @@ export default function MembersTab() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Members Directory</h1>
           <p>Manage the {members.length} active tubewell share members</p>
         </div>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={openAddModal} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Plus size={16} /> Add Member
+          </button>
+        )}
       </div>
 
+      {/* Stats Cards ... */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         {/* TOTAL MEMBERS */}
         <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
@@ -129,10 +320,50 @@ export default function MembersTab() {
         {members.map(member => {
           const avatar = getAvatarColor(member.userCode);
           return (
-            <div key={member.userCode} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div key={member.userCode} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
               
+              {/* Admin Actions */}
+              {isAdmin && (
+                <div className="context-menu-container" style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                  <button 
+                    onClick={() => setActiveDropdownId(activeDropdownId === member.id ? null : member.id)}
+                    className="btn-icon"
+                    title="Options"
+                  >
+                    <MoreVertical size={18} />
+                  </button>
+                  
+                  {activeDropdownId === member.id && (
+                    <div style={{
+                      position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                      background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+                      borderRadius: '8px', boxShadow: 'var(--shadow-md)',
+                      width: '120px', zIndex: 10, display: 'flex', flexDirection: 'column',
+                      padding: '4px'
+                    }}>
+                      <button 
+                        onClick={() => { openEditModal(member); setActiveDropdownId(null); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left', borderRadius: '4px', fontSize: '13px', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => { confirmDelete(member.id); setActiveDropdownId(null); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', textAlign: 'left', borderRadius: '4px', fontSize: '13px', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-light)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Card Header with Avatar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 'var(--space-4)', paddingRight: isAdmin ? '40px' : '0' }}>
                 
                 {/* Avatar */}
                 <div style={{ 
@@ -145,20 +376,21 @@ export default function MembersTab() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 600,
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  flexShrink: 0
                 }}>
                   {getInitials(member.nameEn)}
                 </div>
 
                 {/* Name & ID */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.nameEn}</h3>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.nameEn}</h3>
                     {member.isLeased && (
                       <span className="badge badge-warning" style={{ fontSize: '11px', padding: '2px 6px' }}>Leased</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID: {member.userCode}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Code: {member.userCode}</span>
                 </div>
               </div>
 
@@ -178,6 +410,19 @@ export default function MembersTab() {
                 </div>
               </div>
 
+              {/* Time Window (Weekly Schedule) */}
+              <div style={{ background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)', marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Start Time</div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.startDay} {member.startTime}</div>
+                </div>
+                <div style={{ color: 'var(--text-tertiary)' }}>→</div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>End Time</div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.endDay} {member.endTime}</div>
+                </div>
+              </div>
+
               {/* Tenants Section */}
               {member.tenants && member.tenants.length > 0 && (
                 <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-default)', paddingTop: '16px' }}>
@@ -186,9 +431,7 @@ export default function MembersTab() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {member.tenants.map((tenant, tIdx) => {
-                      const tNameEn = tenant.tenantNameEn || tenant.tenantName || '';
-                      const tNameUr = tenant.tenantNameUr || '';
-                      const tDisplayName = tNameEn || tNameUr || `Thekedar #${tIdx + 1}`;
+                      const tDisplayName = tenant.tenantNameEn || `Tenant #${tIdx + 1}`;
                       const h = tenant.tenantLeasedHours || 0;
                       const m = tenant.tenantLeasedMinutes || 0;
                       const acres = tenant.tenantLeasedAcres || 0;
@@ -221,6 +464,138 @@ export default function MembersTab() {
           );
         })}
       </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+            >
+              <X size={24} />
+            </button>
+            
+            <h2 style={{ margin: '0 0 24px 0' }}>{editingMemberId ? 'Edit Member' : 'Add New Member'}</h2>
+
+            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Name</label>
+                  <input 
+                    type="text" required 
+                    className="input-field" 
+                    value={formData.nameEn} 
+                    onChange={e => setFormData({...formData, nameEn: e.target.value})} 
+                  />
+                </div>
+                <div style={{ width: '100px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>User Code</label>
+                  <input 
+                    type="number" required 
+                    className="input-field" 
+                    value={formData.userCode} 
+                    onChange={e => setFormData({...formData, userCode: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Weekly Hours</label>
+                  <input 
+                    type="number" min="0" required
+                    className="input-field" 
+                    value={formData.durationHours} 
+                    onChange={e => setFormData({...formData, durationHours: e.target.value})} 
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Weekly Minutes</label>
+                  <input 
+                    type="number" min="0" max="59" required
+                    className="input-field" 
+                    value={formData.durationMinutes} 
+                    onChange={e => setFormData({...formData, durationMinutes: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Land (Acres)</label>
+                <input 
+                  type="number" step="0.1" min="0" required
+                  className="input-field" 
+                  value={formData.totalLandAcres} 
+                  onChange={e => setFormData({...formData, totalLandAcres: e.target.value})} 
+                />
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={formData.isLeased} 
+                  onChange={e => setFormData({...formData, isLeased: e.target.checked})} 
+                />
+                <span style={{ fontWeight: 500 }}>Is Leased to Tenants?</span>
+              </label>
+
+              {formData.isLeased && (
+                <div style={{ background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h4 style={{ margin: 0 }}>Tenants</h4>
+                    <button type="button" onClick={handleAddTenant} className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '12px' }}>+ Add Tenant</button>
+                  </div>
+                  
+                  {formData.tenants.map((t, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '12px', background: 'var(--bg-surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Name</label>
+                          <input type="text" placeholder="e.g. Ali Raza" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantNameEn} onChange={e => handleTenantChange(idx, 'tenantNameEn', e.target.value)} required />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Hours</label>
+                            <input type="number" min="0" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantLeasedHours} onChange={e => handleTenantChange(idx, 'tenantLeasedHours', e.target.value)} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Minutes</label>
+                            <input type="number" min="0" max="59" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantLeasedMinutes} onChange={e => handleTenantChange(idx, 'tenantLeasedMinutes', e.target.value)} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Acres</label>
+                            <input type="number" step="0.1" min="0" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantLeasedAcres} onChange={e => handleTenantChange(idx, 'tenantLeasedAcres', e.target.value)} />
+                          </div>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => handleRemoveTenant(idx)} className="btn-icon btn-icon-danger" style={{ marginTop: '16px' }} title="Remove Tenant">
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ))}
+                  {formData.tenants.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>No tenants added. Click '+ Add Tenant' to add one.</p>}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Member & Schedule</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal 
+        isOpen={!!memberToDelete}
+        title="Delete Member"
+        message="Are you sure you want to delete this member? The entire weekly schedule will automatically re-chain to fill the gap."
+        onConfirm={executeDelete}
+        onCancel={() => setMemberToDelete(null)}
+        confirmText="Delete Member"
+      />
     </div>
   );
 }
