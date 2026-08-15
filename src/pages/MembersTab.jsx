@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { autoRechainSchedule } from '../utils/scheduleLogic';
-import { Edit2, Trash2, Plus, X, MoreVertical } from '../components/Icons';
+import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload } from '../components/Icons';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function MembersTab({ isAdmin }) {
@@ -18,11 +18,18 @@ export default function MembersTab({ isAdmin }) {
   
   // Context Menu State
   const [activeDropdownId, setActiveDropdownId] = useState(null);
+  
+  // Add Menu State
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.context-menu-container')) {
         setActiveDropdownId(null);
+      }
+      if (!e.target.closest('.add-menu-container')) {
+        setIsAddMenuOpen(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
@@ -225,6 +232,189 @@ export default function MembersTab({ isAdmin }) {
     }
   };
 
+  const handleExportSchedule = () => {
+    if (!members || members.length === 0) {
+      return alert('No schedule members to export.');
+    }
+
+    const exportPayload = {
+      appName: "Turbine Bill & Schedule Manager",
+      exportDate: new Date().toISOString(),
+      version: "1.0",
+      totalMembers: members.length,
+      users: members.map(u => {
+        const h = u.durationHours !== undefined ? u.durationHours : Math.floor((u.totalMinutes || 600) / 60);
+        const m = u.durationMinutes !== undefined ? u.durationMinutes : ((u.totalMinutes || 600) % 60);
+        const totMins = u.totalMinutes || (h * 60 + m);
+
+        const tenants = Array.isArray(u.tenants) && u.tenants.length > 0 
+          ? u.tenants 
+          : (u.isLeased && (u.tenantNameEn || u.tenantNameUr || u.tenantName || u.linkedMemberId)
+              ? [{
+                  id: 't-1',
+                  tenantType: u.tenantType || 'external',
+                  linkedMemberId: u.linkedMemberId || null,
+                  tenantNameEn: u.tenantNameEn || u.tenantName || '',
+                  tenantNameUr: u.tenantNameUr || '',
+                  tenantPhone: u.tenantPhone || '',
+                  tenantLeasedHours: u.tenantLeasedHours || 0,
+                  tenantLeasedMinutes: u.tenantLeasedMinutes || 0,
+                  tenantTotalLeasedMins: u.tenantTotalLeasedMins || 0,
+                  tenantLeasedAcres: u.tenantLeasedAcres || 0
+                }]
+              : []);
+
+        return {
+          userCode: u.userCode || u.code || '01',
+          nameEn: u.nameEn || u.name || '',
+          nameUr: u.nameUr || '',
+          phone: u.phone || '',
+          userType: u.userType || 'internal',
+          startDay: u.startDay || 'Sunday',
+          startTime: u.startTime || '08:00',
+          endDay: u.endDay || 'Monday',
+          endTime: u.endTime || '01:00',
+          durationHours: h,
+          durationMinutes: m,
+          totalMinutes: totMins,
+          totalLandAcres: u.totalLandAcres || 0,
+          isLeased: !!u.isLeased,
+          tenants: tenants
+        };
+      })
+    };
+
+    const jsonStr = JSON.stringify(exportPayload, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `turbine_schedule_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportSchedule = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target.result;
+        let importedUsers = [];
+
+        if (file.name.endsWith('.json') || text.trim().startsWith('{') || text.trim().startsWith('[')) {
+          const parsed = JSON.parse(text);
+          const rawList = Array.isArray(parsed) ? parsed : (parsed.users || parsed.schedule || []);
+
+          if (!Array.isArray(rawList) || rawList.length === 0) {
+            throw new Error('JSON file does not contain a valid users list.');
+          }
+
+          importedUsers = rawList.map((u, idx) => {
+            const nameEn = (u.nameEn || u.name || '').trim();
+            const uCode = String(u.userCode || u.code || (idx + 1)).padStart(2, '0');
+
+            const h = parseInt(u.durationHours, 10) || 0;
+            const m = parseInt(u.durationMinutes, 10) || 0;
+            let totMins = (h * 60) + m;
+            if (totMins <= 0 && u.totalMinutes) totMins = u.totalMinutes;
+            if (totMins <= 0) totMins = 600;
+
+            const rawTenants = Array.isArray(u.tenants) && u.tenants.length > 0
+              ? u.tenants
+              : (u.isLeased || u.tenantNameEn || u.tenantNameUr || u.tenantName
+                  ? [{
+                      id: 't-1',
+                      tenantType: u.tenantType || 'external',
+                      linkedMemberId: u.linkedMemberId || null,
+                      tenantNameEn: (u.tenantNameEn || u.tenantName || '').trim(),
+                      tenantNameUr: (u.tenantNameUr || '').trim(),
+                      tenantPhone: (u.tenantPhone || '').trim(),
+                      tenantLeasedHours: parseInt(u.tenantLeasedHours, 10) || 0,
+                      tenantLeasedMinutes: parseInt(u.tenantLeasedMinutes, 10) || 0,
+                      tenantTotalLeasedMins: u.tenantTotalLeasedMins || ((parseInt(u.tenantLeasedHours, 10) || 0) * 60 + (parseInt(u.tenantLeasedMinutes, 10) || 0)),
+                      tenantLeasedAcres: parseFloat(u.tenantLeasedAcres) || 0
+                    }]
+                  : []);
+
+            return {
+              id: 'usr-' + Date.now() + '-' + idx,
+              userCode: uCode,
+              code: uCode,
+              nameEn: nameEn,
+              nameUr: (u.nameUr || '').trim(),
+              name: nameEn,
+              fullName: nameEn,
+              phone: (u.phone || '').trim(),
+              userType: u.userType || 'internal',
+              startDay: u.startDay || 'Sunday',
+              startTime: u.startTime || '08:00',
+              endDay: u.endDay || 'Monday',
+              endTime: u.endTime || '01:00',
+              durationHours: h || Math.floor(totMins / 60),
+              durationMinutes: m || (totMins % 60),
+              totalMinutes: totMins,
+              totalLandAcres: parseFloat(u.totalLandAcres) || 0,
+              isLeased: !!u.isLeased || rawTenants.length > 0,
+              tenants: rawTenants.map(t => ({
+                id: t.id || `t-${Date.now()}-${Math.random()}`,
+                tenantType: t.tenantType || 'external',
+                linkedMemberId: t.linkedMemberId || null,
+                tenantNameEn: (t.tenantNameEn || t.tenantName || '').trim(),
+                tenantNameUr: (t.tenantNameUr || '').trim(),
+                tenantPhone: (t.tenantPhone || '').trim(),
+                tenantLeasedHours: parseInt(t.tenantLeasedHours, 10) || 0,
+                tenantLeasedMinutes: parseInt(t.tenantLeasedMinutes, 10) || 0,
+                tenantTotalLeasedMins: t.tenantTotalLeasedMins || ((parseInt(t.tenantLeasedHours, 10) || 0) * 60 + (parseInt(t.tenantLeasedMinutes, 10) || 0)),
+                tenantLeasedAcres: parseFloat(t.tenantLeasedAcres) || 0
+              }))
+            };
+          });
+        }
+
+        if (importedUsers.length === 0) throw new Error("No users found.");
+
+        if (!window.confirm(`Found ${importedUsers.length} members. Importing will OVERWRITE the current schedule. Are you sure?`)) {
+          return;
+        }
+        
+        const { db, firebase } = await initFirebaseAsync();
+        
+        // Sort and rechain
+        importedUsers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
+        importedUsers = autoRechainSchedule(importedUsers);
+
+        const batch = db.batch();
+
+        // Delete all current members first
+        const snapshot = await db.collection('members').get();
+        snapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+
+        // Set all new imported members
+        importedUsers.forEach(member => {
+          const docRef = db.collection('members').doc(member.id);
+          batch.set(docRef, member);
+        });
+
+        await batch.commit();
+        alert('Schedule imported successfully!');
+      } catch (err) {
+        console.error("Import error:", err);
+        alert('Failed to import schedule: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+    setIsAddMenuOpen(false);
+  };
+
   // Helper to get initials from a name
   const getInitials = (name) => {
     if (!name) return '?';
@@ -275,9 +465,47 @@ export default function MembersTab({ isAdmin }) {
           <p>Manage the {members.length} active tubewell share members</p>
         </div>
         {isAdmin && (
-          <button className="btn btn-primary" onClick={openAddModal} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Plus size={16} /> Add Member
-          </button>
+          <div className="add-menu-container" style={{ position: 'relative' }}>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              Add <ChevronDown size={16} />
+            </button>
+            
+            <input 
+              type="file" 
+              accept=".json" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleImportSchedule}
+            />
+
+            {isAddMenuOpen && (
+              <div className="dropdown-menu">
+                <button 
+                  className="dropdown-item"
+                  onClick={() => { openAddModal(); setIsAddMenuOpen(false); }}
+                >
+                  <Plus size={16} /> Add New Member
+                </button>
+                <div className="dropdown-divider"></div>
+                <button 
+                  className="dropdown-item"
+                  onClick={() => { handleExportSchedule(); setIsAddMenuOpen(false); }}
+                >
+                  <Download size={16} /> Export Schedule
+                </button>
+                <button 
+                  className="dropdown-item"
+                  onClick={() => { fileInputRef.current.click(); }}
+                >
+                  <Upload size={16} /> Import Schedule
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -334,28 +562,19 @@ export default function MembersTab({ isAdmin }) {
                   </button>
                   
                   {activeDropdownId === member.id && (
-                    <div style={{
-                      position: 'absolute', top: '100%', right: 0, marginTop: '4px',
-                      background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-                      borderRadius: '8px', boxShadow: 'var(--shadow-md)',
-                      width: '120px', zIndex: 10, display: 'flex', flexDirection: 'column',
-                      padding: '4px'
-                    }}>
+                    <div className="dropdown-menu">
                       <button 
+                        className="dropdown-item"
                         onClick={() => { openEditModal(member); setActiveDropdownId(null); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left', borderRadius: '4px', fontSize: '13px', transition: 'background 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <Edit2 size={14} /> Edit
+                        <Edit2 size={16} /> Edit Member
                       </button>
+                      <div className="dropdown-divider"></div>
                       <button 
+                        className="dropdown-item danger"
                         onClick={() => { confirmDelete(member.id); setActiveDropdownId(null); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', textAlign: 'left', borderRadius: '4px', fontSize: '13px', transition: 'background 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-light)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <Trash2 size={14} /> Delete
+                        <Trash2 size={16} /> Delete Member
                       </button>
                     </div>
                   )}
