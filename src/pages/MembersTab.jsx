@@ -26,6 +26,25 @@ export default function MembersTab({ isAdmin }) {
   // Drag and Drop State
   const [dragItemIndex, setDragItemIndex] = useState(null);
   const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
+  
+  // Smooth scroll ref
+  const scrollRAF = React.useRef(null);
+
+  const startScrolling = (direction) => {
+    if (scrollRAF.current) return;
+    const scrollStep = () => {
+      window.scrollBy(0, direction * 8); // Smooth 8px per frame
+      scrollRAF.current = requestAnimationFrame(scrollStep);
+    };
+    scrollRAF.current = requestAnimationFrame(scrollStep);
+  };
+
+  const stopScrolling = () => {
+    if (scrollRAF.current) {
+      cancelAnimationFrame(scrollRAF.current);
+      scrollRAF.current = null;
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -631,12 +650,17 @@ export default function MembersTab({ isAdmin }) {
                 if (e.clientY === 0) return;
                 const threshold = 100;
                 if (e.clientY < threshold) {
-                  window.scrollBy(0, -20);
+                  startScrolling(-1);
                 } else if (window.innerHeight - e.clientY < threshold) {
-                  window.scrollBy(0, 20);
+                  startScrolling(1);
+                } else {
+                  stopScrolling();
                 }
               }}
-              onDragEnd={handleDrop}
+              onDragEnd={(e) => {
+                stopScrolling();
+                handleDrop(e);
+              }}
               style={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
