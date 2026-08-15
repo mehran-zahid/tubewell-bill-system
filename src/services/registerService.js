@@ -62,11 +62,10 @@ export async function getRegisterEntries(startDate = null, endDate = null) {
 // Function to fetch just the absolute latest entry's end reading
 export async function getLatestEndReading() {
   const { db, firebase } = await initFirebaseAsync();
-  
   const q = firebase.query(
     firebase.collection(db, COLLECTION_NAME),
     firebase.orderBy('date', 'desc'),
-    firebase.limit(5) // fetch a few to find the actual latest created one if dates match
+    firebase.limit(5)
   );
   
   const querySnapshot = await firebase.getDocs(q);
@@ -85,4 +84,30 @@ export async function getLatestEndReading() {
   });
   
   return docs[0].endReading;
+}
+
+export async function updateRegisterEntries(updatedEntries) {
+  const { db, firebase } = await initFirebaseAsync();
+  const batch = firebase.writeBatch(db);
+  
+  updatedEntries.forEach(entry => {
+    const docRef = firebase.doc(db, COLLECTION_NAME, entry.id);
+    const updates = { ...entry };
+    delete updates.id; // Don't write the ID field to the document itself
+    
+    // Ensure numbers
+    if (updates.startReading) updates.startReading = parseFloat(updates.startReading);
+    if (updates.endReading) updates.endReading = parseFloat(updates.endReading);
+    if (updates.unitsConsumed) updates.unitsConsumed = parseFloat(updates.unitsConsumed);
+    
+    batch.update(docRef, updates);
+  });
+  
+  await batch.commit();
+}
+
+export async function deleteRegisterEntry(id) {
+  const { db, firebase } = await initFirebaseAsync();
+  const docRef = firebase.doc(db, COLLECTION_NAME, id);
+  await firebase.deleteDoc(docRef);
 }
