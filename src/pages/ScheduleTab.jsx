@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Users } from '../components/Icons';
 import { initFirebaseAsync } from '../config/firebase';
+import { format12Hour } from '../utils/scheduleLogic';
 
 const DAYS = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
 
@@ -8,14 +9,6 @@ function timeToMinutes(day, time) {
   if (!time) return 0;
   const [hours, minutes] = time.split(':').map(Number);
   return DAYS[day] * 24 * 60 + hours * 60 + minutes;
-}
-
-function format12Hour(timeStr) {
-  if (!timeStr) return '';
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const h12 = hours % 12 || 12;
-  return `${h12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
 export default function ScheduleTab() {

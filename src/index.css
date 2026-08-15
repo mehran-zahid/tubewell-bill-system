@@ -138,6 +138,15 @@ h1, h2, h3, h4, h5, h6 {
   outline: none;
 }
 
+select.input-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -180,6 +189,17 @@ h1, h2, h3, h4, h5, h6 {
 .btn-secondary:hover {
   background: var(--bg-surface-hover);
   border-color: var(--border-hover);
+}
+
+.btn-tertiary {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid transparent;
+}
+
+.btn-tertiary:hover {
+  background: var(--secondary-light);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
 .btn-icon {

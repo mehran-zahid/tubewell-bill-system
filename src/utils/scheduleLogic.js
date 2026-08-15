@@ -7,6 +7,20 @@ export function timeToMins(tStr) {
   return (h * 60) + (m || 0);
 }
 
+// Convert "HH:MM" to "hh:mm AM/PM"
+export function format12Hour(timeStr) {
+  if (!timeStr || typeof timeStr !== 'string') return '';
+  if (!timeStr.includes(':')) return timeStr; // Return as-is if not in HH:MM format
+  
+  const parts = timeStr.split(':');
+  const hours = parseInt(parts[0], 10) || 0;
+  const minutes = parseInt(parts[1], 10) || 0;
+  
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const h12 = hours % 12 || 12;
+  return `${h12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+}
+
 // Convert absolute minute offset back to Day and "HH:MM"
 export function offsetToDayTime(offsetMins) {
   // Normalize offset to 1 week (10080 minutes)

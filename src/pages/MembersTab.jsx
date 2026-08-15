@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
-import { autoRechainSchedule } from '../utils/scheduleLogic';
-import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload, GripVertical } from '../components/Icons';
+import { autoRechainSchedule, format12Hour } from '../utils/scheduleLogic';
+import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload, GripVertical, CalendarClock } from '../components/Icons';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function MembersTab({ isAdmin }) {
@@ -23,9 +23,14 @@ export default function MembersTab({ isAdmin }) {
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const fileInputRef = React.useRef(null);
   
+  // Anchor Modal State
+  const [isAnchorModalOpen, setIsAnchorModalOpen] = useState(false);
+  const [anchorData, setAnchorData] = useState({ startDay: 'Sunday', startTime: '06:00' });
+  
   // Drag and Drop State
   const [dragItemIndex, setDragItemIndex] = useState(null);
   const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
+  const [scheduleAnchor, setScheduleAnchor] = useState(null);
   
   // Smooth scroll ref
   const scrollRAF = React.useRef(null);
@@ -66,6 +71,8 @@ export default function MembersTab({ isAdmin }) {
       durationHours: 0,
       durationMinutes: 0,
       totalLandAcres: 0,
+      startDay: 'Sunday',
+      startTime: '06:00',
       isLeased: false,
       tenants: []
     };
@@ -223,8 +230,52 @@ export default function MembersTab({ isAdmin }) {
     }
   };
 
+  const openAnchorModal = () => {
+    if (members.length > 0) {
+      setAnchorData({ startDay: members[0].startDay || 'Sunday', startTime: members[0].startTime || '06:00' });
+    }
+    setIsAnchorModalOpen(true);
+  };
+
+  const handleSaveAnchor = async (e) => {
+    e.preventDefault();
+    if (members.length === 0) {
+      setIsAnchorModalOpen(false);
+      return;
+    }
+
+    try {
+      let updatedMembers = autoRechainSchedule([...members], { 
+        day: anchorData.startDay, 
+        time: anchorData.startTime 
+      });
+      setMembers(updatedMembers);
+      setIsAnchorModalOpen(false);
+
+      const { db, firebase } = await initFirebaseAsync();
+      const batch = firebase.writeBatch(db);
+      
+      updatedMembers.forEach(member => {
+        const docRef = firebase.doc(db, 'members', member.id);
+        batch.update(docRef, {
+          startDay: member.startDay,
+          startTime: member.startTime,
+          endDay: member.endDay,
+          endTime: member.endTime
+        });
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error("Error saving anchor:", error);
+      alert("Failed to save schedule anchor.");
+    }
+  };
+
   const handleDragStart = (e, index) => {
     setDragItemIndex(index);
+    if (members.length > 0) {
+      setScheduleAnchor({ day: members[0].startDay, time: members[0].startTime });
+    }
     // Needed for Firefox
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', e.target.parentNode);
@@ -255,8 +306,8 @@ export default function MembersTab({ isAdmin }) {
       turnOrder: idx + 1
     }));
 
-    // Recalculate schedule
-    updatedMembers = autoRechainSchedule(updatedMembers);
+    // Recalculate schedule keeping original anchor
+    updatedMembers = autoRechainSchedule(updatedMembers, scheduleAnchor);
 
     setMembers(updatedMembers); // Optimistic UI update
     setDragItemIndex(null);
@@ -554,7 +605,15 @@ export default function MembersTab({ isAdmin }) {
           <p>Manage the {members.length} active tubewell share members</p>
         </div>
         {isAdmin && (
-          <div className="add-menu-container" style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button 
+              className="btn btn-tertiary" 
+              onClick={openAnchorModal} 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <CalendarClock size={16} /> Change Start Time
+            </button>
+            <div className="add-menu-container" style={{ position: 'relative' }}>
             <button 
               className="btn btn-primary" 
               onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} 
@@ -594,6 +653,7 @@ export default function MembersTab({ isAdmin }) {
                 </button>
               </div>
             )}
+          </div>
           </div>
         )}
       </div>
@@ -761,12 +821,12 @@ export default function MembersTab({ isAdmin }) {
               <div style={{ background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)', marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Start Time</div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.startDay} {member.startTime}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.startDay} {format12Hour(member.startTime)}</div>
                 </div>
                 <div style={{ color: 'var(--text-tertiary)' }}>→</div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>End Time</div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.endDay} {member.endTime}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.endDay} {format12Hour(member.endTime)}</div>
                 </div>
               </div>
 
@@ -815,20 +875,18 @@ export default function MembersTab({ isAdmin }) {
       {/* Modal */}
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <button 
-              onClick={() => setIsModalOpen(false)}
-              style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
-            >
+          <div className="modal-content" style={{ width: '600px', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', padding: '24px' }}>
+            <button className="modal-close" onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
               <X size={24} />
             </button>
             
             <h2 style={{ margin: '0 0 24px 0' }}>{editingMemberId ? 'Edit Member' : 'Add New Member'}</h2>
-
+            
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
               <div style={{ display: 'flex', gap: '16px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Name</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Member Name (English)</label>
                   <input 
                     type="text" required 
                     className="input-field" 
@@ -934,7 +992,6 @@ export default function MembersTab({ isAdmin }) {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal 
         isOpen={!!memberToDelete}
         title="Delete Member"
@@ -943,6 +1000,104 @@ export default function MembersTab({ isAdmin }) {
         onCancel={() => setMemberToDelete(null)}
         confirmText="Delete Member"
       />
+
+      {/* Schedule Anchor Modal */}
+      {isAnchorModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ width: '400px', maxWidth: '90vw', padding: '24px', overflow: 'visible' }}>
+            <button className="modal-close" onClick={() => setIsAnchorModalOpen(false)} style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+              <X size={24} />
+            </button>
+            
+            <h2 style={{ margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CalendarClock size={24} color="var(--primary)" /> Change Start Time
+            </h2>
+            
+            <form onSubmit={handleSaveAnchor} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Start Day</label>
+                    
+                    {/* Custom Dropdown Trigger */}
+                    <div 
+                      className="input-field" 
+                      style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                      onClick={() => document.getElementById('day-dropdown-menu').style.display = document.getElementById('day-dropdown-menu').style.display === 'none' ? 'block' : 'none'}
+                    >
+                      <span>{anchorData.startDay}</span>
+                      <ChevronDown size={16} color="var(--text-secondary)" />
+                    </div>
+
+                    {/* Custom Dropdown Menu */}
+                    <div 
+                      id="day-dropdown-menu"
+                      style={{ 
+                        display: 'none',
+                        position: 'absolute', 
+                        top: '100%', 
+                        left: 0, 
+                        right: 0, 
+                        marginTop: '4px',
+                        background: 'var(--bg-surface)', 
+                        border: '1px solid var(--border-default)', 
+                        borderRadius: 'var(--radius-md)', 
+                        boxShadow: 'var(--shadow-md)',
+                        zIndex: 100,
+                        maxHeight: '150px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                        <div 
+                          key={day}
+                          onClick={() => {
+                            setAnchorData({...anchorData, startDay: day});
+                            document.getElementById('day-dropdown-menu').style.display = 'none';
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            background: anchorData.startDay === day ? 'var(--primary-light)' : 'transparent',
+                            color: anchorData.startDay === day ? 'var(--primary)' : 'var(--text-primary)',
+                            fontWeight: anchorData.startDay === day ? 600 : 400,
+                            transition: 'background 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (anchorData.startDay !== day) e.target.style.background = 'var(--bg-muted)';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (anchorData.startDay !== day) e.target.style.background = 'transparent';
+                          }}
+                        >
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Start Time (24h)</label>
+                    <input 
+                      type="time" required 
+                      className="input-field" 
+                      value={anchorData.startTime} 
+                      onChange={e => setAnchorData({...anchorData, startTime: e.target.value})} 
+                    />
+                  </div>
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '12px', lineHeight: 1.4 }}>
+                  Setting this time anchors the entire schedule. Everyone else's time will automatically cascade sequentially after this.
+                </p>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsAnchorModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Anchor</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
