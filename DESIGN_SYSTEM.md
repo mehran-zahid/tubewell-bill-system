@@ -88,8 +88,8 @@ We use the **Inter + Outfit** font pairing — the industry-standard combination
 /* Body & UI — optimized for screen readability */
 --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
-/* Monospace — for numbers, amounts, data */
---font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+/* Monospace / Amounts */
+--font-mono: 'Outfit', system-ui, -apple-system, sans-serif;
 ```
 
 ### 3.2 Type Scale
@@ -103,15 +103,15 @@ We use the **Inter + Outfit** font pairing — the industry-standard combination
 | **Body** | Inter | 14px | 400 | 1.6 | Standard body text, descriptions |
 | **Body Small** | Inter | 13px | 400 | 1.5 | Secondary info, help text |
 | **Caption** | Inter | 12px | 500 | 1.4 | Labels, timestamps, table headers |
-| **Amount** | JetBrains Mono | 18px | 600 | 1.3 | Currency amounts (₨ 12,500) |
-| **Amount Large** | JetBrains Mono | 28px | 700 | 1.2 | KPI numbers on dashboard cards |
+| **Amount** | Outfit | 18px | 600 | 1.3 | Currency amounts (₨ 12,500) |
+| **Amount Large** | Outfit | 28px | 700 | 1.2 | KPI numbers on dashboard cards |
 
 ### 3.3 Google Fonts Import
 
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 ```
 
 ---
@@ -258,7 +258,7 @@ Row Hover:
   Background:    var(--bg-surface-hover)  →  #F8FAFC
 
 Amounts Column:
-  Font:          JetBrains Mono, 14px, weight 600
+  Font:          Outfit, 14px, weight 600
   Text-align:    right
 ```
 
@@ -516,7 +516,7 @@ Never show a blank screen. Display:
   /* Typography */
   --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-mono: 'Outfit', system-ui, -apple-system, sans-serif;
 
   /* Spacing */
   --space-1: 4px;
