@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import MainLayout from './components/MainLayout';
 import ScheduleTab from './pages/ScheduleTab';
@@ -15,6 +15,8 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { showToast } = useToast();
+  // undefined = initial load (not yet determined), null = explicitly logged out
+  const prevUserRef = useRef(undefined);
 
   useEffect(() => {
     let unsubscribe;
@@ -27,6 +29,11 @@ function AppContent() {
             const adminSnap = await firebase.getDoc(adminRef);
             
             if (adminSnap.exists()) {
+              // Only toast on genuine login (prev was null), not on page reload (prev was undefined)
+              if (prevUserRef.current === null) {
+                showToast(`Welcome back, ${currentUser.displayName || currentUser.email.split('@')[0]}!`, 'success');
+              }
+              prevUserRef.current = currentUser;
               setUser(currentUser);
               setIsAdmin(true);
             } else {
@@ -34,16 +41,19 @@ function AppContent() {
               console.warn("Unauthorized login attempt:", currentUser.email);
               showToast(`Access Denied: ${currentUser.email} does not have admin privileges.`, 'error');
               await firebase.signOut(auth);
+              prevUserRef.current = null;
               setUser(null);
               setIsAdmin(false);
             }
           } catch (error) {
             console.error("Error verifying admin status:", error);
             await firebase.signOut(auth);
+            prevUserRef.current = null;
             setUser(null);
             setIsAdmin(false);
           }
         } else {
+          prevUserRef.current = null;
           setUser(null);
           setIsAdmin(false);
         }
@@ -60,7 +70,7 @@ function AppContent() {
       const { auth, firebase } = await initFirebaseAsync();
       const provider = new firebase.GoogleAuthProvider();
       await firebase.signInWithPopup(auth, provider);
-      showToast("Logged in successfully", "success");
+      // Success toast fires in onAuthStateChanged after admin check passes
     } catch (error) {
       console.error("Login failed:", error);
       showToast("Login failed. Please try again.", "error");

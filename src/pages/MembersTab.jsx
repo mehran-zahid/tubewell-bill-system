@@ -270,7 +270,6 @@ export default function MembersTab({ isAdmin }) {
       setFormData(getEmptyForm());
       setEditingMemberId(null);
       setIsModalOpen(false);
-      setEditingMemberId(null);
       showToast("Member saved successfully", "success");
     } catch (e) {
       console.error("Error saving member", e);

@@ -70,6 +70,26 @@ export default function BillingTab({ isAdmin }) {
     localStorage.setItem('billing_fixedExpenses', JSON.stringify(fixedExpenses));
   }, [billingTitle, startDate, endDate, cycleStartReading, cycleEndReading, wapdaBill, fixedExpenses]);
 
+  // Clears all form inputs and localStorage after a bill is published
+  const resetForm = () => {
+    const d = new Date();
+    const defaultTitle = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+    setBillingTitle(defaultTitle);
+    setStartDate('');
+    setEndDate('');
+    setCycleStartReading('');
+    setCycleEndReading('');
+    setWapdaBill('');
+    setWapdaRefNo('');
+    setWapdaBillDetails(null);
+    setFixedExpenses([{ id: 1, title: 'Operator Salary', amount: '' }]);
+    setBillingResult(null);
+    setIsResultStale(false);
+    // Clear localStorage so the next new bill is always blank
+    ['billingTitle','startDate','endDate','cycleStartReading','cycleEndReading','wapdaBill','fixedExpenses']
+      .forEach(k => localStorage.removeItem(`billing_${k}`));
+  };
+
   const [liveWarnings, setLiveWarnings] = useState([]);
 
   // Mark result as stale when any calculation input changes after a result exists
@@ -464,6 +484,7 @@ export default function BillingTab({ isAdmin }) {
       const bills = await getAllGeneratedBills();
       setSavedBills(bills);
       setSelectedBillId(saved.id);
+      resetForm();
       setViewMode('list');
       setEditingBillId(null);
       showToast("Bill saved and published successfully!", "success");
