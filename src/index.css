@@ -606,6 +606,27 @@ select.input-field {
   .bottom-nav {
     display: flex;
   }
+
+  .input-field {
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto;
+    max-height: 90vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    position: absolute;
+    bottom: 0;
+    margin: 0;
+    animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 /* Schedule Card Responsiveness */

@@ -128,10 +128,10 @@ export default function ScheduleTab() {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
-          <h1>Weekly Schedule</h1>
-          <p>
+          <h1 style={{ fontSize: '22px', margin: 0 }}>Weekly Schedule</h1>
+          <p style={{ fontSize: '12px', marginTop: '4px', color: 'var(--text-secondary)' }}>
             Live tubewell rotation. Today is <strong style={{ color: 'var(--primary)' }}>{currentDayStr}</strong>
           </p>
         </div>
@@ -168,13 +168,13 @@ export default function ScheduleTab() {
           const endDateStr = `${member.endDay.substring(0, 3)}, ${months[endDate.getMonth()]} ${endDate.getDate()}`;
 
           return (
-            <div 
+              <div 
               key={member.userCode} 
               className="card"
               style={{ 
                 display: 'flex', 
                 flexDirection: 'column',
-                padding: '16px',
+                padding: '12px',
                 background: isCurrentShift ? 'var(--success-light)' : 'var(--bg-surface)',
                 borderColor: isCurrentShift ? 'var(--success)' : 'var(--border-default)',
                 position: 'relative',
@@ -196,16 +196,16 @@ export default function ScheduleTab() {
 
               <div className="schedule-card-inner">
                 <div className="schedule-info">
-                  <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500, marginBottom: '6px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
                     {startDateStr} {format12Hour(member.startTime)} <span style={{ opacity: 0.5 }}>→</span> {endDateStr} {format12Hour(member.endTime)}
                   </div>
                   
                   {/* Primary Name Display */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {member.nameEn}
                     </span>
-                    {member.isLeased && <span className="badge badge-warning" style={{ fontSize: '11px', padding: '2px 6px' }}>Leased</span>}
+                    {member.isLeased && <span className="badge badge-warning" style={{ fontSize: '10px', padding: '2px 6px' }}>Leased</span>}
                   </div>
                   
                   {/* Tenants Display (Chips) */}
@@ -230,14 +230,14 @@ export default function ScheduleTab() {
 
                         return (
                           <div key={tIdx} style={{ 
-                            fontSize: '11px', 
+                            fontSize: '10px', 
                             fontWeight: 500, 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             gap: '3px',
                             background: isCurrentShift ? 'rgba(22, 163, 74, 0.15)' : 'var(--bg-muted)',
                             color: isCurrentShift ? 'var(--success)' : 'var(--text-secondary)',
-                            padding: '1px 6px',
+                            padding: '2px 6px',
                             borderRadius: '10px',
                             border: `1px solid ${isCurrentShift ? 'rgba(22, 163, 74, 0.3)' : 'var(--border-default)'}`
                           }}>
@@ -252,10 +252,12 @@ export default function ScheduleTab() {
 
                 <div className="schedule-duration" style={{ 
                   color: isCurrentShift ? 'var(--success)' : 'var(--primary)',
+                  fontSize: '14px',
+                  fontWeight: 700
                 }}>
                   <span>{member.durationHours}h {member.durationMinutes > 0 ? `${member.durationMinutes}m` : ''}</span>
                   {isCurrentShift && (
-                    <span style={{ fontSize: '13px', fontWeight: 500, opacity: 0.8 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 500, opacity: 0.8 }}>
                       {timeRemaining}
                     </span>
                   )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { autoRechainSchedule, format12Hour } from '../utils/scheduleLogic';
 import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload, GripVertical, CalendarClock } from '../components/Icons';
+import { Settings2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonMemberCard, SkeletonMembersTable } from '../components/Skeleton';
@@ -595,28 +596,19 @@ export default function MembersTab({ isAdmin }) {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
-          <h1>Members Directory</h1>
+          <h1 style={{ fontSize: '22px', margin: 0 }}>Members Directory</h1>
         </div>
         {isAdmin && (
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="add-menu-container" style={{ display: 'flex', alignItems: 'center' }}>
             <button 
-              className="btn btn-tertiary" 
-              onClick={openAnchorModal} 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              className="btn-icon" 
+              onClick={(e) => { e.stopPropagation(); setIsAddMenuOpen(!isAddMenuOpen); }}
+              style={{ padding: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
             >
-              <CalendarClock size={16} /> Change Start Time
+              <MoreVertical size={20} />
             </button>
-            <div className="add-menu-container" style={{ position: 'relative' }}>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              Add <ChevronDown size={16} />
-            </button>
-            
             <input 
               type="file" 
               accept=".json" 
@@ -624,66 +616,45 @@ export default function MembersTab({ isAdmin }) {
               style={{ display: 'none' }} 
               onChange={handleImportSchedule}
             />
-
-            {isAddMenuOpen && (
-              <div className="dropdown-menu">
-                <button 
-                  className="dropdown-item"
-                  onClick={() => { openAddModal(); setIsAddMenuOpen(false); }}
-                >
-                  <Plus size={16} /> Add New Member
-                </button>
-                <div className="dropdown-divider"></div>
-                <button 
-                  className="dropdown-item"
-                  onClick={() => { handleExportSchedule(); setIsAddMenuOpen(false); }}
-                >
-                  <Download size={16} /> Export Schedule
-                </button>
-                <button 
-                  className="dropdown-item"
-                  onClick={() => { fileInputRef.current.click(); }}
-                >
-                  <Upload size={16} /> Import Schedule
-                </button>
-              </div>
-            )}
-          </div>
           </div>
         )}
       </div>
 
       {/* Stats Cards ... */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         {/* TOTAL MEMBERS */}
-        <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TOTAL MEMBERS</div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>{totalMembers}</div>
+        <div className="card" style={{ flex: '1 1 130px', padding: '12px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>TOTAL MEMBERS</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalMembers}</div>
         </div>
 
         {/* TOTAL TENANTS */}
-        <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TOTAL TENANTS</div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>{totalTenants}</div>
+        <div className="card" style={{ flex: '1 1 130px', padding: '12px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>TOTAL TENANTS</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalTenants}</div>
         </div>
 
         {/* TENANT LEASED HOURS */}
-        <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TENANT LEASED HOURS</div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>{tenantLeasedHours.toFixed(2)} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-tertiary)' }}>hrs</span></div>
+        <div className="card" style={{ flex: '1 1 130px', padding: '12px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>TENANT HOURS</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            {tenantLeasedHours.toFixed(1)} <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)' }}>hrs</span>
+          </div>
         </div>
 
         {/* TOTAL ASSIGNED HOURS */}
-        <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TOTAL ASSIGNED HOURS</div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--primary)' }}>{totalAssignedHours.toFixed(2)} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-tertiary)' }}>/ 168.00 hrs</span></div>
+        <div className="card" style={{ flex: '1 1 130px', padding: '12px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>ASSIGNED HOURS</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '4px', flexWrap: 'wrap' }}>
+            {totalAssignedHours.toFixed(1)} <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)' }}>/ 168 hrs</span>
+          </div>
         </div>
 
         {/* REMAINING WEEKLY HOURS */}
-        <div className="card" style={{ padding: '16px', background: remainingWeeklyHours < 0 ? 'var(--danger-light)' : 'var(--bg-surface)', borderColor: remainingWeeklyHours < 0 ? 'var(--danger)' : 'var(--border-default)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>REMAINING WEEKLY HOURS</div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: remainingWeeklyHours < 0 ? 'var(--danger)' : 'var(--warning)' }}>
-            {remainingWeeklyHours < 0 ? `Over by +${Math.abs(remainingWeeklyHours).toFixed(2)}` : remainingWeeklyHours.toFixed(2)} <span style={{ fontSize: '14px', fontWeight: 600, color: remainingWeeklyHours < 0 ? 'var(--danger)' : 'var(--text-tertiary)', opacity: remainingWeeklyHours < 0 ? 0.8 : 1 }}>hrs</span>
+        <div className="card" style={{ flex: '1 1 130px', padding: '12px', background: remainingWeeklyHours < 0 ? 'var(--danger-light)' : 'var(--bg-surface)', borderColor: remainingWeeklyHours < 0 ? 'var(--danger)' : 'var(--border-default)' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>REMAINING HOURS</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: remainingWeeklyHours < 0 ? 'var(--danger)' : 'var(--warning)', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            {remainingWeeklyHours < 0 ? `+${Math.abs(remainingWeeklyHours).toFixed(1)}` : remainingWeeklyHours.toFixed(1)} <span style={{ fontSize: '11px', fontWeight: 600, color: remainingWeeklyHours < 0 ? 'var(--danger)' : 'var(--text-tertiary)', opacity: remainingWeeklyHours < 0 ? 0.8 : 1 }}>hrs</span>
           </div>
         </div>
       </div>
@@ -722,6 +693,7 @@ export default function MembersTab({ isAdmin }) {
                 display: 'flex', 
                 flexDirection: 'column', 
                 position: 'relative',
+                padding: '12px',
                 opacity: dragItemIndex === index ? 0.5 : 1,
                 transform: dragOverItemIndex === index ? 'scale(1.02)' : 'scale(1)',
                 border: dragOverItemIndex === index ? '2px dashed var(--primary)' : '1px solid var(--border-default)',
@@ -771,8 +743,8 @@ export default function MembersTab({ isAdmin }) {
                 
                 {/* Avatar */}
                 <div style={{ 
-                  width: '44px', 
-                  height: '44px', 
+                  width: '32px', 
+                  height: '32px', 
                   borderRadius: '50%', 
                   background: avatar.bg,
                   color: avatar.text,
@@ -780,7 +752,7 @@ export default function MembersTab({ isAdmin }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 600,
-                  fontSize: '16px',
+                  fontSize: '12px',
                   flexShrink: 0
                 }}>
                   {member.userCode || '?'}
@@ -789,9 +761,9 @@ export default function MembersTab({ isAdmin }) {
                 {/* Name & ID */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.nameEn}</h3>
+                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.nameEn}</h3>
                     {member.isLeased && (
-                      <span className="badge badge-warning" style={{ fontSize: '11px', padding: '2px 6px' }}>Leased</span>
+                      <span className="badge badge-warning" style={{ fontSize: '10px', padding: '2px 6px' }}>Leased</span>
                     )}
                   </div>
                   <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Code: {member.userCode}</span>
@@ -799,38 +771,38 @@ export default function MembersTab({ isAdmin }) {
               </div>
 
               {/* Stats (Share & Land) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: 'var(--space-4)' }}>
-                <div style={{ background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 500 }}>Weekly Share</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, color: 'var(--primary)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: 'var(--space-3)' }}>
+                <div style={{ background: 'var(--bg-canvas)', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px', fontWeight: 500 }}>Weekly Share</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 700, color: 'var(--primary)' }}>
                     {member.durationHours}h {member.durationMinutes > 0 ? `${member.durationMinutes}m` : ''}
                   </div>
                 </div>
-                <div style={{ background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 500 }}>Total Land</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, color: 'var(--success-dark)' }}>
-                    {member.totalLandAcres || 0} <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)' }}>acres</span>
+                <div style={{ background: 'var(--bg-canvas)', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px', fontWeight: 500 }}>Total Land</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 700, color: 'var(--success-dark)' }}>
+                    {member.totalLandAcres || 0} <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)' }}>acres</span>
                   </div>
                 </div>
               </div>
 
               {/* Time Window (Weekly Schedule) */}
-              <div style={{ background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)', marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ background: 'var(--bg-canvas)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', marginBottom: 'var(--space-3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Start Time</div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.startDay} {format12Hour(member.startTime)}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Start Time</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.startDay ? member.startDay.substring(0,3) : ''} {format12Hour(member.startTime)}</div>
                 </div>
                 <div style={{ color: 'var(--text-tertiary)' }}>→</div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>End Time</div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.endDay} {format12Hour(member.endTime)}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>End Time</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{member.endDay ? member.endDay.substring(0,3) : ''} {format12Hour(member.endTime)}</div>
                 </div>
               </div>
 
               {/* Tenants Section */}
               {member.tenants && member.tenants.length > 0 && (
-                <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-default)', paddingTop: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-default)', paddingTop: '12px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', letterSpacing: '0.5px' }}>
                     TENANTS
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -848,11 +820,11 @@ export default function MembersTab({ isAdmin }) {
                       const tAvatar = { bg: 'var(--warning-light)', text: 'var(--warning)' };
                       
                       return (
-                        <div key={tenant.id || tIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div key={tenant.id || tIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-canvas)', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ 
-                              width: '32px', height: '32px', borderRadius: '50%', background: tAvatar.bg, color: tAvatar.text, 
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 600, flexShrink: 0 
+                              width: '28px', height: '28px', borderRadius: '50%', background: tAvatar.bg, color: tAvatar.text, 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, flexShrink: 0 
                             }}>
                               {tenant.tenantCode || '?'}
                             </div>
@@ -886,7 +858,7 @@ export default function MembersTab({ isAdmin }) {
             
             <h2 style={{ margin: '0 0 24px 0' }}>{editingMemberId ? 'Edit Member' : 'Add New Member'}</h2>
             
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveMember(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
               <div style={{ display: 'flex', gap: '16px' }}>
                 <div style={{ flex: 1 }}>
@@ -1023,7 +995,7 @@ export default function MembersTab({ isAdmin }) {
               <CalendarClock size={24} color="var(--primary)" /> Change Start Time
             </h2>
             
-            <form onSubmit={handleSaveAnchor} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveAnchor(anchorData); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', gap: '16px' }}>
                   <div style={{ flex: 1, position: 'relative' }}>
@@ -1108,6 +1080,44 @@ export default function MembersTab({ isAdmin }) {
           </div>
         </div>
       )}
+          {isAddMenuOpen && (
+            <div className="modal-overlay" onClick={() => setIsAddMenuOpen(false)} style={{ zIndex: 60 }}>
+              <div className="modal-content slide-up" onClick={e => e.stopPropagation()} style={{ padding: '24px', maxWidth: '400px' }}>
+                <h2 style={{ fontSize: '18px', marginBottom: '16px', borderBottom: '1px solid var(--border-default)', paddingBottom: '12px' }}>Admin Actions</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button 
+                    className="btn btn-primary"
+                    style={{ justifyContent: 'flex-start', padding: '16px' }}
+                    onClick={() => { openAddModal(); setIsAddMenuOpen(false); }}
+                  >
+                    <Plus size={20} style={{ marginRight: '12px' }} /> Add New Member
+                  </button>
+                  <button 
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start', padding: '16px' }}
+                    onClick={() => { openAnchorModal(); setIsAddMenuOpen(false); }}
+                  >
+                    <CalendarClock size={20} style={{ marginRight: '12px' }} /> Change Start Time
+                  </button>
+                  <button 
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start', padding: '16px' }}
+                    onClick={() => { handleExportSchedule(); setIsAddMenuOpen(false); }}
+                  >
+                    <Download size={20} style={{ marginRight: '12px' }} /> Export Schedule
+                  </button>
+                  <button 
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start', padding: '16px' }}
+                    onClick={() => { fileInputRef.current.click(); setIsAddMenuOpen(false); }}
+                  >
+                    <Upload size={20} style={{ marginRight: '12px' }} /> Import Schedule
+                  </button>
+                </div>
+                <button className="btn btn-tertiary" style={{ width: '100%', marginTop: '16px' }} onClick={() => setIsAddMenuOpen(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
     </div>
   );
 }
