@@ -220,89 +220,93 @@ export default function BillingTab({ isAdmin }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-        {/* Input Panel */}
-        <div className="card" style={{ flex: '0 0 320px' }}>
-          <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Bill Details</h2>
-          
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label className="form-label">Billing Title</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              value={billingTitle}
-              onChange={(e) => setBillingTitle(e.target.value)}
-              placeholder="e.g. August 2026"
-            />
-          </div>
+      {/* Input Panel */}
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Bill Details</h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          {/* Left Column - General Info */}
+          <div>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label">Billing Title</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={billingTitle}
+                onChange={(e) => setBillingTitle(e.target.value)}
+                placeholder="e.g. August 2026"
+              />
+            </div>
 
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">Start Date</label>
-              <input 
-                type="date" 
-                className="input-field" 
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">Start Date</label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">End Date</label>
+                <input 
+                  type="date" 
+                  className="input-field" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">End Date</label>
-              <input 
-                type="date" 
-                className="input-field" 
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+            
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">Cycle Start Reading</label>
+                <input 
+                  type="number" 
+                  className="input-field" 
+                  value={cycleStartReading}
+                  onChange={(e) => setCycleStartReading(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">Cycle End Reading</label>
+                <input 
+                  type="number" 
+                  className="input-field" 
+                  value={cycleEndReading}
+                  onChange={(e) => setCycleEndReading(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
             </div>
-          </div>
-          
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">Cycle Start Reading</label>
+
+            {liveWarnings.length > 0 && (
+              <div style={{ background: 'var(--danger-light)', borderLeft: '3px solid var(--danger)', padding: '12px', borderRadius: '4px', marginBottom: '24px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger-dark)', textTransform: 'uppercase', marginBottom: '8px' }}>Pre-generation Warnings</div>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--danger-dark)', fontSize: '13px' }}>
+                  {liveWarnings.map((warning, idx) => (
+                    <li key={idx} style={{ marginBottom: '4px' }}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label">Total WAPDA Bill (Rs.)</label>
               <input 
                 type="number" 
                 className="input-field" 
-                value={cycleStartReading}
-                onChange={(e) => setCycleStartReading(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">Cycle End Reading</label>
-              <input 
-                type="number" 
-                className="input-field" 
-                value={cycleEndReading}
-                onChange={(e) => setCycleEndReading(e.target.value)}
-                placeholder="0"
+                placeholder="e.g. 50000"
+                value={wapdaBill}
+                onChange={(e) => setWapdaBill(e.target.value)}
               />
             </div>
           </div>
 
-          {liveWarnings.length > 0 && (
-            <div style={{ background: 'var(--danger-light)', borderLeft: '3px solid var(--danger)', padding: '12px', borderRadius: '4px', marginBottom: '24px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger-dark)', textTransform: 'uppercase', marginBottom: '8px' }}>Pre-generation Warnings</div>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--danger-dark)', fontSize: '13px' }}>
-                {liveWarnings.map((warning, idx) => (
-                  <li key={idx} style={{ marginBottom: '4px' }}>{warning}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="form-group" style={{ marginBottom: '24px' }}>
-            <label className="form-label">Total WAPDA Bill (Rs.)</label>
-            <input 
-              type="number" 
-              className="input-field" 
-              placeholder="e.g. 50000"
-              value={wapdaBill}
-              onChange={(e) => setWapdaBill(e.target.value)}
-            />
-          </div>
-
-          <div style={{ marginBottom: '24px' }}>
+          {/* Right Column - Fixed Expenses */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <label className="form-label" style={{ marginBottom: 0 }}>Fixed Expenses</label>
               <button 
@@ -313,84 +317,84 @@ export default function BillingTab({ isAdmin }) {
               </button>
             </div>
             
-            {fixedExpenses.map((expense, i) => (
-              <div key={expense.id} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  placeholder="Title (e.g. Salary)"
-                  style={{ flex: 1 }}
-                  value={expense.title}
-                  onChange={(e) => handleExpenseChange(expense.id, 'title', e.target.value)}
-                />
-                <input 
-                  type="number" 
-                  className="input-field" 
-                  placeholder="Rs."
-                  style={{ width: '100px' }}
-                  value={expense.amount}
-                  onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
-                />
-                <button 
-                  onClick={() => handleRemoveExpense(expense.id)}
-                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0 4px' }}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', flex: 1 }}>
+              {fixedExpenses.map((expense, i) => (
+                <div key={expense.id} style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    placeholder="Title (e.g. Salary)"
+                    style={{ flex: 1 }}
+                    value={expense.title}
+                    onChange={(e) => handleExpenseChange(expense.id, 'title', e.target.value)}
+                  />
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    placeholder="Rs."
+                    style={{ width: '100px' }}
+                    value={expense.amount}
+                    onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
+                  />
+                  <button 
+                    onClick={() => handleRemoveExpense(expense.id)}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0 4px' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', justifyContent: 'center', marginTop: 'auto' }}
+              onClick={handleCalculate}
+              disabled={loading}
+            >
+              <Calculator size={18} />
+              {loading ? 'Calculating...' : 'Generate Bills'}
+            </button>
           </div>
-
-          <button 
-            className="btn btn-primary" 
-            style={{ width: '100%', justifyContent: 'center' }}
-            onClick={handleCalculate}
-            disabled={loading}
-          >
-            <Calculator size={18} />
-            {loading ? 'Calculating...' : 'Generate Bills'}
-          </button>
-        </div>
-
-        {/* Results Panel */}
-        <div style={{ flex: 1 }}>
-          {!billingResult ? (
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 20px', textAlign: 'center', height: '100%' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
-                <Calculator size={32} />
-              </div>
-              <h3 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                No Bill Generated
-              </h3>
-              <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '300px' }}>
-                Enter the WAPDA bill and click Generate to see the calculated breakdown for each member and tenant.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-              <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>WAPDA HOURLY RATE</div>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--primary)' }}>
-                  Rs. {billingResult.wapdaHourlyRate ? billingResult.wapdaHourlyRate.toFixed(2) : '0.00'} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-tertiary)' }}>/ hr</span>
-                </div>
-              </div>
-              <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TOTAL METER HOURS</div>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  {billingResult.totalConsumedHours.toFixed(2)}h
-                </div>
-              </div>
-              <div className="card" style={{ padding: '16px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 600 }}>Total Fixed</div>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>Rs. {billingResult.totalFixedExpenses.toLocaleString()}</div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
+      {/* Results Panel */}
+      {!billingResult ? (
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 20px', textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
+            <Calculator size={32} />
+          </div>
+          <h3 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            No Bill Generated
+          </h3>
+          <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '300px' }}>
+            Enter the WAPDA bill and click Generate to see the calculated breakdown for each member and tenant.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '24px' }}>
+          <div className="card" style={{ padding: '20px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>WAPDA HOURLY RATE</div>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--primary)' }}>
+              Rs. {billingResult.wapdaHourlyRate ? billingResult.wapdaHourlyRate.toFixed(2) : '0.00'} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-tertiary)' }}>/ hr</span>
+            </div>
+          </div>
+          <div className="card" style={{ padding: '20px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TOTAL METER HOURS</div>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>
+              {billingResult.totalConsumedHours.toFixed(2)}h
+            </div>
+          </div>
+          <div className="card" style={{ padding: '20px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 600 }}>Total Fixed</div>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>Rs. {billingResult.totalFixedExpenses.toLocaleString()}</div>
+          </div>
+        </div>
+      )}
+
       {billingResult && (
-        <div style={{ marginTop: '24px' }}>
+        <div>
           {/* Breakdown Table */}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', tableLayout: 'fixed' }}>
