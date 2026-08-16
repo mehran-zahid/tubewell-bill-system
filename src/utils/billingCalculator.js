@@ -80,7 +80,7 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
   // WAPDA Hourly Rate based purely on total consumed hours from the meter
   const wapdaHourlyRate = totalConsumedHours > 0 ? (totalWapda / totalConsumedHours) : 0;
 
-  for (const [id, stats] of userStats.entries()) {
+  for (const [_id, stats] of userStats.entries()) {
     // Usage Bill (WAPDA) based strictly on consumed meter hours * hourly rate
     const usageShare = stats.consumedHours * wapdaHourlyRate;
     

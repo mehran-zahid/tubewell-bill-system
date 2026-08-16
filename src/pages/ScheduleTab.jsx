@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users } from '../components/Icons';
+import { Users } from '../components/Icons';
 import { initFirebaseAsync } from '../config/firebase';
 import { format12Hour } from '../utils/scheduleLogic';
 
@@ -16,7 +16,6 @@ export default function ScheduleTab() {
   const [loading, setLoading] = useState(true);
   const [currentDayStr, setCurrentDayStr] = useState('');
   const [currentMinutes, setCurrentMinutes] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const updateTime = () => {
@@ -119,11 +118,8 @@ export default function ScheduleTab() {
     timeRemaining = `${remHours}h ${remMins}m remaining`;
   }
 
-  // Filter after rotation
-  const filteredSortedMembers = sortedMembers.filter(m => 
-    m.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    m.userCode.includes(searchQuery)
-  );
+  // No search filter anymore
+  const filteredSortedMembers = sortedMembers;
 
   return (
     <div>
@@ -139,7 +135,7 @@ export default function ScheduleTab() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '900px' }}>
         {filteredSortedMembers.length === 0 ? (
           <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            No members found matching "{searchQuery}"
+            No members found.
           </div>
         ) : filteredSortedMembers.map((member, index) => {
           const isCurrentShift = activeIndex !== -1 && member.userCode === members[activeIndex].userCode;

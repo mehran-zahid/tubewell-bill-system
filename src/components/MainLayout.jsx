@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarClock, Users, LogIn, LogOut, Shield, BookText, Calculator, Search } from './Icons';
+import { CalendarClock, Users, LogOut, Shield, BookText, Calculator, Search } from './Icons';
 import Logo from './Logo';
 
 export default function MainLayout({ 

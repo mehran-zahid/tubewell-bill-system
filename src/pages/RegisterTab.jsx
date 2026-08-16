@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { BookText, Plus, Filter, AlertTriangle, Trash2 } from '../components/Icons';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Plus, Filter, Trash2 } from '../components/Icons';
 import { addRegisterEntry, getRegisterEntries, getLatestEndReading, updateRegisterEntries, deleteRegisterEntry } from '../services/registerService';
 import { initFirebaseAsync } from '../config/firebase';
 import NewRegisterEntryModal from '../components/NewRegisterEntryModal';
@@ -27,7 +27,7 @@ export default function RegisterTab({ isAdmin }) {
   const inputRefs = useRef({});
 
   // Calculate Date Ranges
-  const getCalculatedDateRange = () => {
+  const getCalculatedDateRange = useCallback(() => {
     const today = new Date();
     let start = new Date();
     let end = new Date();
@@ -56,7 +56,7 @@ export default function RegisterTab({ isAdmin }) {
         startDate: start.toISOString().split('T')[0],
         endDate: end.toISOString().split('T')[0]
     };
-  };
+  }, [timeframe, customStartDate, customEndDate, isAdmin]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,7 +111,7 @@ export default function RegisterTab({ isAdmin }) {
       }
     };
     fetchData();
-  }, [timeframe, customStartDate, customEndDate, isAdmin]);
+  }, [timeframe, customStartDate, customEndDate, isAdmin, latestEndReading, members.length, getCalculatedDateRange]);
 
   const handleAddEntry = async (data) => {
     try {

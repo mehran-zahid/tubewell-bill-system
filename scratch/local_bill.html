@@ -1,0 +1,875 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-16" />
+    <meta name="keywords" content="industrial electricity bill, mdi bill, duplicate bill" />
+    <meta name="description" content="Industrial MDI electricity consumer bill" />
+    <title>MEPCO ONLINE BILL</title>
+
+    <noscript>
+        <h3>You must have JavaScript enabled in order to view this page.</h3>
+    </noscript>
+
+    <link href="/styles/bill-fonts/fonts.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&amp;family=Roboto:wght@400;500;700;900&amp;display=swap" rel="stylesheet" />
+    <link href="/styles/ibill-design.css?v=20260811e" rel="stylesheet" type="text/css" />
+    <link href="/styles/ibill-design-app.css?v=20260811e" rel="stylesheet" type="text/css" />
+    <link href="/styles/img-zoom/multizoom.css" rel="stylesheet" type="text/css" />
+
+    <style>
+        .main-dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            justify-content: start;
+            row-gap: 3px;
+            column-gap: 4px;
+            margin-top: 3px;
+        }
+
+        .inner-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .component-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .card-header {
+            background: #0c2356;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 8px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .en-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .ur-lbl {
+            font-family: "Noto Nastaliq Urdu", serif;
+            font-size: 8px;
+            color: #334155;
+            direction: rtl;
+        }
+
+        .val-space {
+            min-height: 14px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #020617;
+            word-break: break-word;
+        }
+
+        .grid-4col {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .grid-col-cell {
+            padding: 6px 7px;
+            min-width: 0;
+        }
+
+        .border-divider-left {
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .meter-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .meter-table th,
+        .meter-table td {
+            border: 1px solid #e2e8f0;
+            padding: 4px 5px;
+            font-size: 9px;
+            text-align: center;
+        }
+
+        .meter-table th {
+            background: #f8fafc;
+            font-weight: 800;
+        }
+
+        .right-panel-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .right-section-cell {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 6px;
+            text-align: center;
+        }
+
+        .right-main-val {
+            font-size: 13px;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        .payable-card,
+        .lp-surcharge-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 8px;
+            background: #ffffff;
+        }
+
+        .meter-snaps-grid {
+            display: grid;
+            gap: 4px;
+            grid-template-columns: repeat(2, 1fr);
+            padding: 5px;
+        }
+
+        .meter-snap-cell {
+            border: 1px solid #e2e8f0;
+            min-height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .meter-snap-cell img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .header-brand-mark--split {
+            display: flex;
+            align-items: center;
+            line-height: 1;
+        }
+
+        .header-brand-text {
+            font-size: 37px;
+            font-weight: 400;
+            letter-spacing: -1px;
+            line-height: 0.9;
+        }
+
+        .header-brand-emblem {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+            margin-left: 2px;
+        }
+
+        .header-brand-logo {
+            width: auto;
+            max-width: 120px;
+            height: 38px;
+            object-fit: contain;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            inset: 0;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            max-height: 70%;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .ibn-is-hidden {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media print {
+            .noprint {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <script src="/js/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+</head>
+<body class="gbn-print-root">
+    <span id="lblSnapError" style="color:Red;"></span>
+
+    <div id="loader-container">
+        <div class="bill-loader" role="status" aria-live="polite" aria-label="Loading bill">
+            <div class="bill-loader__icon" aria-hidden="true"></div>
+            <div class="bill-loader__title">Loading your bill</div>
+            <div id="loading-bar" class="bill-loader__bar">
+                <div id="progress"></div>
+            </div>
+            <div class="bill-loader__meta">
+                <div id="loading-text">Preparing document…</div>
+                <div id="loading-percent">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gbn-app-shell">
+        <div class="tabs noprint">
+            <div class="tabs__list">
+                <div class="tab active" onclick="showTab(0)">Bill</div>
+                <div class="tab" onclick="showTab(1)">Tax Certificate</div>
+                
+            </div>
+            
+            <div class="tabs__actions">
+                <button type="button" class="gbn-print-btn gbn-print-btn--icon" onclick="window.print()" aria-label="Print" title="Print">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M6 9V2h12v7"></path>
+                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+                        <path d="M6 14h12v8H6z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+        </div>
+
+        <div class="tab-content active">
+            
+
+            <div class="bill-canvas-viewport canvas-viewport" id="viewport-1" data-bill-index="1">
+                <div class="a4-container maincontent" id="maincontent-1">
+                    <header class="bill-header bill-header--disco-15">
+                        <div class="header-left">
+                            <div class="header-brand-mark header-brand-mark--split">
+                                
+                                <span class="header-brand-text brand-accent">MEPC</span>
+                                <img class="header-brand-emblem" src="/images/companies/mepco/logo.png" alt="MEPCO" width="34" height="34" />
+                                
+                            </div>
+                            <div class="ellipsis-protect" style="font-size: 8px; font-weight: bold; margin-top: 2px;">MEPCO GST NO: 04-07-2716-007-55</div>
+                            <div class="ellipsis-protect" style="font-size: 8px; color: #475569; line-height: 1;">
+                                <a href="http://www.mepco.com.pk" style="color: inherit; text-decoration: none;">www.mepco.com.pk</a>
+                            </div>
+                            <div class="text-danger ellipsis-protect" style="font-weight: 800; font-size: 9px; margin-top: 1px;">Say No To Corruption</div>
+                        </div>
+                        <div class="header-center">
+                            <h1 class="brand-accent ellipsis-protect" style="font-size: 13px; font-weight: 800; letter-spacing: -0.3px; margin: 0;">MULTAN ELECTRIC POWER COMPANY</h1>
+                            <h2 class="ellipsis-protect bill-header-title" style="font-size: 11px; font-weight: 800; margin: 1px 0 0 0;">ELECTRICITY CONSUMER BILL (MDI)</h2>
+                            <div class="ellipsis-protect bill-header-subtitle" style="font-size: 9px; font-weight: 700; color: #475569; margin: 0;">YOUR BETTER SERVICE – OUR PRIDE</div>
+                            
+                        </div>
+                        <div class="header-right">
+                            
+                            <div class="header-qr-urdu-row">
+                                <textarea id="header_qr_text_1" class="ibn-is-hidden" readonly>0002010102112876003258313B0EE15AC0BDE065BAD4F794D21C0108ALFHPKKA0224PK08ALFH401100101053264152040115530358654063362755802PK5921MEPCO RAAST P2M CL AC6006MULTAN625401142915311098290005220021500284980726170826070621226663044670</textarea>
+                                <button type="button" class="header-qr-trigger" title="Tap to enlarge for scanning">
+                                    <span class="header-qr-host" id="header_bill_qrcode_1"></span>
+                                </button>
+                                <div class="header-urdu-text">
+                                    
+                                    <div class="ur-lbl header-payment-urdu">راست اپنائیں۔<br /><strong>QR</strong> کوڈ سے ادائیگی کریں۔<br />انعام پائیں۔</div>
+                                    
+                                    <div class="header-payment-scan">Scan and Pay</div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </header>
+
+                    <main class="main-dashboard-grid">
+                        <section class="inner-stack">
+                            <div class="component-card consumer-detail-card--mdi">
+                                <div class="card-header">CONSUMER DETAIL</div>
+                                <div class="consumer-detail-grid">
+                                    <div class="grid-col-cell">
+                                        <div class="label-row"><span class="en-lbl">REFERENCE NO</span><span class="ur-lbl">حوالہ نمبر</span></div>
+                                        <div class="val-space">29 15311 0982900 R</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left">
+                                        <div class="label-row"><span class="en-lbl">TRANSFORMER</span><span class="ur-lbl">ٹرانسفارمر</span></div>
+                                        <div class="val-space val-space--wrap">Gulam Sarwar</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left">
+                                        <div class="label-row"><span class="en-lbl">SAN LOAD</span><span class="ur-lbl">منظور شدہ لوڈ</span></div>
+                                        <div class="val-space">18.65</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left">
+                                        <div class="label-row"><span class="en-lbl">TARIFF</span><span class="ur-lbl">ٹیرف</span></div>
+                                        <div class="val-space">D-2B(50)T</div>
+                                    </div>
+                                    <div class="grid-col-cell consumer-detail-grid__row-gap">
+                                        <div class="label-row"><span class="en-lbl">CONSUMER ID</span><span class="ur-lbl">کنزیومر نمبر</span></div>
+                                        <div class="val-space">2150028498 / 15014624440</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left consumer-detail-grid__row-gap">
+                                        <div class="label-row"><span class="en-lbl">FEEDER</span><span class="ur-lbl">فیڈر</span></div>
+                                        <div class="val-space">Machiwala(M.Pakhi)</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left consumer-detail-grid__row-gap">
+                                        <div class="label-row"><span class="en-lbl">STATUS</span><span class="ur-lbl">حالت</span></div>
+                                        <div class="val-space val-space--status"><br> <br></div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left consumer-detail-grid__row-gap consumer-detail-grid__cell--empty" aria-hidden="true"></div>
+                                    <div class="grid-col-cell consumer-detail-grid__row-gap consumer-detail-grid__cell--address">
+                                        <div class="label-row"><span class="en-lbl">NAME &amp; ADDRESS</span><span class="ur-lbl">نام و پتہ</span></div>
+                                        <div class="val-space val-space--address">Ghulam Sarwar, 12 Wb, Vehari</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left consumer-detail-grid__row-gap">
+                                        <div class="label-row"><span class="en-lbl">SUB DIVISION</span><span class="ur-lbl">سب ڈویژن</span></div>
+                                        <div class="val-space">Vehari City</div>
+                                    </div>
+                                    <div class="grid-col-cell border-divider-left consumer-detail-grid__row-gap">
+                                        <div class="label-row"><span class="en-lbl">TARIFF CAT</span><span class="ur-lbl">ٹیرف کیٹگری</span></div>
+                                        <div class="val-space">Agri. T/Well</div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+
+                            <div class="component-card meter-info-card--mdi">
+                                <div class="card-header">METER INFO</div>
+                                <table class="mdi-meter-table">
+                                    <thead>
+                                        <tr>
+                                            <th>METER</th>
+                                            <th>TYPE</th>
+                                            <th>PREVIOUS</th>
+                                            <th>PRESENT</th>
+                                            <th>MF</th>
+                                            <th>UNITS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="mdi-meter-no-cell" rowspan="3">3198010111<br>3198010111<br></td>
+                                            <td class="mdi-type-label">KWH</td>
+                                            <td>80977.1<br>16748.73<br></td>
+                                            <td>88495<br>18269<br></td>
+                                            <td>1<br>1<br></td>
+                                            <td>(O)  7518   
+(P)  1520</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="mdi-type-label">KVARH</td>
+                                            <td>12310.88<br>2599.19<br></td>
+                                            <td>13275<br>2973<br></td>
+                                            <td>1<br>1<br></td>
+                                            <td>(O)  964   
+(P)  374</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="mdi-type-label">MDI</td>
+                                            <td>-</td>
+                                            <td>28.115<br>28.127<br></td>
+                                            <td>1<br>1<br></td>
+                                            <td>(O)  28   
+(P)  28</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="mdi-meter-footer">
+                                    <div class="mdi-meter-footer-cell">
+                                        <span class="en-lbl">PRV CUMM MDI</span>
+                                        <div class="mdi-meter-footer-val">          412.885<br>          410.873<br></div>
+                                    </div>
+                                    <div class="mdi-meter-footer-cell">
+                                        <span class="en-lbl">PRS CUMM MDI</span>
+                                        <div class="mdi-meter-footer-val">          441.000<br>          439.000<br></div>
+                                    </div>
+                                    <div class="mdi-meter-footer-cell">
+                                        <span class="en-lbl">Reset no</span>
+                                        <div class="mdi-meter-footer-val">18<br>18<br></div>
+                                    </div>
+                                    <div class="mdi-meter-footer-cell">
+                                        <span class="en-lbl">Power factor</span>
+                                        <div class="mdi-meter-footer-val"></div>
+                                    </div>
+                                </div>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    
+                                    
+                                </table>
+                            </div>
+
+                            <div class="component-card charges-breakdown-card">
+                                <div class="card-header">BILL CHARGES BREAKDOWN</div>
+                                <div class="charges-breakdown-grid">
+                                    <div class="charges-breakdown-col charges-breakdown-col--left">
+                                        <div class="charges-bd-row">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en">Energy Charges</span>
+                                                <span class="charges-bd-pct">84.02 %</span>
+                                                <span class="charges-bd-ur">بجلی چارجز</span>
+                                            </div>
+                                            <span class="charges-bd-val">279,303</span>
+                                        </div>
+                                        <div class="charges-bd-row">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en">Taxes</span>
+                                                <span class="charges-bd-pct">15.98 %</span>
+                                                <span class="charges-bd-ur">کل ٹیکس</span>
+                                            </div>
+                                            <span class="charges-bd-val">53,137</span>
+                                        </div>
+                                        <div class="charges-bd-row charges-bd-row--current">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en">Current Bill</span>
+                                                <span class="charges-bd-ur">موجودہ بل</span>
+                                            </div>
+                                            <span class="charges-bd-val">332,441</span>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="charges-breakdown-col charges-breakdown-col--right">
+                                        <div class="charges-bd-row">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en charges-bd-en--strong">Arrears</span>
+                                                <span class="charges-bd-ur">بقایاجات</span>
+                                            </div>
+                                            <span class="charges-bd-val"></span>
+                                        </div>
+                                        <div class="charges-bd-row">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en charges-bd-en--strong">Installment</span>
+                                                <span class="charges-bd-ur">قسط</span>
+                                            </div>
+                                            <span class="charges-bd-val"></span>
+                                        </div>
+                                        <div class="charges-bd-row">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en charges-bd-en--strong">Adjustments</span>
+                                                <span class="charges-bd-ur">ایڈجسٹمنٹ</span>
+                                            </div>
+                                            <span class="charges-bd-val charges-bd-val--strong"></span>
+                                        </div>
+                                        
+                                        <div class="charges-bd-row">
+                                            <div class="charges-bd-label">
+                                                <span class="charges-bd-en charges-bd-en--strong">Total FPA</span>
+                                            </div>
+                                            <span class="charges-bd-val charges-bd-val--strong">3,834</span>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="charges-bd-row charges-bd-row--spacer" aria-hidden="true">
+                                        
+                                    </div>
+                                    <div class="charges-bd-row charges-bd-row--spacer charges-bd-row--spacer-alt" aria-hidden="true"></div>
+                                    <div class="charges-bd-row charges-bd-row--grand">
+                                        <div class="charges-bd-label">
+                                            <span class="charges-bd-en">Grand Total</span>
+                                            <span class="charges-bd-ur">کل واجبات</span>
+                                        </div>
+                                        <span class="charges-bd-val">336,275</span>
+                                    </div>
+                                </div>
+                                
+                                
+                            </div>
+
+                            
+                            <div class="ibn-bill-messages ibn-bill-messages--mdi">
+                                
+                                
+                            </div>
+                            
+
+                            <div class="component-card">
+                                <div class="card-header">BILL HISTORY</div>
+                                <div class="history-data-wrapper history-data-wrapper--mdi">
+                                    <div class="history-block-grid history-block-grid--mdi">
+                                        <div class="history-header-row">
+                                            <div class="history-header-cell">MONTH</div>
+                                            <div class="history-header-cell">STATUS</div>
+                                            <div class="history-header-cell">MDI</div>
+                                            <div class="history-header-cell">KWH UNITS</div>
+                                            <div class="history-header-cell">BILL (RS.)</div>
+                                            <div class="history-header-cell">PAYMENT (RS.)</div>
+                                        </div>
+                                        <div class="history-row"><div class="history-cell">Jul25</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">5345</div><div class="history-cell">197482</div><div class="history-cell">197482</div></div>
+                                        <div class="history-row"><div class="history-cell">Aug25</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">30</span></div><div class="history-cell">8816</div><div class="history-cell">315013</div><div class="history-cell">315013</div></div>
+                                        <div class="history-row"><div class="history-cell">Sep25</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">11617</div><div class="history-cell">414852</div><div class="history-cell">414852</div></div>
+                                        <div class="history-row"><div class="history-cell">Oct25</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">30</span></div><div class="history-cell">6978</div><div class="history-cell">260255</div><div class="history-cell">260255</div></div>
+                                        <div class="history-row"><div class="history-cell">Nov25</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">4050</div><div class="history-cell">156446</div><div class="history-cell">156446</div></div>
+                                        <div class="history-row"><div class="history-cell">Dec25</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">3141</div><div class="history-cell">122733</div><div class="history-cell">122733</div></div>
+                                    </div>
+                                    <div class="history-block-grid history-block-grid--mdi history-center-divider">
+                                        <div class="history-header-row">
+                                            <div class="history-header-cell">MONTH</div>
+                                            <div class="history-header-cell">STATUS</div>
+                                            <div class="history-header-cell">MDI</div>
+                                            <div class="history-header-cell">KWH UNITS</div>
+                                            <div class="history-header-cell">BILL (RS.)</div>
+                                            <div class="history-header-cell">PAYMENT (RS.)</div>
+                                        </div>
+                                        <div class="history-row"><div class="history-cell">Jan26</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">3967</div><div class="history-cell">147206</div><div class="history-cell">147206</div></div>
+                                        <div class="history-row"><div class="history-cell">Feb26</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">6925</div><div class="history-cell">275340</div><div class="history-cell">275340</div></div>
+                                        <div class="history-row"><div class="history-cell">Mar26</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">7324</div><div class="history-cell">299148</div><div class="history-cell">299148</div></div>
+                                        <div class="history-row"><div class="history-cell">Apr26</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">8594</div><div class="history-cell">317527</div><div class="history-cell">317527</div></div>
+                                        <div class="history-row"><div class="history-cell">May26</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">9564</div><div class="history-cell">377798</div><div class="history-cell">377798</div></div>
+                                        <div class="history-row"><div class="history-cell">Jun26</div><div class="history-cell"><span class="history-status-pill">  </span></div><div class="history-cell"><span class="history-mdi-pill">29</span></div><div class="history-cell">8090</div><div class="history-cell">294523</div><div class="history-cell">294523</div></div>
+                                    </div>
+                                </div>
+                                <div class="history-footer-banner">
+                                    <div class="history-footer-cell">
+                                        <div class="label-row"><span class="en-lbl">Deferred Amount</span><span class="ur-lbl">موخر شدہ رقم</span></div>
+                                        <div class="history-footer-value"></div>
+                                    </div>
+                                    <div class="history-footer-cell history-footer-cell--divider">
+                                        <div class="label-row"><span class="en-lbl">Outstanding Inst. Amount</span><span class="ur-lbl">بقایا اقساط کی رقم</span></div>
+                                        <div class="history-footer-value"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="inner-stack right-sidebar--mdi">
+                            <div class="right-panel-box">
+                                <div class="right-section-cell">
+                                    <div class="right-panel-label-row">
+                                        <span class="right-panel-en">BILL MONTH</span>
+                                        <span class="ur-lbl">مہینہ بل</span>
+                                    </div>
+                                    <div class="right-main-val">JUL 26</div>
+                                </div>
+                                <div class="right-grid-2col">
+                                    <div class="right-grid-cell">
+                                        <span class="right-panel-en right-panel-en--block">READING DATE</span>
+                                        <span class="ur-lbl right-panel-ur--block">تاریخ ریڈنگ</span>
+                                        <span class="right-panel-date-val">03 AUG 26</span>
+                                    </div>
+                                    <div class="right-grid-cell">
+                                        <span class="right-panel-en right-panel-en--block">ISSUE DATE</span>
+                                        <span class="ur-lbl right-panel-ur--block">تاریخ اجراء</span>
+                                        <span class="right-panel-date-val">03 AUG 26</span>
+                                    </div>
+                                </div>
+                                <div class="right-section-cell right-section-cell--due">
+                                    <div class="right-panel-label-row">
+                                        <span class="right-panel-en right-panel-en--due">&#9888; DUE DATE</span>
+                                        <span class="ur-lbl">مقررہ تاریخ</span>
+                                    </div>
+                                    <div class="right-main-val right-main-val--due">17 AUG 26</div>
+                                </div>
+                            </div>
+
+                            <div class="payable-card">
+                                
+                                <div class="payable-card-copy">
+                                    <span class="payable-card-title">PAYABLE WITHIN</span>
+                                    <span class="payable-card-title">DUE DATE</span>
+                                    <span class="ur-lbl payable-card-urdu">مقررہ تاریخ تک واجب الادا</span>
+                                </div>
+                                <div class="payable-card-amount">
+                                    336275
+                                </div>
+                                
+                            </div>
+
+                            <div class="lp-surcharge-card">
+                                <div class="lp-surcharge-grid">
+                                    <div class="lp-surcharge-label-col">
+                                        <div class="lp-surcharge-label-block">
+                                            <span class="lp-surcharge-line">L.P</span>
+                                            <span class="lp-surcharge-line">SURCHARGE</span>
+                                            <span class="ur-lbl lp-surcharge-urdu">تاخیر ادائیگی سرچارج</span>
+                                        </div>
+                                        <div class="lp-surcharge-label-divider"></div>
+                                        <div class="lp-surcharge-label-block">
+                                            <span class="lp-surcharge-line">PAYABLE</span>
+                                            <span class="lp-surcharge-line">AFTER DUE</span>
+                                            <span class="lp-surcharge-line">DATE</span>
+                                            <span class="ur-lbl lp-surcharge-urdu">مقررہ تاریخ کے بعد واجب الادا</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="lp-surcharge-data-col">
+                                        <div class="lp-surcharge-top-val">13,965</div>
+                                        <div class="lp-surcharge-bottom-block">
+                                            <div class="lp-surcharge-period">Till 20-AUG-26</div>
+                                            <div class="lp-surcharge-bottom-val">350,240</div>
+                                        </div>
+                                    </div>
+                                    <div class="lp-surcharge-data-col">
+                                        <div class="lp-surcharge-top-val">27,930</div>
+                                        <div class="lp-surcharge-bottom-block">
+                                            <div class="lp-surcharge-period">After 20-AUG-26</div>
+                                            <div class="lp-surcharge-bottom-val">364,205</div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            
+                            <div class="component-card qr-charges-card qr-charges-card--mdi">
+                                <textarea id="charges_qr_text_1" class="ibn-is-hidden" readonly>----- CONSUMER DETAILS -----
+REF NO: 29153110982900
+CONSUMER ID: 2150028498
+OLD REF: 29531109829005
+NTN NO: 00000000000
+STRN NO: 0000000000000
+AC: 0
+CONN DATE: 
+SAN LOAD: 18.65
+----- ENERGY DETAILS = 279303.21 -----
+UNITS: 9038
+VARIABLE CHRG: 260592.22
+FIXED CHRG: 7460
+METER RENT: 5
+SERVICE RENT: 0
+F.C. SUR: 29192.74
+QTA: -17946.75
+SEASONAL CHRGS: 0
+LPF: 0
+----- TAXES = 53137.45 -----
+ED: 2426.45
+TV FEE: 0
+GST: 50711
+ITAX: 0
+ETAX: 0
+FTAX: 0
+RSTAX: 0
+ASTAX: 0
+STAX: 0
+----- FPA DETAILS = 3834.5 -----
+FPA_ENERGY:3217.33
+IT: 0
+ED: 32.17
+STAX: 0
+FTAX: 0
+ETAX: 0
+GST: 585
+----- BILL CALC -----
+ 28.6900 X 7518
+
+ 29.5400 X 1520
+
+
+  
+ 18.65 X 400
+</textarea>
+                                <div class="qr-charges-qr-row">
+                                    <button type="button" class="qr-charges-trigger" title="Tap to enlarge for scanning">
+                                        <span class="qr-charges-host" id="charges_qrcode_1"></span>
+                                    </button>
+                                    <div class="qr-charges-tap-hint qr-charges-tap-hint--vertical noprint">Tap QR to enlarge for scanning</div>
+                                </div>
+                                <div class="ur-lbl qr-charges-urdu">چارجز کی تفصیل دیکھنے کے لیے QR کوڈ اسکین کریں</div>
+                            </div>
+                            
+                            <div class="component-card meter-snaps-card meter-snaps-card--mdi">
+                                <div class="meter-snaps-grid meter-snaps-grid--loading"
+                                     data-meter-snaps
+                                     data-ref-no="29153110982900"
+                                     data-bill-month="01-Jul-26"
+                                     data-company-code="15"
+                                     data-circle="15300"
+                                     data-division="15310"
+                                     data-batch="29"
+                                     data-bill-ym="202607"
+                                     data-meter-count="2"
+                                     data-snaps-base="http://snaps.pitc.com.pk/"></div>
+                                <div class="meter-snaps-error" hidden></div>
+                            </div>
+                            
+
+                            <div class="component-card customer-support-card customer-support-card--mdi">
+                                <div class="customer-support-title">Please call for customer support</div>
+                                <ol class="customer-support-list">
+                                    <li><b>Complaint: 118</b></li>
+                                    <li><b>SMS: 8118</b></li>
+                                    <li><b>Whatsapp</b></li>
+                                </ol>
+                            </div>
+                        </section>
+                    </main>
+
+                    <footer class="perforated-slip perforated-slip--mdi">
+                        <div class="slip-branding-grid">
+                            <div class="slip-logo-stamp-col">
+                                <img class="disco-logo-slip" src="/images/companies/mepco/logo.png" alt="MEPCO" width="48" height="48" />
+                                <div class="bank-stamp-container">
+                                    <div class="bank-stamp-circle">BANK STAMP</div>
+                                </div>
+                            </div>
+                            <div class="slip-title-area">
+                                <h4 class="slip-heading">MULTAN ELECTRIC POWER COMPANY</h4>
+                                <h4 class="slip-bill-type">ELECTRICITY CONSUMER BILL (MDI)</h4>
+                                <div class="slip-subtitle">YOUR BETTER SERVICE – OUR PRIDE</div>
+                                
+                            </div>
+                            <div>
+                                <div class="barcode-placeholder" aria-label="Payment barcode">
+                                    <svg id="ibn_bill_barcode_1"></svg>
+                                </div>
+                                
+                                <div class="barcode-caption"> - 29 15311 0982900 - JUL 26 - 17 AUG 26 - 000336275 - 000364205-20 AUG 26-000350240 - 6</div>
+                                
+                                <script>
+                                    JsBarcode("#ibn_bill_barcode_1", 'E2915311098290007261708260003362750003642052008260003502406E', { width: 1, height: 50, margin: 5, displayValue: false });
+                                </script>
+                                <div class="slip-id-box">
+                                    <div class="slip-id-row">
+                                        <div class="id-label"><span>CONSUMER ID</span><span class="ur-lbl">کنزیومر نمبر</span></div>
+                                        <div class="slip-id-value">2150028498 / 15014624440</div>
+                                    </div>
+                                    <div class="slip-id-row">
+                                        <div class="id-label"><span>REFERENCE NO</span><span class="ur-lbl">حوالہ نمبر</span></div>
+                                        <div class="slip-id-value">29 15311 0982900 R</div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                        <div class="slip-matrix-grid">
+                            <div class="slip-matrix-cell">BILL MONTH <span class="ur-lbl">مہینہ بل</span></div>
+                            <div class="slip-matrix-cell">DUE DATE <span class="ur-lbl">مقررہ تاریخ</span></div>
+                            <div class="slip-matrix-cell slip-payable-within-title">PAYABLE WITHIN DUE DATE <span class="ur-lbl">مقررہ تاریخ تک واجب الادا</span></div>
+                            <div class="slip-matrix-value slip-main-amount">
+                                336275
+                            </div>
+                            <div class="slip-matrix-value">JUL 26</div>
+                            <div class="slip-matrix-value">17 AUG 26</div>
+                            <div class="slip-matrix-cell slip-payable-after-title">PAYABLE AFTER DUE DATE <span class="ur-lbl">مقررہ تاریخ کے بعد واجب الادا</span></div>
+                            
+                            <div class="slip-matrix-value slip-late-box">Till 20-AUG-26<br />350240</div>
+                            <div class="slip-matrix-value slip-late-box">After 20-AUG-26<br />364205</div>
+                            
+                        </div>
+                    </footer>
+                </div>
+            </div>
+
+            
+        </div>
+
+        <div class="tab-content">
+            
+            <h2>Tax Certificate Not Found!</h2>
+            <p>Tax Certificate is available only for those consumers from whom Income Tax has been deducted in electricity bills.</p>
+            
+        </div>
+
+        
+    </div>
+
+    <script src="/js/bill-qr.js?v=20260630"></script>
+    <script src="/js/meter-snap-zoom.js"></script>
+    <script src="/js/meter-snaps-loader.js?v=20260702"></script>
+    <script src="/js/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function showTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+                if (contents[i]) {
+                    contents[i].classList.toggle('active', i === index);
+                }
+            });
+
+            var tariffFrame = document.getElementById('ibn-tariff-frame');
+            if (tariffFrame && index === 2 && !tariffFrame.getAttribute('src')) {
+                tariffFrame.setAttribute('src', tariffFrame.getAttribute('data-src'));
+            }
+        }
+
+        function showLoadingBar() {
+            const progressBar = document.getElementById('progress');
+            const loaderContainer = document.getElementById('loader-container');
+            const percentLabel = document.getElementById('loading-percent');
+            const duration = Math.floor(Math.random() * (5000 - 3000 + 1)) + 3000;
+            const startTime = performance.now();
+
+            function animate(time) {
+                const elapsed = time - startTime;
+                const progress = Math.min((elapsed / duration) * 100, 100);
+                progressBar.style.width = progress + '%';
+                if (percentLabel) {
+                    percentLabel.textContent = Math.round(progress) + '%';
+                }
+                if (progress < 100) {
+                    requestAnimationFrame(animate);
+                } else {
+                    loaderContainer.classList.add('bill-loader--hide');
+                    setTimeout(function () {
+                        loaderContainer.style.display = 'none';
+                    }, 450);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function handleCanvasScaling() {
+            if (window.matchMedia('print').matches) {
+                return;
+            }
+
+            var billWidth = 794;
+            var billHeight = 1123;
+            var readabilityScale = 1.5;
+            var horizontalPadding = 48;
+            var availableWidth = Math.max(window.innerWidth - horizontalPadding, billWidth * 0.5);
+            var scale = Math.min(readabilityScale, availableWidth / billWidth);
+            var tabHorizontalPad = 26;
+            var shellWidth = Math.ceil(billWidth * scale + tabHorizontalPad);
+            var shell = document.querySelector('.gbn-app-shell');
+
+            if (shell) {
+                shell.style.maxWidth = shellWidth + 'px';
+            }
+
+            document.querySelectorAll('.bill-canvas-viewport').forEach(function (viewport) {
+                viewport.style.width = billWidth + 'px';
+                viewport.style.transform = 'scale(' + scale + ')';
+                viewport.style.transformOrigin = 'top center';
+                viewport.style.marginBottom = (billHeight * (scale - 1)) + 'px';
+            });
+        }
+
+        window.onload = showLoadingBar;
+        window.addEventListener('resize', handleCanvasScaling);
+        window.addEventListener('DOMContentLoaded', function () {
+            handleCanvasScaling();
+        });
+    </script>
+</body>
+</html>

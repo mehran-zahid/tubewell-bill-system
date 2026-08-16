@@ -26,7 +26,7 @@ export default function FetchBillTab() {
         try {
           const errData = await res.json();
           errMsg = errData.error || errMsg;
-        } catch(e) {}
+        } catch(_e) {}
         throw new Error(errMsg);
       }
 

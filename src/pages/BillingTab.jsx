@@ -2,16 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
-import { Calculator, Download } from '../components/Icons';
-
-export default function BillingTab({ isAdmin }) {
+import { Calculator } from '../components/Icons';
+import { RefreshCw, CheckCircle2, Edit3, Save } from 'lucide-react';
+import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
+export default function BillingTab({ _isAdmin }) {
   const [members, setMembers] = useState([]);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [billingResult, setBillingResult] = useState(null);
 
+  const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
+  const [wapdaRefNo, setWapdaRefNo] = useState('');
+  const [isWapdaManualMode, setIsWapdaManualMode] = useState(false);
+  const [isFetchingWapda, setIsFetchingWapda] = useState(false);
+  const [wapdaBillDetails, setWapdaBillDetails] = useState(null);
+  const [showWapdaHtml, setShowWapdaHtml] = useState(false);
+
   // Helper to load from localStorage
-  const loadStored = (key, defaultVal) => {
+  function loadStored(key, defaultVal) {
     try {
       const stored = localStorage.getItem(`billing_${key}`);
       return stored ? JSON.parse(stored) : defaultVal;
@@ -31,7 +39,6 @@ export default function BillingTab({ isAdmin }) {
   const [endDate, setEndDate] = useState(() => loadStored('endDate', ''));
   const [cycleStartReading, setCycleStartReading] = useState(() => loadStored('cycleStartReading', ''));
   const [cycleEndReading, setCycleEndReading] = useState(() => loadStored('cycleEndReading', ''));
-  const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
   const [fixedExpenses, setFixedExpenses] = useState(() => loadStored('fixedExpenses', [{ id: 1, title: 'Operator Salary', amount: '' }]));
 
   // Sync to localStorage
@@ -46,6 +53,100 @@ export default function BillingTab({ isAdmin }) {
   }, [billingTitle, startDate, endDate, cycleStartReading, cycleEndReading, wapdaBill, fixedExpenses]);
 
   const [liveWarnings, setLiveWarnings] = useState([]);
+
+  // Load WAPDA Settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getWapdaSettings();
+        if (settings && settings.refNo) {
+          setWapdaRefNo(settings.refNo);
+        }
+      } catch (e) {
+        console.error("Error loading WAPDA settings", e);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // Load Bill for Selected Month
+  useEffect(() => {
+    const loadBillForMonth = async () => {
+      if (!billingTitle) return;
+      try {
+        const bill = await getWapdaBillByMonth(billingTitle);
+        if (bill) {
+          setWapdaBillDetails(bill);
+          setWapdaBill(bill.amount);
+          setIsWapdaManualMode(false);
+        } else {
+          setWapdaBillDetails(null);
+        }
+      } catch (e) {
+        console.error("Error loading WAPDA bill for month", e);
+      }
+    };
+    loadBillForMonth();
+  }, [billingTitle]);
+
+  const handleFetchWapdaBill = async () => {
+    if (!wapdaRefNo) {
+      alert("Please enter a Reference Number in the Settings or below first.");
+      setIsWapdaManualMode(true);
+      return;
+    }
+    
+    setIsFetchingWapda(true);
+    try {
+      await updateWapdaSettings(wapdaRefNo);
+      const fetched = await fetchBillFromAPI(wapdaRefNo);
+      
+      const billData = {
+        amount: fetched.amount,
+        month: fetched.month,
+        readingDate: fetched.readDate || 'Unknown',
+        rawHtml: fetched.rawHtml,
+        isManualOverride: false
+      };
+      
+      await saveWapdaBill(billingTitle, billData);
+      
+      setWapdaBillDetails(billData);
+      setWapdaBill(billData.amount);
+      setIsWapdaManualMode(false);
+    } catch (e) {
+      console.error(e);
+      alert("Error fetching bill: " + e.message);
+      setIsWapdaManualMode(true);
+    } finally {
+      setIsFetchingWapda(false);
+    }
+  };
+
+  const handleManualWapdaSave = async () => {
+    const amountNum = parseFloat(wapdaBill);
+    if (isNaN(amountNum)) {
+      alert("Please enter a valid number for the WAPDA bill.");
+      return;
+    }
+    
+    const billData = {
+      amount: amountNum,
+      month: billingTitle,
+      readingDate: 'Manual Entry',
+      rawHtml: null,
+      isManualOverride: true
+    };
+    
+    try {
+      await saveWapdaBill(billingTitle, billData);
+      setWapdaBillDetails(billData);
+      setIsWapdaManualMode(false);
+    } catch(e) {
+      console.error(e);
+      alert("Error saving manual bill");
+    }
+  };
 
   // Load Members on mount
   useEffect(() => {
@@ -293,15 +394,87 @@ export default function BillingTab({ isAdmin }) {
               </div>
             )}
 
-            <div className="form-group" style={{ marginBottom: '24px' }}>
-              <label className="form-label">Total WAPDA Bill (Rs.)</label>
-              <input 
-                type="number" 
-                className="input-field" 
-                placeholder="e.g. 50000"
-                value={wapdaBill}
-                onChange={(e) => setWapdaBill(e.target.value)}
-              />
+            <div style={{ marginBottom: '24px', background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>WAPDA Bill</label>
+                <button 
+                  onClick={() => setIsWapdaManualMode(!isWapdaManualMode)}
+                  style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Edit3 size={14} />
+                  {isWapdaManualMode ? 'Cancel Edit' : 'Edit Manually'}
+                </button>
+              </div>
+
+              {isWapdaManualMode ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    placeholder="Total WAPDA Bill (Rs.)"
+                    value={wapdaBill}
+                    onChange={(e) => setWapdaBill(e.target.value)}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setIsWapdaManualMode(false)}>Cancel</button>
+                    <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={handleManualWapdaSave}>
+                      <Save size={16} /> Save
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {wapdaBillDetails ? (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
+                      <div>
+                        <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'Outfit' }}>Rs. {parseFloat(wapdaBillDetails.amount).toLocaleString()}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {wapdaBillDetails.isManualOverride ? 'Manually Entered' : `Fetched: ${wapdaBillDetails.month} (${wapdaBillDetails.readingDate})`}
+                        </div>
+                      </div>
+                      {wapdaBillDetails.isManualOverride ? null : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          {wapdaBillDetails.rawHtml && (
+                            <button 
+                              className="btn btn-secondary" 
+                              onClick={() => setShowWapdaHtml(true)}
+                              style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)' }}
+                            >
+                              View Full Bill
+                            </button>
+                          )}
+                          <CheckCircle2 size={24} color="var(--success)" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>No bill loaded for this month.</div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px', display: 'block', textTransform: 'uppercase' }}>Reference Number</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={wapdaRefNo}
+                        onChange={(e) => setWapdaRefNo(e.target.value)}
+                        placeholder="14-digit Ref No"
+                        style={{ padding: '8px 12px', fontSize: '13px' }}
+                      />
+                    </div>
+                    <button 
+                      className="btn btn-secondary" 
+                      onClick={handleFetchWapdaBill}
+                      disabled={isFetchingWapda || !wapdaRefNo}
+                      style={{ padding: '8px 16px', height: '37px' }}
+                    >
+                      <RefreshCw size={16} />
+                      {isFetchingWapda ? 'Fetching...' : (wapdaBillDetails ? 'Refetch' : 'Fetch Bill')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -318,7 +491,7 @@ export default function BillingTab({ isAdmin }) {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', flex: 1 }}>
-              {fixedExpenses.map((expense, i) => (
+              {fixedExpenses.map((expense, _i) => (
                 <div key={expense.id} style={{ display: 'flex', gap: '8px' }}>
                   <input 
                     type="text" 
@@ -441,6 +614,28 @@ export default function BillingTab({ isAdmin }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* Raw HTML Modal */}
+          {showWapdaHtml && wapdaBillDetails?.rawHtml && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', flexDirection: 'column', padding: '24px' }}>
+              <div style={{ background: 'var(--bg-card)', borderRadius: '8px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ padding: '16px', borderBottom: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, fontFamily: 'Outfit', color: 'var(--text-primary)' }}>Original MEPCO Bill</h3>
+                  <button 
+                    onClick={() => setShowWapdaHtml(false)}
+                    style={{ background: 'var(--danger-light)', color: 'var(--danger)', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Close
+                  </button>
+                </div>
+                <iframe 
+                  srcDoc={wapdaBillDetails.rawHtml}
+                  style={{ flex: 1, border: 'none', width: '100%', backgroundColor: '#fff' }}
+                  title="MEPCO Bill"
+                />
               </div>
             </div>
           )}

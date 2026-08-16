@@ -199,7 +199,62 @@ function mepcoApiPlugin() {
             body: formData.toString()
           });
 
-          const html2 = await res2.text();
+          let html2 = await res2.text();
+          
+          // Fetch and inject meter snaps server-side to bypass CORS
+          const refNoMatch = html2.match(/data-ref-no="([^"]+)"/);
+          const billMonthMatch = html2.match(/data-bill-month="([^"]+)"/);
+          const meterCountMatch = html2.match(/data-meter-count="([^"]+)"/);
+
+          if (refNoMatch && billMonthMatch) {
+            try {
+              const snapRes = await fetch('https://usersnap.pitc.com.pk/api/SnapsForDuplicateBill/ToDuplicate', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                  REF_NO: refNoMatch[1],
+                  BILL_MONTH: billMonthMatch[1]
+                })
+              });
+              
+              if (snapRes.ok) {
+                const snapData = await snapRes.json();
+                console.log('usersnap response:', snapData.STATUS, snapData.MESSAGE);
+                if (String(snapData.STATUS) === '1' && snapData.DATA && snapData.DATA.length > 0) {
+                  const data = snapData.DATA[0];
+                  let imagesHtml = '';
+                  const meterCount = parseInt(meterCountMatch ? meterCountMatch[1] : '0', 10);
+                  const useSnap5to8 = data.SNAP_5 && data.SNAP_5 !== 'null';
+                  
+                  for (let i = 0; i < meterCount; i++) {
+                    const snapKey = useSnap5to8 ? 'SNAP_' + (i + 5) : 'SNAP_' + (i + 1);
+                    const base64Img = data[snapKey];
+                    if (base64Img && base64Img !== 'null') {
+                      imagesHtml += `<div class="meter-snap-cell meter-snap-cell--zoomable" data-meter-snap-zoom-init="1" role="button" tabindex="0" aria-label="View meter snap enlarged"><img src="data:image/png;base64,${base64Img}" alt="Meter snap ${i + 1}" loading="lazy" /></div>`;
+                    }
+                  }
+                  
+                  if (imagesHtml) {
+                    // Replace the multiline opening tag (it spans multiple lines with data- attributes)
+                    html2 = html2.replace(/(<div class="meter-snaps-grid[\s\S]*?>)/, `$1${imagesHtml}`);
+                    // Remove the client-side loader script (handles ?v= query strings)
+                    html2 = html2.replace(/<script[^>]*src="[^"]*meter-snaps-loader\.js[^"]*"[^>]*><\/script>/gi, '');
+                    html2 = html2.replace(/<script[^>]*src="[^"]*meter-snap-zoom\.js[^"]*"[^>]*><\/script>/gi, '');
+                    console.log('Successfully injected', meterCount, 'images');
+                  }
+                }
+              } else {
+                console.error('usersnap api failed with status', snapRes.status, await snapRes.text());
+              }
+            } catch (err) {
+              console.error('Failed to fetch meter snaps in proxy:', err);
+            }
+          } else {
+             console.log('Did not find refNoMatch or billMonthMatch');
+          }
           
           res.setHeader('Content-Type', 'text/html');
           res.end(html2);
@@ -220,3 +275,4 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), adminApiPlugin(env), mepcoApiPlugin()],
   };
 });
+

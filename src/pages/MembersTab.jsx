@@ -606,13 +606,7 @@ export default function MembersTab({ isAdmin }) {
     setIsAddMenuOpen(false);
   };
 
-  // Helper to get initials from a name
-  const getInitials = (name) => {
-    if (!name) return '?';
-    const parts = name.split(' ');
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.substring(0, 2).toUpperCase();
-  };
+  // Removed unused getInitials
 
   // Helper to generate a stable pastel color from user code
   const getAvatarColor = (code) => {
