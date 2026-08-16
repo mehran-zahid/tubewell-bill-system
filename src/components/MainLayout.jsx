@@ -9,7 +9,6 @@ export default function MainLayout({
   isAdmin,
   user,
   handleLogin,
-  handleDevLogin,
   handleLogout
 }) {
   const navItems = [
@@ -212,16 +211,6 @@ export default function MainLayout({
                 <Shield size={18} />
                 <span style={{ fontWeight: 500 }}>Get Admin Access</span>
               </button>
-              {import.meta.env.DEV && (
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={handleDevLogin}
-                  style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', padding: '12px' }}
-                  title="Dev Bypass"
-                >
-                  Dev
-                </button>
-              )}
             </div>
           )}
         </div>
