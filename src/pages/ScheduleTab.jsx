@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users } from '../components/Icons';
 import { initFirebaseAsync } from '../config/firebase';
 import { format12Hour } from '../utils/scheduleLogic';
-import { SkeletonTable } from '../components/Skeleton';
+import { SkeletonScheduleTable } from '../components/Skeleton';
 
 const DAYS = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
 
@@ -71,7 +71,7 @@ export default function ScheduleTab() {
   if (loading) {
     return (
       <div style={{ padding: '0' }}>
-        <SkeletonTable rows={7} />
+        <SkeletonScheduleTable rows={7} />
       </div>
     );
   }

@@ -7,7 +7,7 @@ import RegisterStats from '../components/RegisterStats';
 import CustomDropdown from '../components/CustomDropdown';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
-import { SkeletonTable } from '../components/Skeleton';
+import { SkeletonLogbookTable } from '../components/Skeleton';
 
 export default function RegisterTab({ isAdmin }) {
   const { showToast } = useToast();
@@ -442,7 +442,7 @@ export default function RegisterTab({ isAdmin }) {
 
       {loading ? (
         <div style={{ padding: '0' }}>
-          <SkeletonTable rows={5} />
+          <SkeletonLogbookTable rows={5} />
         </div>
       ) : filteredEntries.length === 0 ? (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 20px', textAlign: 'center', flex: 1 }}>

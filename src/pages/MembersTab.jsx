@@ -4,12 +4,13 @@ import { autoRechainSchedule, format12Hour } from '../utils/scheduleLogic';
 import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload, GripVertical, CalendarClock } from '../components/Icons';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
-import { SkeletonCard, SkeletonTable } from '../components/Skeleton';
+import { SkeletonMemberCard, SkeletonMembersTable } from '../components/Skeleton';
 
 export default function MembersTab({ isAdmin }) {
   const { showToast } = useToast();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('grid');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -563,10 +564,10 @@ export default function MembersTab({ isAdmin }) {
       <div style={{ padding: 'var(--space-6)' }}>
         {viewMode === 'grid' ? (
           <div className="members-grid">
-            <SkeletonCard count={4} />
+            <SkeletonMemberCard count={4} />
           </div>
         ) : (
-          <SkeletonTable rows={5} />
+          <SkeletonMembersTable rows={5} />
         )}
       </div>
     );

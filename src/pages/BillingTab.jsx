@@ -9,6 +9,7 @@ import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '..
 import CustomDropdown from '../components/CustomDropdown';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
+import { SkeletonBillingList } from '../components/Skeleton';
 
 export default function BillingTab({ isAdmin }) {
   const { showToast } = useToast();
@@ -16,6 +17,7 @@ export default function BillingTab({ isAdmin }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [billingResult, setBillingResult] = useState(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // New State for Role-Based Views
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'create'
@@ -80,6 +82,8 @@ export default function BillingTab({ isAdmin }) {
         }
       } catch (e) {
         console.error("Error loading bills", e);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
     loadBills();
@@ -521,8 +525,12 @@ export default function BillingTab({ isAdmin }) {
         </div>
       </div>
 
-      {viewMode === 'list' ? (
-        <div className="card print-hidden" style={{ marginBottom: '24px' }}>
+      {isInitialLoading ? (
+        <SkeletonBillingList />
+      ) : (
+        <>
+          {viewMode === 'list' ? (
+            <div className="card print-hidden" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>Select Billing Month</h2>
@@ -1097,6 +1105,8 @@ export default function BillingTab({ isAdmin }) {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
 
           {/* Raw HTML Modal */}
