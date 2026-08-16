@@ -4,6 +4,7 @@ import MainLayout from './components/MainLayout';
 import ScheduleTab from './pages/ScheduleTab';
 import MembersTab from './pages/MembersTab';
 import RegisterTab from './pages/RegisterTab';
+import BillingTab from './pages/BillingTab';
 import ConfirmModal from './components/ConfirmModal';
 import { initFirebaseAsync } from './config/firebase';
 
@@ -90,6 +91,7 @@ function App() {
         {activeTab === 'schedule' && <ScheduleTab isAdmin={isAdmin} />}
         {activeTab === 'members' && <MembersTab isAdmin={isAdmin} />}
         {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
+        {activeTab === 'billing' && <BillingTab isAdmin={isAdmin} />}
       </MainLayout>
 
       <ConfirmModal 

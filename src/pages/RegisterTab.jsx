@@ -126,17 +126,31 @@ export default function RegisterTab({ isAdmin }) {
     }
   };
 
-  // Client-side Member Filter
+  // Client-side Member Filter and Sort
   const filteredEntries = useMemo(() => {
-    if (selectedMember === 'all') return entries;
-    const mem = members.find(m => m.id === selectedMember);
-    if (!mem) return [];
-    
-    return entries.filter(entry => 
-      String(entry.memberId) === String(mem.id) || 
-      String(entry.memberId) === String(mem.userCode) ||
-      (parseInt(entry.memberId, 10) === parseInt(mem.userCode, 10) && !isNaN(parseInt(mem.userCode, 10)))
-    );
+    let result = entries;
+    if (selectedMember !== 'all') {
+      const mem = members.find(m => m.id === selectedMember);
+      if (mem) {
+        result = entries.filter(entry => 
+          String(entry.memberId) === String(mem.id) || 
+          String(entry.memberId) === String(mem.userCode) ||
+          (parseInt(entry.memberId, 10) === parseInt(mem.userCode, 10) && !isNaN(parseInt(mem.userCode, 10)))
+        );
+      } else {
+        result = [];
+      }
+    }
+
+    // Sort logically: Newest Date first. If same date, Highest Reading first (most recent on top)
+    return [...result].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateA !== dateB) {
+        return dateB - dateA; // Descending by date
+      }
+      return (parseFloat(b.startReading) || 0) - (parseFloat(a.startReading) || 0); // Descending by meter reading
+    });
   }, [entries, selectedMember, members]);
 
   // Max date for non-admins to prevent picking a start date older than 6 months
