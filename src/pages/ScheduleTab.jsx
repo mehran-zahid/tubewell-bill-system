@@ -194,10 +194,10 @@ export default function ScheduleTab() {
                 }} />
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div className="schedule-card-inner">
                 {/* Removed User ID Circle as requested */}
 
-                <div style={{ flex: 1 }}>
+                <div className="schedule-info">
                   <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
                     {startDateStr} {format12Hour(member.startTime)} <span style={{ opacity: 0.5 }}>→</span> {endDateStr} {format12Hour(member.endTime)}
                   </div>
@@ -252,15 +252,8 @@ export default function ScheduleTab() {
                   )}
                 </div>
 
-                <div style={{ 
-                  fontFamily: 'var(--font-mono)', 
-                  fontSize: '18px', 
-                  fontWeight: 700,
-                  textAlign: 'right',
+                <div className="schedule-duration" style={{ 
                   color: isCurrentShift ? 'var(--success)' : 'var(--primary)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-end'
                 }}>
                   {member.durationHours}h {member.durationMinutes > 0 ? `${member.durationMinutes}m` : ''}
                   
