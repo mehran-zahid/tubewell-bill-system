@@ -19,8 +19,9 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
         const leased = (parseFloat(tenant.tenantLeasedHours) || 0) + ((parseFloat(tenant.tenantLeasedMinutes) || 0) / 60);
         totalLeasedHours += leased;
         
-        userStats.set(tenant.id, {
-          id: tenant.id,
+        const uniqueTenantId = `tenant_${owner.id}_${tenant.id || tenant.tenantCode || Math.random().toString(36).substr(2, 9)}`;
+        userStats.set(uniqueTenantId, {
+          id: uniqueTenantId,
           code: tenant.tenantCode,
           name: tenant.tenantNameEn,
           type: 'tenant',
