@@ -9,29 +9,77 @@ export default function MainLayout({
   isAdmin,
   user,
   handleLogin,
+  handleDevLogin,
   handleLogout
 }) {
   const navItems = [
-    { id: 'schedule', label: 'Weekly Schedule', icon: CalendarClock },
-    { id: 'members', label: 'Members Directory', icon: Users },
-    { id: 'register', label: 'Register Readings', icon: BookText },
-    { id: 'billing', label: 'Billing System', icon: Calculator }
+    { id: 'schedule', label: 'Schedule', icon: CalendarClock },
+    { id: 'members', label: 'Directory', icon: Users },
+    { id: 'register', label: 'Readings', icon: BookText },
+    { id: 'billing', label: 'Billing', icon: Calculator }
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-canvas)' }}>
-      {/* Left Sidebar */}
-      <aside style={{ 
-        width: '240px', 
-        background: 'var(--bg-surface)', 
-        borderRight: '1px solid var(--border-default)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        zIndex: 10
-      }}>
+    <div className="app-layout">
+      {/* Mobile Header (Visible only on small screens) */}
+      <div className="mobile-header">
+        <Logo size="small" />
+        
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'var(--primary-light)',
+                color: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '14px'
+              }}>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                ) : (
+                  user.email.charAt(0).toUpperCase()
+                )}
+              </div>
+              <button 
+                onClick={handleLogout}
+                style={{ background: 'transparent', border: 'none', padding: '4px', cursor: 'pointer', color: 'var(--text-secondary)' }}
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleLogin}
+                style={{ padding: '6px 12px', fontSize: '12px', gap: '4px' }}
+              >
+                <Shield size={14} />
+                Admin
+              </button>
+              {import.meta.env.DEV && (
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={handleDevLogin}
+                  style={{ padding: '6px 12px', fontSize: '12px', gap: '4px' }}
+                  title="Dev Bypass"
+                >
+                  Dev
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Left Sidebar (Desktop) */}
+      <aside className="sidebar">
         {/* Logo Area */}
         <div style={{ height: '60px', padding: '0 var(--space-4)', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border-default)' }}>
           <Logo size="small" />
@@ -155,24 +203,55 @@ export default function MainLayout({
               </button>
             </div>
           ) : (
-            <button 
-              className="btn btn-secondary" 
-              onClick={handleLogin}
-              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px' }}
-            >
-              <Shield size={18} />
-              <span style={{ fontWeight: 500 }}>Get Admin Access</span>
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleLogin}
+                style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px' }}
+              >
+                <Shield size={18} />
+                <span style={{ fontWeight: 500 }}>Get Admin Access</span>
+              </button>
+              {import.meta.env.DEV && (
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={handleDevLogin}
+                  style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', padding: '12px' }}
+                  title="Dev Bypass"
+                >
+                  Dev
+                </button>
+              )}
+            </div>
           )}
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, overflowY: 'auto' }}>
+      <main style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
         <div className="app-container" style={{ padding: 'var(--space-8)' }}>
           {children}
         </div>
       </main>
+
+      {/* Bottom Navbar (Mobile) */}
+      <nav className="bottom-nav">
+        {navItems.map(item => {
+          const isActive = activeTab === item.id;
+          const IconComponent = item.icon;
+          
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <IconComponent size={20} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

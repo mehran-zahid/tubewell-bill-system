@@ -77,12 +77,26 @@ function AppContent() {
     }
   };
 
+  const handleDevLogin = () => {
+    setUser({ email: 'dev@local.network', displayName: 'Dev Admin' });
+    setIsAdmin(true);
+    showToast("Dev Mode Bypass: Logged in!", "success");
+  };
+
   const handleLogout = () => {
     setShowLogoutConfirm(true);
   };
 
   const executeLogout = async () => {
     try {
+      if (user?.email === 'dev@local.network') {
+        setUser(null);
+        setIsAdmin(false);
+        setShowLogoutConfirm(false);
+        showToast("Signed out successfully", "info");
+        return;
+      }
+      
       const { auth, firebase } = await initFirebaseAsync();
       await firebase.signOut(auth);
       setShowLogoutConfirm(false);
@@ -101,6 +115,7 @@ function AppContent() {
         isAdmin={isAdmin}
         user={user}
         handleLogin={handleLogin}
+        handleDevLogin={handleDevLogin}
         handleLogout={handleLogout}
       >
         {activeTab === 'schedule' && <ScheduleTab />}
