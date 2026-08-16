@@ -3,7 +3,7 @@ import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
@@ -372,6 +372,49 @@ export default function BillingTab({ isAdmin }) {
       alert("Failed to calculate bill.");
     }
     setLoading(false);
+  };
+
+  const getBillTitle = () => {
+    return viewMode === 'list' && selectedBillId 
+      ? (savedBills.find(b => b.id === selectedBillId)?.billingTitle || 'Tubewell Bill')
+      : (billingTitle || 'Tubewell Bill');
+  };
+
+  const [copiedStates, setCopiedStates] = useState({});
+
+  const handleCopyGlobalWhatsApp = () => {
+    if (!billingResult) return;
+    const title = getBillTitle();
+    let text = `${title}\n-------------------------\n`;
+    text += `WAPDA Bill: Rs. ${billingResult.wapdaBill.toLocaleString()}\n`;
+    text += `Fixed Expenses: Rs. ${billingResult.totalFixedExpenses.toLocaleString()}\n`;
+    text += `Total Billed: Rs. ${billingResult.grandTotalBilled.toLocaleString()}\n\n`;
+    text += `Electricity Rate: Rs. ${billingResult.wapdaHourlyRate.toLocaleString(undefined, {minimumFractionDigits: 2})} / hr\n`;
+    text += `Total Rate: Rs. ${billingResult.totalHourlyRate.toLocaleString(undefined, {minimumFractionDigits: 2})} / hr\n\n`;
+    text += `--- Breakdown ---\n`;
+    billingResult.breakdowns.forEach((m, idx) => {
+      text += `${idx + 1}. ${m.name}: Rs. ${m.totalBill.toLocaleString()}\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedStates(prev => ({ ...prev, global: true }));
+      setTimeout(() => setCopiedStates(prev => ({ ...prev, global: false })), 2000);
+    });
+  };
+
+  const handleCopyMemberWhatsApp = (member) => {
+    if (!billingResult) return;
+    const title = getBillTitle();
+    let text = `${title}\nMember: ${member.name}\n-------------------------\n`;
+    text += `Total Bill: Rs. ${member.totalBill.toLocaleString()}\n\n`;
+    text += `Meter Hours: ${member.consumedHours ? member.consumedHours.toFixed(1) : '0.0'}h\n`;
+    text += `WAPDA Share: Rs. ${member.usageShare.toLocaleString()}\n`;
+    text += `Fixed Share: Rs. ${member.fixedShare.toLocaleString()}\n`;
+    
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedStates(prev => ({ ...prev, [member.id]: true }));
+      setTimeout(() => setCopiedStates(prev => ({ ...prev, [member.id]: false })), 2000);
+    });
   };
 
   const handleSaveAndPublish = async () => {
@@ -786,11 +829,17 @@ export default function BillingTab({ isAdmin }) {
       ) : (
         <div className="card" style={{ padding: '32px', marginBottom: '24px' }}>
           {/* Action Bar for PDF Generation */}
-          <div className="print-hidden" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+          <div className="print-hidden" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
             <button 
-              className="btn btn-secondary"
+              onClick={handleCopyGlobalWhatsApp}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: copiedStates.global ? 'var(--success)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
+            >
+              {copiedStates.global ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+              {copiedStates.global ? 'Copied!' : 'Copy WhatsApp Summary'}
+            </button>
+            <button 
               onClick={() => window.print()}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
             >
               <Download size={16} />
               Download PDF Report
@@ -985,14 +1034,24 @@ export default function BillingTab({ isAdmin }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
               {billingResult.breakdowns.map((b) => (
                 <div key={b.id} className="card" style={{ padding: '24px', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div style={{ minWidth: '48px', width: '48px', height: '48px', borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700 }}>
-                      {b.code}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+                      <div style={{ minWidth: '48px', width: '48px', height: '48px', borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700 }}>
+                        {b.code}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
+                        <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>{b.type === 'tenant' ? 'Tenant' : 'Owner'}</div>
+                      </div>
                     </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
-                      <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>{b.type === 'tenant' ? 'Tenant' : 'Owner'}</div>
-                    </div>
+                    <button 
+                      className="print-hidden"
+                      onClick={() => handleCopyMemberWhatsApp(b)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedStates[b.id] ? 'var(--success)' : 'var(--text-tertiary)', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}
+                      title="Copy WhatsApp Summary"
+                    >
+                      {copiedStates[b.id] ? <CheckCircle2 size={18} /> : <Copy size={18} />}
+                    </button>
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-muted)', padding: '12px 16px', borderRadius: 'var(--radius-md)' }}>
