@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from './Icons';
 
-export default function CustomDropdown({ value, onChange, options, style = {}, disabled = false }) {
+export default function CustomDropdown({ value, onChange, options, style = {}, disabled = false, className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -19,7 +19,7 @@ export default function CustomDropdown({ value, onChange, options, style = {}, d
   const selectedOption = options.find(opt => opt.value === value) || options[0];
 
   return (
-    <div className="custom-dropdown" ref={dropdownRef} style={{ position: 'relative', ...style }}>
+    <div className={`custom-dropdown ${className}`} ref={dropdownRef} style={{ position: 'relative', ...style }}>
       <button 
         type="button"
         className="input-field" 

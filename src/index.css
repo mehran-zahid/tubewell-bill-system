@@ -521,6 +521,30 @@ select.input-field {
   }
 }
 
+/* ===== Billing Breakdown Cards ===== */
+.billing-breakdown-card {
+  padding: 24px;
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.billing-breakdown-title {
+  font-size: 18px;
+}
+.billing-breakdown-total {
+  font-size: 24px;
+}
+.billing-breakdown-avatar {
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+}
+.billing-breakdown-stats {
+  padding: 12px 16px;
+}
+
 /* Responsive Layout */
 .app-layout {
   display: flex;
@@ -733,6 +757,171 @@ select.input-field {
     font-size: 12px;
     color: var(--text-secondary);
     font-weight: 500;
+  }
+
+  /* ===== Billing Tab Responsive ===== */
+
+  .billing-breakdown-card {
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+  .billing-breakdown-title {
+    font-size: 16px !important;
+  }
+  .billing-breakdown-total {
+    font-size: 20px !important;
+  }
+  .billing-breakdown-avatar {
+    min-width: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 16px !important;
+  }
+  .billing-breakdown-stats {
+    padding: 10px 12px !important;
+  }
+
+  /* Page header */
+  .billing-header h1 {
+    font-size: 24px !important;
+  }
+  .billing-header p {
+    font-size: 13px !important;
+  }
+
+  /* List mode controls — stack vertically */
+  .billing-list-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .billing-list-controls > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .billing-list-dropdown {
+    width: 100% !important;
+  }
+  .billing-list-actions {
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .billing-list-actions .btn {
+    flex: 1 !important;
+  }
+  .billing-create-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Create mode form rows — keep them side-by-side to save vertical space */
+  .billing-form-row {
+    gap: 12px !important;
+  }
+
+  /* Fixed expense row */
+  .billing-expense-row {
+    flex-wrap: wrap !important;
+  }
+  .billing-expense-row > input[type="text"] {
+    width: 100% !important;
+    flex: none !important;
+  }
+  .billing-expense-amount {
+    flex: 1 !important;
+    width: auto !important;
+  }
+
+  /* WAPDA ref row */
+  .billing-wapda-ref-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .billing-wapda-ref-row .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Results stat values */
+  .billing-stat-value {
+    font-size: 20px !important;
+  }
+  .billing-rate-suffix {
+    font-size: 14px !important;
+  }
+
+  /* PDF Button hidden on mobile */
+  .billing-pdf-btn {
+    display: none !important;
+  }
+
+  /* Action bar — wrap and center */
+  .billing-action-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .billing-action-bar button {
+    justify-content: center !important;
+    padding: 10px 12px !important;
+  }
+
+  /* Breakdown table — hide on mobile */
+  .billing-table-desktop {
+    display: none !important;
+  }
+
+  /* Layout toggle — hide on mobile (always cards) */
+  .billing-layout-toggle {
+    display: none !important;
+  }
+
+  /* Card view — always show on mobile */
+  .billing-card-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Results card padding */
+  .billing-results-card {
+    padding: 20px !important;
+  }
+
+  /* Stats grid */
+  .billing-stats-master-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+  .billing-stat-wapda { order: 1; }
+  .billing-stat-collection { order: 2; }
+  .billing-stat-fixed { 
+    order: 3; 
+    grid-column: 1 / -1 !important; 
+  }
+  .billing-stat-fixed > div:first-child,
+  .billing-stat-fixed > .billing-stat-value {
+    align-self: center !important;
+    text-align: center !important;
+  }
+  .billing-stat-fixed > div:first-child {
+    justify-content: center !important;
+  }
+  .billing-stat-rate { order: 4; }
+  .billing-stat-total-cost { order: 5; }
+
+  /* Create mode card */
+  .billing-create-card {
+    padding: 16px !important;
+  }
+
+  /* WAPDA bill detail card on mobile */
+  .billing-wapda-detail {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
   }
 }
 

@@ -551,7 +551,7 @@ export default function BillingTab({ isAdmin }) {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div className="billing-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Billing System</h1>
           <p style={{ fontFamily: 'Inter', fontSize: '15px', color: 'var(--text-secondary)' }}>View and manage monthly bills</p>
@@ -564,10 +564,11 @@ export default function BillingTab({ isAdmin }) {
         <>
           {viewMode === 'list' ? (
             <div className="card print-hidden" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="billing-list-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>Select Billing Month</h2>
               <CustomDropdown
+                className="billing-list-dropdown"
                 value={selectedBillId}
                 onChange={(val) => setSelectedBillId(val)}
                 options={
@@ -580,7 +581,7 @@ export default function BillingTab({ isAdmin }) {
               />
               
               {isAdmin && selectedBillId && (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="billing-list-actions" style={{ display: 'flex', gap: '8px' }}>
                   <button 
                     className="btn btn-secondary" 
                     onClick={() => handleEditBill(selectedBillId)}
@@ -602,7 +603,7 @@ export default function BillingTab({ isAdmin }) {
             </div>
             
             {isAdmin && (
-              <button className="btn btn-primary" onClick={startCreateMode}>
+              <button className="btn btn-primary billing-create-btn" onClick={startCreateMode}>
                 <Plus size={18} /> Create New Month Bill
               </button>
             )}
@@ -610,8 +611,8 @@ export default function BillingTab({ isAdmin }) {
         </div>
       ) : (
         /* Input Panel (Create Mode) */
-        <div className="card print-hidden" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className="card print-hidden billing-create-card" style={{ marginBottom: '24px' }}>
+          <div className="billing-create-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>
               {editingBillId ? 'Edit Bill Details' : 'Create New Bill Details'}
             </h2>
@@ -636,8 +637,8 @@ export default function BillingTab({ isAdmin }) {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
+              <div className="billing-form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
                   <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Calendar size={14} color="var(--text-secondary)" /> Start Date
                   </label>
@@ -648,7 +649,7 @@ export default function BillingTab({ isAdmin }) {
                     onChange={(e) => setStartDate(e.target.value)}
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
+                <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
                   <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Calendar size={14} color="var(--text-secondary)" /> End Date
                   </label>
@@ -661,10 +662,10 @@ export default function BillingTab({ isAdmin }) {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Gauge size={14} color="var(--text-secondary)" /> Cycle Start Reading
+              <div className="billing-form-row" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                    <Gauge size={14} color="var(--text-secondary)" /> Start Reading
                   </label>
                   <input 
                     type="number" 
@@ -674,9 +675,9 @@ export default function BillingTab({ isAdmin }) {
                     placeholder="0"
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Gauge size={14} color="var(--text-secondary)" /> Cycle End Reading
+                <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                    <Gauge size={14} color="var(--text-secondary)" /> End Reading
                   </label>
                   <input 
                     type="number" 
@@ -733,7 +734,7 @@ export default function BillingTab({ isAdmin }) {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {wapdaBillDetails ? (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
+                      <div className="billing-wapda-detail" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
                         <div>
                           <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>Rs. {parseFloat(wapdaBillDetails.amount).toLocaleString()}</div>
                           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -759,7 +760,7 @@ export default function BillingTab({ isAdmin }) {
                       <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontStyle: 'italic', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-default)', textAlign: 'center' }}>No bill loaded for this month.</div>
                     )}
 
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: '4px' }}>
+                    <div className="billing-wapda-ref-row" style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: '4px' }}>
                       <div style={{ flex: 1 }}>
                         <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Reference Number</label>
                         <input 
@@ -801,7 +802,7 @@ export default function BillingTab({ isAdmin }) {
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
                   {fixedExpenses.map((expense, _i) => (
-                    <div key={expense.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div key={expense.id} className="billing-expense-row" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <input 
                         type="text" 
                         className="input-field" 
@@ -810,7 +811,7 @@ export default function BillingTab({ isAdmin }) {
                         value={expense.title}
                         onChange={(e) => handleExpenseChange(expense.id, 'title', e.target.value)}
                       />
-                      <div style={{ position: 'relative', width: '130px' }}>
+                      <div className="billing-expense-amount" style={{ position: 'relative', width: '130px' }}>
                         <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: 500 }}>Rs.</span>
                         <input 
                           type="number" 
@@ -823,7 +824,7 @@ export default function BillingTab({ isAdmin }) {
                       </div>
                       <button 
                         onClick={() => handleRemoveExpense(expense.id)}
-                        style={{ background: 'var(--danger-light)', border: '1px solid transparent', color: 'var(--danger)', cursor: 'pointer', padding: '8px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ background: 'var(--danger-light)', border: '1px solid transparent', color: 'var(--danger)', cursor: 'pointer', padding: '8px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                         title="Remove"
                       >
                         <Trash2 size={16} />
@@ -888,125 +889,133 @@ export default function BillingTab({ isAdmin }) {
           </p>
         </div>
       ) : (
-        <div className="card" style={{ padding: '32px', marginBottom: '24px' }}>
-          {/* Action Bar for PDF Generation */}
-          <div className="print-hidden" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
-            <button 
-              onClick={handleCopyGlobalWhatsApp}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: copiedStates.global ? 'var(--success)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
-            >
-              {copiedStates.global ? <CheckCircle2 size={16} /> : <Copy size={16} />}
-              {copiedStates.global ? 'Copied!' : 'Copy WhatsApp Summary'}
-            </button>
-            <button 
-              onClick={() => window.print()}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
-            >
-              <Download size={16} />
-              Download PDF Report
-            </button>
-          </div>
-
-          {/* Print-Only Title */}
-          <div className="print-only" style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h1 style={{ fontFamily: 'Outfit', fontSize: '28px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-              {viewMode === 'list' && selectedBillId 
-                ? (savedBills.find(b => b.id === selectedBillId)?.billingTitle || 'Tubewell Bill')
-                : (billingTitle || 'Tubewell Bill')}
-            </h1>
-            <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Generated on {new Date().toLocaleDateString('en-GB')}
-            </p>
-          </div>
-
-          {/* Section 1: The Overall Bill Totals */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px' }}>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <Lightbulb size={16} /> WAPDA Electricity Bill
-              </div>
-              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Rs. {billingResult.wapdaBill ? billingResult.wapdaBill.toLocaleString() : '0'}
-              </div>
+          <div className="card billing-results-card" style={{ padding: '32px', marginBottom: '24px' }}>
+            {/* Action Bar for PDF Generation */}
+            <div className="print-hidden billing-action-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
+              <button 
+                onClick={handleCopyGlobalWhatsApp}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: copiedStates.global ? 'var(--success)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
+              >
+                {copiedStates.global ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                {copiedStates.global ? 'Copied!' : 'Copy WhatsApp Summary'}
+              </button>
+              <button 
+                className="billing-pdf-btn"
+                onClick={() => window.print()}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
+              >
+                <Download size={16} />
+                Download PDF Report
+              </button>
             </div>
-            
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <Wrench size={16} /> Fixed / Repair Expenses
+
+            {/* Print-Only Title */}
+            <div className="print-only" style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h1 style={{ fontFamily: 'Outfit', fontSize: '28px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                {viewMode === 'list' && selectedBillId 
+                  ? (savedBills.find(b => b.id === selectedBillId)?.billingTitle || 'Tubewell Bill')
+                  : (billingTitle || 'Tubewell Bill')}
+              </h1>
+              <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                Generated on {new Date().toLocaleDateString('en-GB')}
+              </p>
+            </div>
+
+            {/* Overall Bill Totals Master Grid */}
+            <div className="billing-stats-master-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '32px' }}>
+              
+              {/* Stat 1: WAPDA */}
+              <div className="billing-stat-item billing-stat-wapda">
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ marginTop: '1px' }}><Lightbulb size={16} /></div> 
+                  <div>WAPDA Electricity<br/>Bill</div>
+                </div>
+                <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Rs. {billingResult.wapdaBill ? billingResult.wapdaBill.toLocaleString() : '0'}
+                </div>
               </div>
-              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Rs. {billingResult.totalFixedExpenses ? billingResult.totalFixedExpenses.toLocaleString() : '0'}
-              </div>
-              {(() => {
-                const currentBill = viewMode === 'list' && selectedBillId ? savedBills.find(b => b.id === selectedBillId) : null;
-                const expensesToShow = currentBill ? (currentBill.fixedExpenses || []) : (viewMode === 'create' ? fixedExpenses : []);
-                if (expensesToShow.length > 0) {
-                  return (
-                    <div style={{ 
-                      marginTop: '16px', 
-                      background: 'var(--bg-muted)', 
-                      borderRadius: '8px', 
-                      padding: '12px 16px',
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '8px',
-                      border: '1px solid var(--border-default)'
-                    }}>
-                      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '2px' }}>
-                        Breakdown
-                      </div>
-                      {expensesToShow.map(expense => (
-                        <div key={expense.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', alignItems: 'center' }}>
-                          <span style={{ color: 'var(--text-secondary)' }}>{expense.title || 'Unnamed Expense'}</span>
-                          <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit' }}>Rs. {parseFloat(expense.amount || 0).toLocaleString()}</span>
+              
+              {/* Stat 2: Fixed Expenses & Breakdown (The '1' spanning full width) */}
+              <div className="billing-stat-item billing-stat-fixed">
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ marginTop: '1px' }}><Wrench size={16} /></div> 
+                  <div>Fixed / Repair<br/>Expenses</div>
+                </div>
+                <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Rs. {billingResult.totalFixedExpenses ? billingResult.totalFixedExpenses.toLocaleString() : '0'}
+                </div>
+                {/* Breakdown */}
+                {(() => {
+                  const currentBill = viewMode === 'list' && selectedBillId ? savedBills.find(b => b.id === selectedBillId) : null;
+                  const expensesToShow = currentBill ? (currentBill.fixedExpenses || []) : (viewMode === 'create' ? fixedExpenses : []);
+                  if (expensesToShow.length > 0) {
+                    return (
+                      <div className="billing-stat-breakdown" style={{ 
+                        background: 'var(--bg-muted)', 
+                        borderRadius: '8px', 
+                        padding: '12px 16px',
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '8px',
+                        border: '1px solid var(--border-default)',
+                        marginTop: '16px'
+                      }}>
+                        <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '2px' }}>
+                          Breakdown
                         </div>
-                      ))}
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-            </div>
+                        {expensesToShow.map(expense => (
+                          <div key={expense.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', alignItems: 'center' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>{expense.title || 'Unnamed Expense'}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit' }}>Rs. {parseFloat(expense.amount || 0).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
 
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <Coins size={16} /> Total Collection Amount
+              {/* Stat 3: Total Collection */}
+              <div className="billing-stat-item billing-stat-collection">
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ marginTop: '1px' }}><Coins size={16} /></div> 
+                  <div>Total Collection<br/>Amount</div>
+                </div>
+                <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Rs. {billingResult.grandTotalBilled ? billingResult.grandTotalBilled.toLocaleString() : '0'}
+                </div>
               </div>
-              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Rs. {billingResult.grandTotalBilled ? billingResult.grandTotalBilled.toLocaleString() : '0'}
+
+              {/* Stat 4: Electricity Rate */}
+              <div className="billing-stat-item billing-stat-rate">
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ marginTop: '1px' }}><Tag size={16} /></div> 
+                  <div>Electricity Rate<br/>Per Hour</div>
+                </div>
+                <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Rs. {billingResult.wapdaHourlyRate ? billingResult.wapdaHourlyRate.toFixed(2) : '0.00'} <span className="billing-rate-suffix" style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 500, color: 'var(--text-tertiary)' }}>/ hr</span>
+                </div>
+              </div>
+
+              {/* Stat 5: Total Cost Per Hour */}
+              <div className="billing-stat-item billing-stat-total-cost">
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ marginTop: '1px' }}><Coins size={16} /></div> 
+                  <div>Total Cost Per<br/>Hour Incl. Repairs</div>
+                </div>
+                <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Rs. {(billingResult.totalHourlyRate || (billingResult.totalConsumedHours > 0 ? (billingResult.wapdaBill + billingResult.totalFixedExpenses) / billingResult.totalConsumedHours : 0)).toFixed(2)} <span className="billing-rate-suffix" style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 500, color: 'var(--text-tertiary)' }}>/ hr</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          <hr style={{ margin: '32px 0', border: 'none', borderTop: '1px solid var(--border-default)' }} />
-
-          {/* Section 2: The "Per Hour" Rate Metrics */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <Tag size={16} /> Electricity Rate Per Hour
-              </div>
-              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Rs. {billingResult.wapdaHourlyRate ? billingResult.wapdaHourlyRate.toFixed(2) : '0.00'} <span style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 500, color: 'var(--text-tertiary)' }}>/ hr</span>
-              </div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <Coins size={16} /> Total Cost Per Hour Incl. Repairs
-              </div>
-              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Rs. {(billingResult.totalHourlyRate || (billingResult.totalConsumedHours > 0 ? (billingResult.wapdaBill + billingResult.totalFixedExpenses) / billingResult.totalConsumedHours : 0)).toFixed(2)} <span style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 500, color: 'var(--text-tertiary)' }}>/ hr</span>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
       {billingResult && (
         <div>
-          {/* Layout Toggle */}
-          <div className="print-hidden" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          {/* Layout Toggle — hidden on mobile */}
+          <div className="print-hidden billing-layout-toggle" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>Breakdown by Member</h3>
             <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-muted)', padding: '4px', borderRadius: '8px' }}>
               <button 
@@ -1042,9 +1051,9 @@ export default function BillingTab({ isAdmin }) {
             </div>
           </div>
 
-          {layoutMode === 'table' ? (
-            /* Breakdown Table */
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          {/* Table View — hidden on mobile via CSS */}
+          {layoutMode === 'table' && (
+            <div className="card billing-table-desktop" style={{ padding: 0, overflow: 'hidden' }}>
                   <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', tableLayout: 'fixed' }}>
                     <thead>
                       <tr>
@@ -1090,18 +1099,19 @@ export default function BillingTab({ isAdmin }) {
                     </tbody>
                   </table>
                 </div>
-          ) : (
-            /* Breakdown Cards */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+          )}
+
+          {/* Card View — always shown on mobile, toggle-controlled on desktop */}
+          <div className="billing-card-grid" style={{ display: layoutMode === 'card' ? 'grid' : 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
               {billingResult.breakdowns.map((b) => (
-                <div key={b.id} className="card" style={{ padding: '24px', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div key={b.id} className="card billing-breakdown-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
-                      <div style={{ minWidth: '48px', width: '48px', height: '48px', borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700 }}>
+                      <div className="billing-breakdown-avatar" style={{ borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                         {b.code}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
+                        <div className="billing-breakdown-title" style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
                         <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>{b.type === 'tenant' ? 'Tenant' : 'Owner'}</div>
                       </div>
                     </div>
@@ -1115,7 +1125,7 @@ export default function BillingTab({ isAdmin }) {
                     </button>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-muted)', padding: '12px 16px', borderRadius: 'var(--radius-md)' }}>
+                  <div className="billing-breakdown-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-muted)', borderRadius: 'var(--radius-md)' }}>
                     <div>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', fontWeight: 600 }}>Meter (H)</div>
                       <div style={{ fontFamily: 'Outfit', color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{b.consumedHours ? b.consumedHours.toFixed(2) : '0.00'}</div>
@@ -1139,12 +1149,11 @@ export default function BillingTab({ isAdmin }) {
 
                   <div style={{ paddingTop: '16px', borderTop: '1px dashed var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '15px' }}>Total Bill</span>
-                    <span style={{ fontFamily: 'Outfit', fontWeight: 800, color: 'var(--primary)', fontSize: '24px' }}>Rs. {b.totalBill.toLocaleString()}</span>
+                    <span className="billing-breakdown-total" style={{ fontFamily: 'Outfit', fontWeight: 800, color: 'var(--primary)' }}>Rs. {b.totalBill.toLocaleString()}</span>
                   </div>
                 </div>
               ))}
             </div>
-          )}
         </div>
       )}
         </>
