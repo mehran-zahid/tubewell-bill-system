@@ -93,7 +93,7 @@ function AppContent() {
         handleLogin={handleLogin}
         handleLogout={handleLogout}
       >
-        {activeTab === 'schedule' && <ScheduleTab isAdmin={isAdmin} />}
+        {activeTab === 'schedule' && <ScheduleTab />}
         {activeTab === 'members' && <MembersTab isAdmin={isAdmin} />}
         {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
         {activeTab === 'billing' && <BillingTab isAdmin={isAdmin} />}

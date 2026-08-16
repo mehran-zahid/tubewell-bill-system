@@ -66,60 +66,63 @@ export default function RegisterTab({ isAdmin }) {
     };
   }, [timeframe, customStartDate, customEndDate, isAdmin]);
 
+  // Effect 1: Load members & latest reading once on mount only
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const loadStaticData = async () => {
       try {
         const { db, firebase } = await initFirebaseAsync();
-        
-        // Fetch Members for the dropdown (only fetch once if empty)
-        if (members.length === 0) {
-          const membersSnapshot = await firebase.getDocs(firebase.collection(db, 'members'));
-          const membersData = [];
-          membersSnapshot.forEach(doc => {
-            const m = { id: doc.id, ...doc.data() };
-            membersData.push(m);
-            // Also push tenants with a tenantCode as unified members
-            if (m.tenants && Array.isArray(m.tenants)) {
-              m.tenants.forEach(t => {
-                if (t.tenantCode) {
-                  membersData.push({
-                    id: `tenant_${doc.id}_${t.tenantCode}`,
-                    userCode: t.tenantCode.toString(),
-                    nameEn: t.tenantNameEn || `Tenant ${t.tenantCode}`,
-                    isTenant: true,
-                    ownerId: doc.id
-                  });
-                }
-              });
-            }
-          });
-          
-          membersData.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
-          setMembers(membersData);
-        }
+        const membersSnapshot = await firebase.getDocs(firebase.collection(db, 'members'));
+        const membersData = [];
+        membersSnapshot.forEach(doc => {
+          const m = { id: doc.id, ...doc.data() };
+          membersData.push(m);
+          // Also push tenants with a tenantCode as unified members
+          if (m.tenants && Array.isArray(m.tenants)) {
+            m.tenants.forEach(t => {
+              if (t.tenantCode) {
+                membersData.push({
+                  id: `tenant_${doc.id}_${t.tenantCode}`,
+                  userCode: t.tenantCode.toString(),
+                  nameEn: t.tenantNameEn || `Tenant ${t.tenantCode}`,
+                  isTenant: true,
+                  ownerId: doc.id
+                });
+              }
+            });
+          }
+        });
+        membersData.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
+        setMembers(membersData);
+      } catch (error) {
+        console.error("Error fetching members:", error);
+      }
 
-        // Calculate constrained dates based on filters
+      try {
+        const latest = await getLatestEndReading();
+        setLatestEndReading(latest);
+      } catch (error) {
+        console.error("Error fetching latest reading:", error);
+      }
+    };
+    loadStaticData();
+  }, []); // runs once on mount
+
+  // Effect 2: Fetch logbook entries whenever filters change
+  useEffect(() => {
+    const fetchEntries = async () => {
+      setLoading(true);
+      try {
         const { startDate, endDate } = getCalculatedDateRange();
-
-        // Fetch Logbook Entries
         const fetchedEntries = await getRegisterEntries(startDate, endDate);
         setEntries(fetchedEntries);
-
-        // Fetch latest end reading for auto-fill (unfiltered)
-        if (latestEndReading === null) {
-          const latest = await getLatestEndReading();
-          setLatestEndReading(latest);
-        }
-
       } catch (error) {
         console.error("Error fetching register data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [timeframe, customStartDate, customEndDate, isAdmin, latestEndReading, members.length, getCalculatedDateRange]);
+    fetchEntries();
+  }, [timeframe, customStartDate, customEndDate, isAdmin, getCalculatedDateRange]);
 
   const handleAddEntry = async (data) => {
     try {

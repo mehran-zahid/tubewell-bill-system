@@ -27,6 +27,7 @@ export default function BillingTab({ isAdmin }) {
   const [editingBillId, setEditingBillId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [billToDelete, setBillToDelete] = useState(null);
+  const [isResultStale, setIsResultStale] = useState(false);
 
   const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
   const [wapdaRefNo, setWapdaRefNo] = useState('');
@@ -70,6 +71,14 @@ export default function BillingTab({ isAdmin }) {
   }, [billingTitle, startDate, endDate, cycleStartReading, cycleEndReading, wapdaBill, fixedExpenses]);
 
   const [liveWarnings, setLiveWarnings] = useState([]);
+
+  // Mark result as stale when any calculation input changes after a result exists
+  useEffect(() => {
+    if (billingResult && viewMode === 'create') {
+      setIsResultStale(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wapdaBill, fixedExpenses, startDate, endDate, cycleStartReading, cycleEndReading]);
 
   // Load Saved Bills on Mount
   useEffect(() => {
@@ -376,6 +385,7 @@ export default function BillingTab({ isAdmin }) {
         expectedHours,
         discrepancyWarning
       });
+      setIsResultStale(false);
       
     } catch (error) {
       console.error("Billing error:", error);
@@ -500,6 +510,7 @@ export default function BillingTab({ isAdmin }) {
     setWapdaBillDetails(billToEdit.wapdaBillDetails || null);
     setFixedExpenses(billToEdit.fixedExpenses || []);
     setBillingResult(billToEdit.billingResult);
+    setIsResultStale(false); // loaded result matches loaded inputs
     
     setViewMode('create');
   };
@@ -509,6 +520,7 @@ export default function BillingTab({ isAdmin }) {
     setEditingBillId(null);
     setBillingResult(null);
     setWapdaBillDetails(null);
+    setIsResultStale(false);
   };
 
   const handleCancelCreateMode = () => {
@@ -816,15 +828,23 @@ export default function BillingTab({ isAdmin }) {
               </button>
               
               {billingResult && (
-                <button 
-                  className="btn btn-success" 
-                  style={{ width: '100%', justifyContent: 'center', marginTop: '12px', background: 'var(--success)', color: 'white', border: 'none' }}
-                  onClick={handleSaveAndPublish}
-                  disabled={isSaving}
-                >
-                  <CheckCircle2 size={18} />
-                  {isSaving ? 'Saving...' : 'Save & Publish Bill'}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {isResultStale && (
+                    <div style={{ fontSize: '12px', color: 'var(--warning-dark)', background: 'var(--warning-light)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', textAlign: 'center' }}>
+                      ⚠️ Inputs changed — regenerate the bill before saving.
+                    </div>
+                  )}
+                  <button 
+                    className="btn btn-success" 
+                    style={{ width: '100%', justifyContent: 'center', marginTop: '4px', background: isResultStale ? 'var(--text-tertiary)' : 'var(--success)', color: 'white', border: 'none', cursor: isResultStale ? 'not-allowed' : 'pointer' }}
+                    onClick={handleSaveAndPublish}
+                    disabled={isSaving || isResultStale}
+                    title={isResultStale ? 'Please click Generate Bills first' : ''}
+                  >
+                    <CheckCircle2 size={18} />
+                    {isSaving ? 'Saving...' : 'Save & Publish Bill'}
+                  </button>
+                </div>
               )}
             </div>
           </div>

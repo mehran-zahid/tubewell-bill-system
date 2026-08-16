@@ -11,12 +11,21 @@ const firebaseConfig = {
 };
 
 // Polling function to wait for the CDN to load asynchronously
+// Rejects after 10 seconds if Firebase never loads (CDN blocked, offline, etc.)
 export const waitForFirebase = () => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const TIMEOUT_MS = 10000;
+    let elapsed = 0;
+
     const check = () => {
       if (window.firebase) {
         resolve(window.firebase);
+      } else if (elapsed >= TIMEOUT_MS) {
+        reject(new Error(
+          'Firebase failed to load. Please check your internet connection and reload the page.'
+        ));
       } else {
+        elapsed += 100;
         setTimeout(check, 100);
       }
     };
