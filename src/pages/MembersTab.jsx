@@ -716,7 +716,9 @@ export default function MembersTab({ isAdmin }) {
               }}
               onDragEnd={(e) => {
                 stopScrolling();
-                handleDrop(e);
+                setDragItemIndex(null);
+                setDragOverItemIndex(null);
+                handleDrop(members);
               }}
               style={{ 
                 display: 'flex', 
