@@ -3,7 +3,7 @@ import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
@@ -784,22 +784,58 @@ export default function BillingTab({ isAdmin }) {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '24px' }}>
-          <div className="card" style={{ padding: '20px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>WAPDA HOURLY RATE</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--primary)' }}>
-              Rs. {billingResult.wapdaHourlyRate ? billingResult.wapdaHourlyRate.toFixed(2) : '0.00'} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-tertiary)' }}>/ hr</span>
+        <div className="card" style={{ padding: '32px', marginBottom: '24px' }}>
+          {/* Section 1: The Overall Bill Totals */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Lightbulb size={16} /> WAPDA Electricity Bill
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Rs. {billingResult.wapdaBill ? billingResult.wapdaBill.toLocaleString() : '0'}
+              </div>
+            </div>
+            
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Wrench size={16} /> Fixed / Repair Expenses
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Rs. {billingResult.totalFixedExpenses ? billingResult.totalFixedExpenses.toLocaleString() : '0'}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Coins size={16} /> Total Collection Amount
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Rs. {billingResult.grandTotalBilled ? billingResult.grandTotalBilled.toLocaleString() : '0'}
+              </div>
             </div>
           </div>
-          <div className="card" style={{ padding: '20px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>TOTAL METER HOURS</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              {billingResult.totalConsumedHours.toFixed(2)}h
+
+          <hr style={{ margin: '32px 0', border: 'none', borderTop: '1px solid var(--border-default)' }} />
+
+          {/* Section 2: The "Per Hour" Rate Metrics */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Tag size={16} /> Electricity Rate Per Hour
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Rs. {billingResult.wapdaHourlyRate ? billingResult.wapdaHourlyRate.toFixed(2) : '0.00'} <span style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 500, color: 'var(--text-tertiary)' }}>/ hr</span>
+              </div>
             </div>
-          </div>
-          <div className="card" style={{ padding: '20px', background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 600 }}>Total Fixed</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>Rs. {billingResult.totalFixedExpenses.toLocaleString()}</div>
+
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Coins size={16} /> Total Cost Per Hour Incl. Repairs
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Rs. {(billingResult.totalHourlyRate || (billingResult.totalConsumedHours > 0 ? (billingResult.wapdaBill + billingResult.totalFixedExpenses) / billingResult.totalConsumedHours : 0)).toFixed(2)} <span style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 500, color: 'var(--text-tertiary)' }}>/ hr</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

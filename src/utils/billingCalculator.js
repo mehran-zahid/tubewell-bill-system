@@ -102,12 +102,16 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
   // Sort by Total Bill (Descending)
   breakdowns.sort((a, b) => b.totalBill - a.totalBill);
 
+  // Total Hourly Rate including fixed expenses
+  const totalHourlyRate = totalConsumedHours > 0 ? ((totalWapda + totalFixed) / totalConsumedHours) : 0;
+
   return {
     wapdaBill: totalWapda,
     totalFixedExpenses: totalFixed,
     grandTotalSystem: totalWapda + totalFixed,
     totalConsumedHours,
     wapdaHourlyRate,
+    totalHourlyRate,
     totalEffectiveHours,
     grandTotalBilled,
     breakdowns
