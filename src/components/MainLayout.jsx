@@ -229,7 +229,7 @@ export default function MainLayout({
 
       {/* Main Content Area */}
       <main style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
-        <div className="app-container" style={{ padding: 'var(--space-8)' }}>
+        <div className="app-container">
           {children}
         </div>
       </main>

@@ -130,9 +130,9 @@ export default function ScheduleTab() {
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1>168-Hour Weekly Schedule</h1>
+          <h1>Weekly Schedule</h1>
           <p>
-            Continuous weekly tubewell schedule. Current day: <strong style={{ color: 'var(--primary)' }}>{currentDayStr}</strong>
+            Live tubewell rotation. Today is <strong style={{ color: 'var(--primary)' }}>{currentDayStr}</strong>
           </p>
         </div>
       </div>
@@ -163,9 +163,9 @@ export default function ScheduleTab() {
           const startDate = new Date(nowMs + diffStart * 60000);
           const endDate = new Date(nowMs + diffEnd * 60000);
           
-          const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-          const startDateStr = `${member.startDay.toUpperCase()}, ${months[startDate.getMonth()]} ${startDate.getDate()}`;
-          const endDateStr = `${member.endDay.toUpperCase()}, ${months[endDate.getMonth()]} ${endDate.getDate()}`;
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const startDateStr = `${member.startDay.substring(0, 3)}, ${months[startDate.getMonth()]} ${startDate.getDate()}`;
+          const endDateStr = `${member.endDay.substring(0, 3)}, ${months[endDate.getMonth()]} ${endDate.getDate()}`;
 
           return (
             <div 
@@ -174,7 +174,7 @@ export default function ScheduleTab() {
               style={{ 
                 display: 'flex', 
                 flexDirection: 'column',
-                padding: '20px',
+                padding: '16px',
                 background: isCurrentShift ? 'var(--success-light)' : 'var(--bg-surface)',
                 borderColor: isCurrentShift ? 'var(--success)' : 'var(--border-default)',
                 position: 'relative',
@@ -195,15 +195,13 @@ export default function ScheduleTab() {
               )}
 
               <div className="schedule-card-inner">
-                {/* Removed User ID Circle as requested */}
-
                 <div className="schedule-info">
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500, marginBottom: '6px' }}>
                     {startDateStr} {format12Hour(member.startTime)} <span style={{ opacity: 0.5 }}>→</span> {endDateStr} {format12Hour(member.endTime)}
                   </div>
                   
                   {/* Primary Name Display */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
                     <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {member.nameEn}
                     </span>
@@ -212,7 +210,7 @@ export default function ScheduleTab() {
                   
                   {/* Tenants Display (Chips) */}
                   {member.isLeased && Array.isArray(member.tenants) && member.tenants.length > 0 && (
-                    <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {member.tenants.map((t, tIdx) => {
                         const tNameEn = t.tenantNameEn || t.tenantName || '';
                         const tDisplayName = tNameEn || `Tenant #${tIdx + 1}`;
@@ -232,19 +230,19 @@ export default function ScheduleTab() {
 
                         return (
                           <div key={tIdx} style={{ 
-                            fontSize: '12px', 
-                            fontWeight: 600, 
+                            fontSize: '11px', 
+                            fontWeight: 500, 
                             display: 'inline-flex', 
                             alignItems: 'center', 
-                            gap: '6px',
+                            gap: '3px',
                             background: isCurrentShift ? 'rgba(22, 163, 74, 0.15)' : 'var(--bg-muted)',
                             color: isCurrentShift ? 'var(--success)' : 'var(--text-secondary)',
-                            padding: '4px 10px',
-                            borderRadius: '12px',
+                            padding: '1px 6px',
+                            borderRadius: '10px',
                             border: `1px solid ${isCurrentShift ? 'rgba(22, 163, 74, 0.3)' : 'var(--border-default)'}`
                           }}>
-                            <Users size={14} />
-                            <span>{tDisplayName} {detailsStr && <span style={{ opacity: 0.8, fontWeight: 500 }}>{detailsStr}</span>}</span>
+                            <Users size={11} />
+                            <span>{tDisplayName} {detailsStr && <span style={{ opacity: 0.8 }}>{detailsStr}</span>}</span>
                           </div>
                         );
                       })}
@@ -255,10 +253,9 @@ export default function ScheduleTab() {
                 <div className="schedule-duration" style={{ 
                   color: isCurrentShift ? 'var(--success)' : 'var(--primary)',
                 }}>
-                  {member.durationHours}h {member.durationMinutes > 0 ? `${member.durationMinutes}m` : ''}
-                  
+                  <span>{member.durationHours}h {member.durationMinutes > 0 ? `${member.durationMinutes}m` : ''}</span>
                   {isCurrentShift && (
-                    <span style={{ fontSize: '12px', fontWeight: 500, opacity: 0.8, marginTop: '2px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, opacity: 0.8 }}>
                       {timeRemaining}
                     </span>
                   )}

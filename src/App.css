@@ -1,7 +1,13 @@
 .app-container {
-  padding: var(--space-8);
+  padding: var(--space-4);
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: var(--space-8);
+  }
 }
 
 .showcase-header {

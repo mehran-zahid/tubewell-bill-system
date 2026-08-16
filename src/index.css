@@ -94,6 +94,7 @@ body {
   background-color: var(--bg-canvas);
   color: var(--text-primary);
   line-height: 1.6;
+  overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile for a native app feel */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -620,8 +621,8 @@ select.input-field {
 
 .schedule-duration {
   font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   text-align: right;
   display: flex;
   flex-direction: column;
@@ -639,7 +640,7 @@ select.input-field {
     align-items: flex-start;
     text-align: left;
     flex-direction: row;
-    gap: 12px;
-    align-items: center;
+    gap: 8px;
+    align-items: baseline;
   }
 }
