@@ -488,7 +488,7 @@ export default function RegisterTab({ isAdmin }) {
                     End Reading
                   </th>
                   <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '18%' }}>
-                    Units Consumed
+                    Hours Consumed
                   </th>
                 </tr>
               </thead>
@@ -604,7 +604,7 @@ export default function RegisterTab({ isAdmin }) {
                       )}
                     </td>
                     <td style={{ borderBottom: '1px solid var(--border-default)', padding: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', fontFamily: 'Outfit', background: isEditMode ? 'var(--bg-muted)' : 'transparent' }}>
-                      {draft.unitsConsumed}
+                      {((parseFloat(draft.unitsConsumed) || 0) / 100).toFixed(2)}
                     </td>
                   </tr>
                 )})}

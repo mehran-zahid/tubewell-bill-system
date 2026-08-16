@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function RegisterStats({ entries, memberName }) {
   const totalRuns = entries.length;
-  const totalUnits = entries.reduce((sum, entry) => sum + (parseFloat(entry.unitsConsumed) || 0), 0);
-  const avgUnits = totalRuns > 0 ? (totalUnits / totalRuns).toFixed(1) : 0;
+  const totalHours = entries.reduce((sum, entry) => sum + (parseFloat(entry.unitsConsumed) || 0), 0) / 100;
+  const avgHours = totalRuns > 0 ? (totalHours / totalRuns).toFixed(2) : 0;
 
   return (
     <div style={{ 
@@ -12,7 +12,7 @@ export default function RegisterStats({ entries, memberName }) {
       gap: '16px', 
       marginBottom: '24px' 
     }}>
-      {/* Total Units Card */}
+      {/* Total Hours Card */}
       <div style={{
         background: 'var(--surface-color)',
         border: '1px solid var(--border-default)',
@@ -32,11 +32,11 @@ export default function RegisterStats({ entries, memberName }) {
             </svg>
           </div>
           <span style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-            Total Units {memberName === 'all' ? '(All)' : ''}
+            Total Hours {memberName === 'all' ? '(All)' : ''}
           </span>
         </div>
         <span style={{ fontFamily: 'Outfit', fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)' }}>
-          {totalUnits.toLocaleString()}
+          {totalHours.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
 
@@ -90,11 +90,11 @@ export default function RegisterStats({ entries, memberName }) {
             </svg>
           </div>
           <span style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-            Avg. Units / Run
+            Avg. Hours / Run
           </span>
         </div>
         <span style={{ fontFamily: 'Outfit', fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)' }}>
-          {avgUnits}
+          {avgHours}
         </span>
       </div>
     </div>
