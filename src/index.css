@@ -366,3 +366,62 @@ select.input-field {
   background: var(--border-default);
   margin: 4px 0;
 }
+
+@media print {
+  /* Hide UI elements that are not part of the bill report */
+  aside,
+  .print-hidden,
+  .toast-container {
+    display: none !important;
+  }
+
+  /* Force background to white, ensure full width */
+  body, html {
+    background: #FFFFFF !important;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    color: #000000;
+  }
+
+  /* Reset cards so they don't have background/shadows in print */
+  .card {
+    box-shadow: none !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    padding: 10px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Keep the table view strictly structured for printing */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  th, td {
+    border-bottom: 1px solid #ddd !important;
+    padding: 8px !important;
+  }
+  th {
+    background-color: #f9fafb !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* Force colors for colored boxes (like avatars or warning/primary tags) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+
+.print-only {
+  display: none;
+}
+@media print {
+  .print-only {
+    display: block !important;
+  }
+}
+

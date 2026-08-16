@@ -3,7 +3,7 @@ import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
@@ -467,7 +467,7 @@ export default function BillingTab({ isAdmin }) {
       </div>
 
       {viewMode === 'list' ? (
-        <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card print-hidden" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>Select Billing Month</h2>
@@ -514,7 +514,7 @@ export default function BillingTab({ isAdmin }) {
         </div>
       ) : (
         /* Input Panel (Create Mode) */
-        <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card print-hidden" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>
               {editingBillId ? 'Edit Bill Details' : 'Create New Bill Details'}
@@ -785,6 +785,30 @@ export default function BillingTab({ isAdmin }) {
         </div>
       ) : (
         <div className="card" style={{ padding: '32px', marginBottom: '24px' }}>
+          {/* Action Bar for PDF Generation */}
+          <div className="print-hidden" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => window.print()}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px' }}
+            >
+              <Download size={16} />
+              Download PDF Report
+            </button>
+          </div>
+
+          {/* Print-Only Title */}
+          <div className="print-only" style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h1 style={{ fontFamily: 'Outfit', fontSize: '28px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+              {viewMode === 'list' && selectedBillId 
+                ? (savedBills.find(b => b.id === selectedBillId)?.billingTitle || 'Tubewell Bill')
+                : (billingTitle || 'Tubewell Bill')}
+            </h1>
+            <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Generated on {new Date().toLocaleDateString('en-GB')}
+            </p>
+          </div>
+
           {/* Section 1: The Overall Bill Totals */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px' }}>
             <div>
@@ -872,7 +896,7 @@ export default function BillingTab({ isAdmin }) {
       {billingResult && (
         <div>
           {/* Layout Toggle */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div className="print-hidden" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>Breakdown by Member</h3>
             <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-muted)', padding: '4px', borderRadius: '8px' }}>
               <button 
