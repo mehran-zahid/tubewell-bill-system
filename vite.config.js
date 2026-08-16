@@ -122,10 +122,101 @@ function adminApiPlugin(env) {
   }
 }
 
+function mepcoApiPlugin() {
+  return {
+    name: 'mepco-api',
+    configureServer(server) {
+      server.middlewares.use('/api/fetch-bill', async (req, res) => {
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const refno = url.searchParams.get('refno');
+        
+        if (!refno || refno.length < 14) {
+          res.statusCode = 400;
+          res.setHeader('Content-Type', 'application/json');
+          return res.end(JSON.stringify({ error: 'Invalid reference number' }));
+        }
+
+        try {
+          const targetUrl = 'http://bill.pitc.com.pk/mepcobill';
+          const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9'
+          };
+
+          const res1 = await fetch(targetUrl, { headers });
+          const html1 = await res1.text();
+          
+          if (!html1.includes('__VIEWSTATE')) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            return res.end(JSON.stringify({ error: 'Failed to access PITC server. The page may be down.' }));
+          }
+
+          const rawSetCookie = res1.headers.get('set-cookie') || '';
+          const sessionId = (rawSetCookie.match(/ASP\.NET_SessionId=([a-z0-9]+)/i) || [])[1] || '';
+          const rvtFromCookie = (rawSetCookie.match(/__RequestVerificationToken=([^;,\s]+)/) || [])[1] || '';
+
+          const getHidden = (name) => {
+            const m = html1.match(new RegExp(`name="${name}"[^>]*value="([^"]*)"`)) ||
+                      html1.match(new RegExp(`name="${name}"\\s+value="([^"]*)"`));
+            return m ? m[1] : '';
+          };
+
+          const vs  = getHidden('__VIEWSTATE');
+          const vsg = getHidden('__VIEWSTATEGENERATOR');
+          const ev  = getHidden('__EVENTVALIDATION');
+          const rvtForm = getHidden('__RequestVerificationToken') || rvtFromCookie;
+
+          const cookieStr = [
+            sessionId ? `ASP.NET_SessionId=${sessionId}` : '',
+            rvtFromCookie ? `__RequestVerificationToken=${rvtFromCookie}` : ''
+          ].filter(Boolean).join('; ');
+
+          const formData = new URLSearchParams({
+            __EVENTTARGET: '',
+            __EVENTARGUMENT: '',
+            __LASTFOCUS: '',
+            __VIEWSTATE: vs,
+            __VIEWSTATEGENERATOR: vsg,
+            __EVENTVALIDATION: ev,
+            __RequestVerificationToken: rvtForm,
+            rbSearchByList: 'refno',
+            searchTextBox: refno,
+            ruCodeTextBox: '',
+            btnSearch: 'Search'
+          });
+
+          const res2 = await fetch(targetUrl, {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Cookie': cookieStr,
+              'Referer': targetUrl,
+              'Origin': 'http://bill.pitc.com.pk'
+            },
+            body: formData.toString()
+          });
+
+          const html2 = await res2.text();
+          
+          res.setHeader('Content-Type', 'text/html');
+          res.end(html2);
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Failed to complete request: ' + error.message }));
+        }
+      });
+    }
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    plugins: [react(), adminApiPlugin(env)],
+    plugins: [react(), adminApiPlugin(env), mepcoApiPlugin()],
   };
 });
