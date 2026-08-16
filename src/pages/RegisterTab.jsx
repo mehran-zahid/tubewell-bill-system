@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Filter, Trash2 } from '../components/Icons';
+import { Plus, Filter, Trash2, MoreVertical } from '../components/Icons';
 import { addRegisterEntry, getRegisterEntries, getLatestEndReading, updateRegisterEntries, deleteRegisterEntry } from '../services/registerService';
 import { initFirebaseAsync } from '../config/firebase';
 import NewRegisterEntryModal from '../components/NewRegisterEntryModal';
@@ -33,6 +33,7 @@ export default function RegisterTab({ isAdmin }) {
   // Confirm Modals
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Calculate Date Ranges
   const getCalculatedDateRange = useCallback(() => {
@@ -299,37 +300,35 @@ export default function RegisterTab({ isAdmin }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* PAGE HEADER */}
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
-        <div>
-          <h1 style={{ fontFamily: 'Outfit', fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Register Readings
-          </h1>
-        </div>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '12px' }}>
+        <h1 style={{ fontFamily: 'Outfit', fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          Register Readings
+        </h1>
         
         {isAdmin && (
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="header-actions" style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
             {selectedRows.length > 0 && (
               <button 
                 onClick={handleDeleteSelected}
                 className="btn btn-secondary"
                 disabled={isSaving}
                 style={{ 
-                  borderRadius: 'var(--radius-md)', padding: '12px 24px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px',
-                  color: 'var(--danger)', borderColor: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px'
+                  borderRadius: 'var(--radius-md)', padding: '8px 12px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px',
+                  color: 'var(--danger)', borderColor: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px'
                 }}
               >
                 <Trash2 size={16} />
-                Delete Selected ({selectedRows.length})
+                Delete ({selectedRows.length})
               </button>
             )}
             
             {isEditMode ? (
-              <>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button 
                   onClick={toggleEditMode}
                   className="btn btn-secondary"
                   disabled={isSaving}
-                  style={{ borderRadius: 'var(--radius-md)', padding: '12px 24px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px' }}
+                  style={{ borderRadius: 'var(--radius-md)', padding: '8px 16px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px' }}
                 >
                   Cancel
                 </button>
@@ -337,33 +336,69 @@ export default function RegisterTab({ isAdmin }) {
                   onClick={handleSaveChanges}
                   className="btn btn-primary"
                   disabled={isSaving}
-                  style={{ borderRadius: 'var(--radius-md)', padding: '12px 24px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px', background: 'var(--success)', border: 'none' }}
+                  style={{ borderRadius: 'var(--radius-md)', padding: '8px 16px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px', background: 'var(--success)', border: 'none' }}
                 >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  {isSaving ? 'Saving...' : 'Save'}
                 </button>
-              </>
+              </div>
             ) : (
               <>
-                <button 
-                  onClick={toggleEditMode}
-                  className="btn btn-secondary"
-                  style={{ borderRadius: 'var(--radius-md)', padding: '12px 24px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px' }}
-                >
-                  Edit Mode
-                </button>
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="btn btn-primary"
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px',
-                    background: 'var(--primary)', color: 'var(--text-inverse)', border: 'none',
-                    borderRadius: 'var(--radius-md)', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px',
-                    cursor: 'pointer', boxShadow: '0 1px 3px rgba(37, 99, 235, 0.3)'
-                  }}
-                >
-                  <Plus size={16} />
-                  Add Entry
-                </button>
+                <div className="desktop-actions" style={{ display: 'flex', gap: '12px' }}>
+                  <button 
+                    onClick={toggleEditMode}
+                    className="btn btn-secondary"
+                    style={{ borderRadius: 'var(--radius-md)', padding: '12px 24px', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px' }}
+                  >
+                    Edit Mode
+                  </button>
+                  <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="btn btn-primary"
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px',
+                      background: 'var(--primary)', color: 'var(--text-inverse)', border: 'none',
+                      borderRadius: 'var(--radius-md)', fontFamily: 'Inter', fontWeight: 600, fontSize: '14px',
+                      cursor: 'pointer', boxShadow: '0 1px 3px rgba(37, 99, 235, 0.3)'
+                    }}
+                  >
+                    <Plus size={16} />
+                    Add Entry
+                  </button>
+                </div>
+                
+                {/* Mobile Dropdown Actions */}
+                <div className="mobile-actions" style={{ position: 'relative' }}>
+                  <button 
+                    className="btn-icon" 
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    style={{ padding: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+                  
+                  {isMobileMenuOpen && (
+                    <div className="dropdown-menu" style={{
+                      position: 'absolute', right: 0, top: 'calc(100% + 2px)',
+                      background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+                      borderRadius: 'var(--radius-md)', boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                      minWidth: '180px', zIndex: 50, padding: '8px'
+                    }}>
+                      <button 
+                        onClick={() => { setIsMobileMenuOpen(false); toggleEditMode(); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', fontFamily: 'Inter', fontWeight: 500, color: 'var(--text-primary)', borderRadius: 'var(--radius-sm)' }}
+                      >
+                        Edit Mode
+                      </button>
+                      <button 
+                        onClick={() => { setIsMobileMenuOpen(false); setIsModalOpen(true); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', fontFamily: 'Inter', fontWeight: 500, color: 'var(--primary)', borderRadius: 'var(--radius-sm)' }}
+                      >
+                        <Plus size={16} />
+                        Add Entry
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -372,12 +407,12 @@ export default function RegisterTab({ isAdmin }) {
 
       {/* FILTER BAR */}
       <div style={{ 
-        display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', 
-        padding: '16px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', 
+        display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '24px', 
+        padding: '16px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', 
         border: '1px solid var(--border-default)', alignItems: 'flex-end', flexShrink: 0,
         opacity: isEditMode ? 0.5 : 1, pointerEvents: isEditMode ? 'none' : 'auto', transition: 'opacity 0.2s'
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 130px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Timeframe</label>
           <CustomDropdown 
             value={timeframe} 
@@ -388,13 +423,12 @@ export default function RegisterTab({ isAdmin }) {
               { value: '90_days', label: 'Last 90 Days' },
               { value: 'custom', label: 'Custom Range' }
             ]}
-            style={{ width: '160px' }}
           />
         </div>
 
         {timeframe === 'custom' && (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 130px' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                 Start Date {!isAdmin && '(Max 6mo)'}
               </label>
@@ -407,7 +441,7 @@ export default function RegisterTab({ isAdmin }) {
                 style={{ padding: '8px 12px' }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 130px' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>End Date</label>
               <input 
                 type="date" 
@@ -420,7 +454,7 @@ export default function RegisterTab({ isAdmin }) {
           </>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 130px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Member</label>
           <CustomDropdown 
             value={selectedMember} 
@@ -432,7 +466,6 @@ export default function RegisterTab({ isAdmin }) {
                 label: `${m.nameEn} - ${m.userCode}`
               }))
             ]}
-            style={{ minWidth: '200px' }}
           />
         </div>
       </div>
@@ -458,21 +491,24 @@ export default function RegisterTab({ isAdmin }) {
         </div>
       ) : (
         <div className="card" style={{ flex: 1, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ overflowX: 'auto', overflowY: 'auto', flex: 1 }}>
-            <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', minWidth: '800px', tableLayout: 'fixed' }}>
+          {/* Desktop Table View */}
+          <div className="desktop-table-view" style={{ overflowX: 'auto', overflowY: 'auto', flex: 1 }}>
+            <table className="responsive-table" style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', minWidth: '100%', tableLayout: 'auto' }}>
               <thead>
                 <tr>
                   {isAdmin && (
                     <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px', textAlign: 'center', width: '48px' }}>
-                      <input 
-                        type="checkbox" 
-                        onChange={(e) => {
-                          if (e.target.checked) setSelectedRows(filteredEntries.map(entry => entry.id));
-                          else setSelectedRows([]);
-                        }}
-                        checked={filteredEntries.length > 0 && selectedRows.length === filteredEntries.length}
-                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                      />
+                      <div style={{ padding: '8px', display: 'flex', justifyContent: 'center' }}>
+                        <input 
+                          type="checkbox" 
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedRows(filteredEntries.map(entry => entry.id));
+                            else setSelectedRows([]);
+                          }}
+                          checked={filteredEntries.length > 0 && selectedRows.length === filteredEntries.length}
+                          style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                        />
+                      </div>
                     </th>
                   )}
                   <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '15%' }}>
@@ -500,16 +536,18 @@ export default function RegisterTab({ isAdmin }) {
                   return (
                   <tr key={entry.id} style={{ background: isSelected ? 'var(--primary-light)' : 'var(--bg-surface)', transition: 'background 0.2s', ':hover': { background: 'var(--bg-surface-hover)' } }}>
                     {isAdmin && (
-                      <td style={{ borderBottom: '1px solid var(--border-default)', padding: '16px', textAlign: 'center' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={isSelected}
-                          onChange={() => handleSelectRow(entry.id)}
-                          style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                        />
+                      <td data-label="SELECT" style={{ borderBottom: '1px solid var(--border-default)', padding: '16px', textAlign: 'center' }}>
+                        <div style={{ padding: '8px', display: 'flex', justifyContent: 'center' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            onChange={() => handleSelectRow(entry.id)}
+                            style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                          />
+                        </div>
                       </td>
                     )}
-                    <td style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                    <td data-label="DATE" style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center' }}>
                       {isEditMode ? (
                         <input 
                           type="date"
@@ -524,7 +562,7 @@ export default function RegisterTab({ isAdmin }) {
                         new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                       )}
                     </td>
-                    <td style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>
+                    <td data-label="MEMBER" style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>
                       {isEditMode ? (
                         <select
                           value={
@@ -573,10 +611,11 @@ export default function RegisterTab({ isAdmin }) {
                         })()
                       )}
                     </td>
-                    <td style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', fontFamily: 'Outfit' }}>
+                    <td data-label="START" style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', fontFamily: 'Outfit' }}>
                       {isEditMode ? (
                         <input 
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
                           value={draft.startReading}
                           onChange={(e) => handleCellChange(entry.id, 'startReading', e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 2)}
@@ -588,10 +627,11 @@ export default function RegisterTab({ isAdmin }) {
                         entry.startReading
                       )}
                     </td>
-                    <td style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', fontFamily: 'Outfit' }}>
+                    <td data-label="END" style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', fontFamily: 'Outfit' }}>
                       {isEditMode ? (
                         <input 
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
                           value={draft.endReading}
                           onChange={(e) => handleCellChange(entry.id, 'endReading', e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 3)}
@@ -603,13 +643,123 @@ export default function RegisterTab({ isAdmin }) {
                         entry.endReading
                       )}
                     </td>
-                    <td style={{ borderBottom: '1px solid var(--border-default)', padding: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', fontFamily: 'Outfit', background: isEditMode ? 'var(--bg-muted)' : 'transparent' }}>
+                    <td data-label="HOURS" style={{ borderBottom: '1px solid var(--border-default)', padding: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', fontFamily: 'Outfit', background: isEditMode ? 'var(--bg-muted)' : 'transparent' }}>
                       {((parseFloat(draft.unitsConsumed) || 0) / 100).toFixed(2)}
                     </td>
                   </tr>
                 )})}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Compact List View */}
+          <div className="mobile-list-view" style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            {filteredEntries.map((entry) => {
+              const draft = isEditMode ? draftEntries[entry.id] : entry;
+              if (!draft) return null;
+              const isSelected = selectedRows.includes(entry.id);
+              
+              const mem = members.find(m => 
+                m.id === String(draft.memberId) || 
+                String(m.userCode) === String(draft.memberId) ||
+                (parseInt(m.userCode, 10) === parseInt(draft.memberId, 10) && !isNaN(parseInt(m.userCode, 10)))
+              );
+              const safeName = entry.memberName || mem?.nameEn || 'Unknown';
+              const safeCode = entry.userCode || mem?.userCode || (safeName !== 'Unknown' ? safeName.charAt(0) : 'U');
+
+              return (
+                <div 
+                  key={`mob-${entry.id}`} 
+                  className="mobile-entry-card" 
+                  onClick={() => { if(isAdmin && !isEditMode) handleSelectRow(entry.id) }} 
+                  style={{ 
+                    border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border-default)',
+                    cursor: isAdmin && !isEditMode ? 'pointer' : 'default'
+                  }}
+                >
+                  <div className="mobile-entry-header">
+                    <div className="mobile-entry-member">
+                      {isAdmin && !isEditMode && (
+                        <div style={{ padding: '8px' }} onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected} 
+                            onChange={() => handleSelectRow(entry.id)} 
+                            style={{ width: '20px', height: '20px', cursor: 'pointer' }} 
+                          />
+                        </div>
+                      )}
+                      {isEditMode ? (
+                        <select 
+                          value={mem ? mem.id : draft.memberId} 
+                          onChange={(e) => handleCellChange(entry.id, 'memberId', e.target.value)} 
+                          className="input-field" 
+                          style={{ padding: '8px', minWidth: '140px' }}
+                        >
+                          {members.map(m => <option key={m.id} value={m.id}>{m.nameEn} - {m.userCode}</option>)}
+                        </select>
+                      ) : (
+                        <>
+                          <div className="mobile-entry-avatar" style={{ background: mem?.isTenant ? 'var(--warning-light)' : 'var(--primary-light)', color: mem?.isTenant ? 'var(--warning)' : 'var(--primary)' }}>
+                            {safeCode}
+                          </div>
+                          <span className="mobile-entry-name">{safeName}</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="mobile-entry-hours">
+                      <span className="mobile-entry-hours-value">{((parseFloat(draft.unitsConsumed) || 0) / 100).toFixed(2)}</span>
+                      <span className="mobile-entry-hours-label">hrs</span>
+                    </div>
+                  </div>
+
+                  <div className="mobile-entry-details">
+                    <div className="mobile-detail-group">
+                      <span className="mobile-detail-label">Date</span>
+                      {isEditMode ? (
+                        <input 
+                          type="date" 
+                          value={draft.date} 
+                          onChange={(e) => handleCellChange(entry.id, 'date', e.target.value)} 
+                          className="input-field" 
+                          style={{ padding: '8px', maxWidth: '140px' }} 
+                        />
+                      ) : (
+                        <span className="mobile-detail-value">{new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      )}
+                    </div>
+                    <div className="mobile-detail-group" style={{ alignItems: 'flex-end' }}>
+                      <span className="mobile-detail-label">Readings (Start &rarr; End)</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {isEditMode ? (
+                          <>
+                            <input 
+                              type="text" 
+                              inputMode="decimal" 
+                              value={draft.startReading} 
+                              onChange={(e) => handleCellChange(entry.id, 'startReading', e.target.value)} 
+                              className="input-field" 
+                              style={{ width: '70px', padding: '8px', textAlign: 'center' }} 
+                            />
+                            <span style={{ color: 'var(--text-tertiary)' }}>&rarr;</span>
+                            <input 
+                              type="text" 
+                              inputMode="decimal" 
+                              value={draft.endReading} 
+                              onChange={(e) => handleCellChange(entry.id, 'endReading', e.target.value)} 
+                              className="input-field" 
+                              style={{ width: '70px', padding: '8px', textAlign: 'center' }} 
+                            />
+                          </>
+                        ) : (
+                          <span className="mobile-detail-value">{entry.startReading} <span style={{color:'var(--text-tertiary)', margin:'0 4px'}}>&rarr;</span> {entry.endReading}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

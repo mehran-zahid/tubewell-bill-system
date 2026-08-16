@@ -103,14 +103,14 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
             </select>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 140px' }}>
               <label style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
                 Start Reading
               </label>
               <input 
-                type="number" 
-                step="any"
+                type="text" 
+                inputMode="decimal"
                 value={startReading} 
                 onChange={(e) => setStartReading(e.target.value)}
                 className="input-field"
@@ -119,13 +119,13 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
               />
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1 1 140px' }}>
               <label style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
                 End Reading
               </label>
               <input 
-                type="number" 
-                step="any"
+                type="text" 
+                inputMode="decimal"
                 value={endReading} 
                 onChange={(e) => setEndReading(e.target.value)}
                 className="input-field"

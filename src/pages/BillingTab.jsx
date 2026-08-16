@@ -620,9 +620,9 @@ export default function BillingTab({ isAdmin }) {
             </button>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
             {/* Left Column - Form */}
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: '0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 300px', minWidth: '0' }}>
               <div className="form-group" style={{ marginBottom: '16px' }}>
                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Calendar size={14} color="var(--text-secondary)" /> Billing Month
@@ -787,7 +787,7 @@ export default function BillingTab({ isAdmin }) {
             </div>
 
             {/* Right Column - Fixed Expenses */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 300px', minWidth: '0' }}>
               <div style={{ background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flex: 1, marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <label className="form-label" style={{ marginBottom: 0 }}>Fixed Expenses</label>

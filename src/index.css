@@ -607,6 +607,14 @@ select.input-field {
     display: flex;
   }
 
+  .register-actions {
+    width: 100%;
+  }
+
+  .register-actions button {
+    flex: 1;
+  }
+
   .input-field {
     font-size: 16px !important; /* Prevent iOS zoom */
   }
@@ -621,6 +629,110 @@ select.input-field {
     bottom: 0;
     margin: 0;
     animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .stat-card-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .stat-card-grid > div:last-child {
+    grid-column: span 2;
+  }
+
+  .desktop-table-view {
+    display: none !important;
+  }
+  
+  .mobile-list-view {
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  .mobile-entry-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed var(--border-default);
+    padding-bottom: 12px;
+  }
+
+  .mobile-entry-member {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mobile-entry-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .mobile-entry-name {
+    font-family: 'Inter';
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .mobile-entry-hours {
+    text-align: right;
+  }
+
+  .mobile-entry-hours-value {
+    font-family: 'Outfit';
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .mobile-entry-hours-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: 4px;
+  }
+
+  .mobile-entry-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mobile-detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-detail-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .mobile-detail-value {
+    font-family: 'Inter';
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
   }
 }
 
@@ -663,5 +775,22 @@ select.input-field {
     flex-direction: row;
     gap: 8px;
     align-items: baseline;
+  }
+}
+
+/* Action Button Responsiveness */
+.mobile-actions {
+  display: none;
+}
+.desktop-actions {
+  display: flex;
+}
+
+@media (max-width: 600px) {
+  .mobile-actions {
+    display: block;
+  }
+  .desktop-actions {
+    display: none !important;
   }
 }
