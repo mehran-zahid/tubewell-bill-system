@@ -6,13 +6,15 @@ import MembersTab from './pages/MembersTab';
 import RegisterTab from './pages/RegisterTab';
 import BillingTab from './pages/BillingTab';
 import ConfirmModal from './components/ConfirmModal';
+import { ToastProvider, useToast } from './context/ToastContext';
 import { initFirebaseAsync } from './config/firebase';
 
-function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState('schedule');
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     let unsubscribe;
@@ -30,7 +32,7 @@ function App() {
             } else {
               // Sign out immediately if not found in admins collection
               console.warn("Unauthorized login attempt:", currentUser.email);
-              alert(`Access Denied: ${currentUser.email} does not have admin privileges.`);
+              showToast(`Access Denied: ${currentUser.email} does not have admin privileges.`, 'error');
               await firebase.signOut(auth);
               setUser(null);
               setIsAdmin(false);
@@ -58,9 +60,10 @@ function App() {
       const { auth, firebase } = await initFirebaseAsync();
       const provider = new firebase.GoogleAuthProvider();
       await firebase.signInWithPopup(auth, provider);
+      showToast("Logged in successfully", "success");
     } catch (error) {
       console.error("Login failed:", error);
-      alert("Login failed. Please try again.");
+      showToast("Login failed. Please try again.", "error");
     }
   };
 
@@ -73,8 +76,10 @@ function App() {
       const { auth, firebase } = await initFirebaseAsync();
       await firebase.signOut(auth);
       setShowLogoutConfirm(false);
+      showToast("Signed out successfully", "info");
     } catch (error) {
       console.error("Logout failed:", error);
+      showToast("Logout failed.", "error");
     }
   };
 
@@ -103,6 +108,14 @@ function App() {
         confirmText="Sign Out"
       />
     </>
+  );
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
 

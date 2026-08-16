@@ -5,8 +5,12 @@ import { initFirebaseAsync } from '../config/firebase';
 import NewRegisterEntryModal from '../components/NewRegisterEntryModal';
 import RegisterStats from '../components/RegisterStats';
 import CustomDropdown from '../components/CustomDropdown';
+import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../context/ToastContext';
+import { SkeletonTable } from '../components/Skeleton';
 
 export default function RegisterTab({ isAdmin }) {
+  const { showToast } = useToast();
   const [entries, setEntries] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +29,10 @@ export default function RegisterTab({ isAdmin }) {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const inputRefs = useRef({});
+
+  // Confirm Modals
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   // Calculate Date Ranges
   const getCalculatedDateRange = useCallback(() => {
@@ -122,7 +130,7 @@ export default function RegisterTab({ isAdmin }) {
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error adding entry:", error);
-      alert("Failed to add entry.");
+      showToast("Failed to add entry. See console.", "error");
     }
   };
 
@@ -167,8 +175,13 @@ export default function RegisterTab({ isAdmin }) {
     );
   };
 
-  const handleDeleteSelected = async () => {
-    if (!window.confirm(`Are you sure you want to permanently delete ${selectedRows.length} selected readings?`)) return;
+  const handleDeleteSelected = () => {
+    if (selectedRows.length === 0) return;
+    setConfirmDeleteOpen(true);
+  };
+
+  const executeDeleteSelected = async () => {
+    setConfirmDeleteOpen(false);
     try {
       setIsSaving(true);
       for (const id of selectedRows) {
@@ -182,9 +195,10 @@ export default function RegisterTab({ isAdmin }) {
         selectedRows.forEach(id => delete newDrafts[id]);
         return newDrafts;
       });
+      showToast("Selected entries deleted.", "success");
     } catch (e) {
       console.error("Failed to delete selected:", e);
-      alert("Failed to delete selected entries.");
+      showToast("Failed to delete selected entries.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -193,7 +207,7 @@ export default function RegisterTab({ isAdmin }) {
   // --- EDIT MODE LOGIC ---
   const toggleEditMode = () => {
     if (isEditMode) {
-      if (window.confirm("Discard unsaved changes?")) setIsEditMode(false);
+      setConfirmDiscardOpen(true);
     } else {
       const drafts = {};
       filteredEntries.forEach(entry => drafts[entry.id] = { ...entry });
@@ -267,9 +281,10 @@ export default function RegisterTab({ isAdmin }) {
           return newArr;
         });
         setIsEditMode(false);
+        showToast("Changes saved successfully!", "success");
       } catch (e) {
         console.error("Save failed:", e);
-        alert("Failed to save changes.");
+        showToast("Failed to save changes.", "error");
       } finally {
         setIsSaving(false);
       }
@@ -426,7 +441,9 @@ export default function RegisterTab({ isAdmin }) {
       {!loading && <RegisterStats entries={filteredEntries} memberName={selectedMember === 'all' ? 'all' : members.find(m => m.id === selectedMember)?.nameEn} />}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px' }}>Loading Logbook...</div>
+        <div style={{ padding: '0' }}>
+          <SkeletonTable rows={5} />
+        </div>
       ) : filteredEntries.length === 0 ? (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 20px', textAlign: 'center', flex: 1 }}>
           <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', marginBottom: '20px' }}>

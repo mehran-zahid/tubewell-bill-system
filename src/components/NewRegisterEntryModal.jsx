@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../context/ToastContext';
 
 export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, members, latestEndReading }) {
+  const { showToast } = useToast();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [memberId, setMemberId] = useState('');
   const [startReading, setStartReading] = useState('');
@@ -21,12 +23,12 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!date || !memberId || !startReading || !endReading) {
-      alert("Please fill all fields.");
+      showToast("Please fill all fields.", "warning");
       return;
     }
     
     if (parseFloat(endReading) <= parseFloat(startReading)) {
-      alert("End reading must be greater than start reading.");
+      showToast("End reading must be greater than start reading.", "error");
       return;
     }
 

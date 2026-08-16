@@ -3,8 +3,11 @@ import { initFirebaseAsync } from '../config/firebase';
 import { autoRechainSchedule, format12Hour } from '../utils/scheduleLogic';
 import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, Download, Upload, GripVertical, CalendarClock } from '../components/Icons';
 import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../context/ToastContext';
+import { SkeletonCard, SkeletonTable } from '../components/Skeleton';
 
 export default function MembersTab({ isAdmin }) {
+  const { showToast } = useToast();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,6 +18,7 @@ export default function MembersTab({ isAdmin }) {
   
   // Confirm Delete Modal State
   const [memberToDelete, setMemberToDelete] = useState(null);
+  const [importConfirmData, setImportConfirmData] = useState(null);
   
   // Context Menu State
   const [activeDropdownId, setActiveDropdownId] = useState(null);
@@ -160,55 +164,57 @@ export default function MembersTab({ isAdmin }) {
     setFormData({ ...formData, tenants: newTenants });
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!formData.nameEn || !formData.userCode) {
-      alert("Name and User Code are required.");
+  const handleSaveMember = async () => {
+    if (!formData.nameEn.trim() || !formData.userCode.trim()) {
+      showToast("Name and User Code are required.", "warning");
       return;
     }
 
     // --- Uniqueness Validation ---
     const allExistingCodes = new Set();
+    const codes = [];
+    const allOtherCodes = new Set();
+    
     members.forEach(m => {
       if (m.id !== editingMemberId) {
         if (m.userCode) {
           const num = parseInt(m.userCode, 10);
-          if (!isNaN(num)) allExistingCodes.add(num);
+          if (!isNaN(num)) allOtherCodes.add(num);
         }
         if (m.tenants && Array.isArray(m.tenants)) {
           m.tenants.forEach(t => {
             if (t.tenantCode) {
               const num = parseInt(t.tenantCode, 10);
-              if (!isNaN(num)) allExistingCodes.add(num);
+              if (!isNaN(num)) allOtherCodes.add(num);
             }
           });
         }
       }
     });
 
-    const submittedCodes = [];
     const mainNum = parseInt(formData.userCode, 10);
-    if (!isNaN(mainNum)) submittedCodes.push(mainNum);
+    if (!isNaN(mainNum)) codes.push(mainNum);
 
     if (formData.isLeased && formData.tenants) {
       formData.tenants.forEach(t => {
         if (t.tenantCode) {
           const tNum = parseInt(t.tenantCode, 10);
-          if (!isNaN(tNum)) submittedCodes.push(tNum);
+          if (!isNaN(tNum)) codes.push(tNum);
         }
       });
     }
 
     // Check for duplicates within the submitted form itself
-    if (new Set(submittedCodes).size !== submittedCodes.length) {
-      alert("You have entered duplicate codes within this member's form. Each owner and tenant must have a strictly unique code.");
+    const duplicatesInForm = codes.filter((item, index) => codes.indexOf(item) !== index);
+    if (duplicatesInForm.length > 0) {
+      showToast("You have entered duplicate codes within this member's form. Each owner and tenant must have a strictly unique code.", "error");
       return;
     }
 
     // Check against other members/tenants in the database
-    for (const code of submittedCodes) {
-      if (allExistingCodes.has(code)) {
-        alert(`The code '${code}' (or its 0-padded equivalent) is already in use by another owner or tenant. Please use a unique code.`);
+    for (const code of codes) {
+      if (allOtherCodes.has(code)) {
+        showToast(`The code '${code}' (or its 0-padded equivalent) is already in use by another owner or tenant. Please use a unique code.`, "error");
         return;
       }
     }
@@ -217,7 +223,6 @@ export default function MembersTab({ isAdmin }) {
     try {
       const { db, firebase } = await initFirebaseAsync();
       
-      // Parse numbers
       const newMemberData = {
         ...formData,
         userCode: formData.userCode.toString(),
@@ -241,18 +246,12 @@ export default function MembersTab({ isAdmin }) {
           updatedMembers[index] = { ...updatedMembers[index], ...newMemberData };
         }
       } else {
-        // Just push it, we don't have an ID yet, we'll let Firestore generate it later
-        // But for sorting and auto-rechaining locally before batching, we generate a temp ID
         updatedMembers.push({ id: `temp_${Date.now()}`, ...newMemberData });
       }
 
-      // Sort by user code
       updatedMembers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
-      
-      // Apply Auto-Schedule Rechain
       updatedMembers = autoRechainSchedule(updatedMembers);
 
-      // Batch write all members to update the schedule atomically
       const batch = firebase.writeBatch(db);
       
       updatedMembers.forEach(member => {
@@ -261,7 +260,6 @@ export default function MembersTab({ isAdmin }) {
           docRef = firebase.doc(db, 'members', member.id);
         } else {
           docRef = firebase.doc(firebase.collection(db, 'members'));
-          // Remove temp id so it doesn't get saved
           delete member.id;
         }
         batch.set(docRef, member, { merge: true });
@@ -271,10 +269,11 @@ export default function MembersTab({ isAdmin }) {
       setFormData(getEmptyForm());
       setEditingMemberId(null);
       setIsModalOpen(false);
-
-    } catch (error) {
-      console.error("Error saving member:", error);
-      alert("Failed to save member.");
+      setEditingMemberId(null);
+      showToast("Member saved successfully", "success");
+    } catch (e) {
+      console.error("Error saving member", e);
+      showToast("Failed to save member.", "error");
     }
   };
 
@@ -285,37 +284,17 @@ export default function MembersTab({ isAdmin }) {
     setIsAnchorModalOpen(true);
   };
 
-  const handleSaveAnchor = async (e) => {
-    e.preventDefault();
-    if (members.length === 0) {
-      setIsAnchorModalOpen(false);
-      return;
-    }
-
+  const handleSaveAnchor = async (anchorDate) => {
     try {
-      let updatedMembers = autoRechainSchedule([...members], { 
-        day: anchorData.startDay, 
-        time: anchorData.startTime 
-      });
-      setMembers(updatedMembers);
-      setIsAnchorModalOpen(false);
-
       const { db, firebase } = await initFirebaseAsync();
-      const batch = firebase.writeBatch(db);
-      
-      updatedMembers.forEach(member => {
-        const docRef = firebase.doc(db, 'members', member.id);
-        batch.update(docRef, {
-          startDay: member.startDay,
-          startTime: member.startTime,
-          endDay: member.endDay,
-          endTime: member.endTime
-        });
-      });
-      await batch.commit();
-    } catch (error) {
-      console.error("Error saving anchor:", error);
-      alert("Failed to save schedule anchor.");
+      const metaRef = firebase.doc(db, 'metadata', 'scheduleAnchor');
+      await firebase.setDoc(metaRef, { date: anchorDate });
+      setScheduleAnchor(anchorDate);
+      setIsAnchorModalOpen(false);
+      showToast("Schedule anchor saved", "success");
+    } catch (e) {
+      console.error("Error saving schedule anchor", e);
+      showToast("Failed to save schedule anchor.", "error");
     }
   };
 
@@ -324,7 +303,6 @@ export default function MembersTab({ isAdmin }) {
     if (members.length > 0) {
       setScheduleAnchor({ day: members[0].startDay, time: members[0].startTime });
     }
-    // Needed for Firefox
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', e.target.parentNode);
   };
@@ -332,7 +310,6 @@ export default function MembersTab({ isAdmin }) {
   const handleDragEnter = (e, index) => {
     setDragOverItemIndex(index);
     if (dragItemIndex !== null && dragItemIndex !== index) {
-      // Instantly swap in local state for responsive UI
       const newMembers = [...members];
       const draggedItem = newMembers.splice(dragItemIndex, 1)[0];
       newMembers.splice(index, 0, draggedItem);
@@ -341,44 +318,22 @@ export default function MembersTab({ isAdmin }) {
     }
   };
 
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    if (dragItemIndex === null) {
-      setDragOverItemIndex(null);
-      return;
-    }
-
-    // Since we updated array in handleDragEnter, we just use the current 'members'
-    let updatedMembers = members.map((m, idx) => ({
-      ...m,
-      turnOrder: idx + 1
-    }));
-
-    // Recalculate schedule keeping original anchor
-    updatedMembers = autoRechainSchedule(updatedMembers, scheduleAnchor);
-
-    setMembers(updatedMembers); // Optimistic UI update
-    setDragItemIndex(null);
-    setDragOverItemIndex(null);
-
+  const handleDrop = async (newOrder) => {
     try {
       const { db, firebase } = await initFirebaseAsync();
       const batch = firebase.writeBatch(db);
       
-      updatedMembers.forEach(member => {
+      newOrder.forEach((member, idx) => {
         const docRef = firebase.doc(db, 'members', member.id);
-        batch.update(docRef, {
-          turnOrder: member.turnOrder,
-          startDay: member.startDay,
-          startTime: member.startTime,
-          endDay: member.endDay,
-          endTime: member.endTime
-        });
+        batch.update(docRef, { turnOrder: idx + 1 });
       });
       await batch.commit();
-    } catch (error) {
-      console.error("Error saving reordered schedule:", error);
-      alert("Failed to save new schedule order.");
+      
+      setMembers(newOrder);
+      showToast("Schedule order saved", "success");
+    } catch (e) {
+      console.error("Error saving schedule order", e);
+      showToast("Failed to save new schedule order.", "error");
     }
   };
 
@@ -393,13 +348,9 @@ export default function MembersTab({ isAdmin }) {
     try {
       const { db, firebase } = await initFirebaseAsync();
       
-      // Remove the member locally
       let updatedMembers = members.filter(m => m.id !== memberId);
-      
-      // Apply Auto-Schedule Rechain
       updatedMembers = autoRechainSchedule(updatedMembers);
 
-      // Batch write to update the remaining members' schedule and delete the chosen one
       const batch = firebase.writeBatch(db);
       
       updatedMembers.forEach(member => {
@@ -407,22 +358,21 @@ export default function MembersTab({ isAdmin }) {
         batch.set(docRef, member, { merge: true });
       });
 
-      // Delete the chosen member
       const deleteRef = firebase.doc(db, 'members', memberId);
       batch.delete(deleteRef);
 
       await batch.commit();
       setMemberToDelete(null);
-
+      showToast("Member deleted", "success");
     } catch (error) {
       console.error("Error deleting member:", error);
-      alert("Failed to delete member.");
+      showToast("Failed to delete member.", "error");
     }
   };
 
   const handleExportSchedule = () => {
     if (!members || members.length === 0) {
-      return alert('No schedule members to export.');
+      return showToast('No schedule members to export.', "warning");
     }
 
     const exportPayload = {
@@ -484,6 +434,7 @@ export default function MembersTab({ isAdmin }) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast("Schedule exported", "success");
   };
 
   const handleImportSchedule = (e) => {
@@ -576,29 +527,26 @@ export default function MembersTab({ isAdmin }) {
         
         const { db, firebase } = await initFirebaseAsync();
         
-        // Sort and rechain
         importedUsers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
         importedUsers = autoRechainSchedule(importedUsers);
 
         const batch = firebase.writeBatch(db);
 
-        // Delete all current members first
         const snapshot = await firebase.getDocs(firebase.collection(db, 'members'));
         snapshot.docs.forEach(doc => {
           batch.delete(doc.ref);
         });
 
-        // Set all new imported members
         importedUsers.forEach(member => {
           const docRef = firebase.doc(db, 'members', member.id);
           batch.set(docRef, member);
         });
 
         await batch.commit();
-        alert('Schedule imported successfully!');
+        showToast('Schedule imported successfully!', "success");
       } catch (err) {
         console.error("Import error:", err);
-        alert('Failed to import schedule: ' + err.message);
+        showToast('Failed to import schedule: ' + err.message, "error");
       }
     };
     reader.readAsText(file);
@@ -611,7 +559,17 @@ export default function MembersTab({ isAdmin }) {
 
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>Loading Live Members...</div>;
+    return (
+      <div style={{ padding: 'var(--space-6)' }}>
+        {viewMode === 'grid' ? (
+          <div className="members-grid">
+            <SkeletonCard count={4} />
+          </div>
+        ) : (
+          <SkeletonTable rows={5} />
+        )}
+      </div>
+    );
   }
 
   // Calculate Stats

@@ -7,8 +7,11 @@ import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Re
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
+import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../context/ToastContext';
 
 export default function BillingTab({ isAdmin }) {
+  const { showToast } = useToast();
   const [members, setMembers] = useState([]);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,6 +24,7 @@ export default function BillingTab({ isAdmin }) {
   const [selectedBillId, setSelectedBillId] = useState('');
   const [editingBillId, setEditingBillId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [billToDelete, setBillToDelete] = useState(null);
 
   const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
   const [wapdaRefNo, setWapdaRefNo] = useState('');
@@ -136,7 +140,7 @@ export default function BillingTab({ isAdmin }) {
 
   const handleFetchWapdaBill = async () => {
     if (!wapdaRefNo) {
-      alert("Please enter a Reference Number in the Settings or below first.");
+      showToast("Please enter a Reference Number in the Settings or below first.", "warning");
       setIsWapdaManualMode(true);
       return;
     }
@@ -160,9 +164,10 @@ export default function BillingTab({ isAdmin }) {
       setWapdaBillDetails(billData);
       setWapdaBill(billData.amount);
       setIsWapdaManualMode(false);
+      showToast("Bill fetched successfully from WAPDA API.", "success");
     } catch (e) {
-      console.error(e);
-      alert("Error fetching bill: " + e.message);
+      console.error("Fetch bill error:", e);
+      showToast("Error fetching bill: " + e.message, "error");
       setIsWapdaManualMode(true);
     } finally {
       setIsFetchingWapda(false);
@@ -171,8 +176,8 @@ export default function BillingTab({ isAdmin }) {
 
   const handleManualWapdaSave = async () => {
     const amountNum = parseFloat(wapdaBill);
-    if (isNaN(amountNum)) {
-      alert("Please enter a valid number for the WAPDA bill.");
+    if (isNaN(amountNum) || amountNum < 0) {
+      showToast("Please enter a valid number for the WAPDA bill.", "error");
       return;
     }
     
@@ -188,9 +193,10 @@ export default function BillingTab({ isAdmin }) {
       await saveWapdaBill(billingTitle, billData);
       setWapdaBillDetails(billData);
       setIsWapdaManualMode(false);
+      showToast("Manual bill saved.", "success");
     } catch(e) {
-      console.error(e);
-      alert("Error saving manual bill");
+      console.error("Save manual bill error:", e);
+      showToast("Error saving manual bill", "error");
     }
   };
 
@@ -308,7 +314,7 @@ export default function BillingTab({ isAdmin }) {
     setLoading(true);
     try {
       if (!startDate || !endDate) {
-        alert("Please select a Start Date and End Date.");
+        showToast("Please select a Start Date and End Date.", "warning");
         setLoading(false);
         return;
       }
@@ -368,10 +374,11 @@ export default function BillingTab({ isAdmin }) {
       });
       
     } catch (error) {
-      console.error("Error calculating bill", error);
-      alert("Failed to calculate bill.");
+      console.error("Billing error:", error);
+      showToast("Failed to calculate bill.", "error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const getBillTitle = () => {
@@ -445,27 +452,32 @@ export default function BillingTab({ isAdmin }) {
       setSelectedBillId(saved.id);
       setViewMode('list');
       setEditingBillId(null);
-      alert("Bill saved and published successfully!");
+      showToast("Bill saved and published successfully!", "success");
     } catch(e) {
-      console.error(e);
-      alert("Failed to save bill: " + e.message);
+      console.error("Failed to save bill:", e);
+      showToast("Failed to save bill: " + e.message, "error");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteBill = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this bill? This cannot be undone.")) return;
+  const handleDeleteBill = (id) => {
+    setBillToDelete(id);
+  };
+
+  const executeDeleteBill = async () => {
+    if (!billToDelete) return;
     try {
-      await deleteGeneratedBill(id);
-      const bills = await getAllGeneratedBills();
-      setSavedBills(bills);
-      if (selectedBillId === id) {
-        setSelectedBillId(bills.length > 0 ? bills[0].id : '');
-      }
-      alert("Bill deleted.");
+      await deleteGeneratedBill(billToDelete);
+      const remaining = savedBills.filter(b => b.id !== billToDelete);
+      setSavedBills(remaining);
+      setSelectedBillId(remaining.length > 0 ? remaining[0].id : '');
+      showToast("Bill deleted.", "success");
     } catch (e) {
-      alert("Failed to delete: " + e.message);
+      console.error("Failed to delete bill:", e);
+      showToast("Failed to delete: " + e.message, "error");
+    } finally {
+      setBillToDelete(null);
     }
   };
 
@@ -1108,6 +1120,15 @@ export default function BillingTab({ isAdmin }) {
               </div>
             </div>
           )}
+
+          <ConfirmModal
+            isOpen={!!billToDelete}
+            title="Delete Bill"
+            message="Are you sure you want to delete this bill? This cannot be undone."
+            onConfirm={executeDeleteBill}
+            onCancel={() => setBillToDelete(null)}
+            confirmText="Delete"
+          />
         </div>
   );
 }
