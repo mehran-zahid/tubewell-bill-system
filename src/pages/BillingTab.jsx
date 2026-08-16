@@ -889,7 +889,7 @@ export default function BillingTab({ isAdmin }) {
           </p>
         </div>
       ) : (
-          <div className="card billing-results-card" style={{ padding: '32px', marginBottom: '24px' }}>
+          <div className="card billing-results-card" style={{ padding: '20px', marginBottom: '24px' }}>
             {/* Action Bar for PDF Generation */}
             <div className="print-hidden billing-action-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
               <button 
@@ -922,7 +922,7 @@ export default function BillingTab({ isAdmin }) {
             </div>
 
             {/* Overall Bill Totals Master Grid */}
-            <div className="billing-stats-master-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '32px' }}>
+            <div className="billing-stats-master-grid">
               
               {/* Stat 1: WAPDA */}
               <div className="billing-stat-item billing-stat-wapda">
