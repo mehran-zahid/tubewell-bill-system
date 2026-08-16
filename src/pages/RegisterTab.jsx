@@ -76,7 +76,7 @@ export default function RegisterTab({ isAdmin }) {
               m.tenants.forEach(t => {
                 if (t.tenantCode) {
                   membersData.push({
-                    id: t.id || `tenant_${doc.id}_${t.tenantCode}`,
+                    id: `tenant_${doc.id}_${t.tenantCode}`,
                     userCode: t.tenantCode.toString(),
                     nameEn: t.tenantNameEn || `Tenant ${t.tenantCode}`,
                     isTenant: true,
@@ -510,7 +510,16 @@ export default function RegisterTab({ isAdmin }) {
                     <td style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>
                       {isEditMode ? (
                         <select
-                          value={draft.memberId}
+                          value={
+                            (() => {
+                              const mem = members.find(m => 
+                                m.id === String(draft.memberId) || 
+                                String(m.userCode) === String(draft.memberId) ||
+                                (parseInt(m.userCode, 10) === parseInt(draft.memberId, 10) && !isNaN(parseInt(m.userCode, 10)))
+                              );
+                              return mem ? mem.id : draft.memberId;
+                            })()
+                          }
                           onChange={(e) => handleCellChange(entry.id, 'memberId', e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
                           ref={el => inputRefs.current[`${rowIndex}-1`] = el}
@@ -532,7 +541,13 @@ export default function RegisterTab({ isAdmin }) {
                           const safeCode = entry.userCode || mem?.userCode || (safeName !== 'Unknown' ? safeName.charAt(0) : 'U');
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>
+                              <div style={{ 
+                                width: '28px', height: '28px', borderRadius: '50%', 
+                                background: mem?.isTenant ? 'var(--warning-light)' : 'var(--primary-light)', 
+                                color: mem?.isTenant ? 'var(--warning)' : 'var(--primary)', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                fontSize: '12px', fontWeight: 700 
+                              }}>
                                 {safeCode}
                               </div>
                               {safeName}

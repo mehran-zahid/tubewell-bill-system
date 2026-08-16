@@ -608,14 +608,7 @@ export default function MembersTab({ isAdmin }) {
 
   // Removed unused getInitials
 
-  // Helper to generate a stable pastel color from user code
-  const getAvatarColor = (code) => {
-    const colors = ['#DBEAFE', '#D1FAE5', '#FEF3C7', '#FCE7F3', '#E0E7FF', '#FFEDD5'];
-    const textColors = ['#1E40AF', '#065F46', '#92400E', '#9D174D', '#3730A3', '#9A3412'];
-    const num = parseInt(code, 10) || 0;
-    const index = num % colors.length;
-    return { bg: colors[index], text: textColors[index] };
-  };
+
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>Loading Live Members...</div>;
@@ -740,7 +733,7 @@ export default function MembersTab({ isAdmin }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
         {members.map((member, index) => {
-          const avatar = getAvatarColor(member.userCode);
+          const avatar = { bg: 'var(--primary-light)', text: 'var(--primary)' };
           return (
             <div 
               key={member.id} 
@@ -893,7 +886,7 @@ export default function MembersTab({ isAdmin }) {
                       if (m > 0) timeParts.push(`${m}m`);
                       const timeStr = timeParts.join(' ');
                       
-                      const tAvatar = getAvatarColor(tenant.tenantCode || '0');
+                      const tAvatar = { bg: 'var(--warning-light)', text: 'var(--warning)' };
                       
                       return (
                         <div key={tenant.id || tIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-canvas)', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
