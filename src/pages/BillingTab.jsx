@@ -803,6 +803,35 @@ export default function BillingTab({ isAdmin }) {
               <div style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Rs. {billingResult.totalFixedExpenses ? billingResult.totalFixedExpenses.toLocaleString() : '0'}
               </div>
+              {(() => {
+                const currentBill = viewMode === 'list' && selectedBillId ? savedBills.find(b => b.id === selectedBillId) : null;
+                const expensesToShow = currentBill ? (currentBill.fixedExpenses || []) : (viewMode === 'create' ? fixedExpenses : []);
+                if (expensesToShow.length > 0) {
+                  return (
+                    <div style={{ 
+                      marginTop: '16px', 
+                      background: 'var(--bg-muted)', 
+                      borderRadius: '8px', 
+                      padding: '12px 16px',
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '8px',
+                      border: '1px solid var(--border-default)'
+                    }}>
+                      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '2px' }}>
+                        Breakdown
+                      </div>
+                      {expensesToShow.map(expense => (
+                        <div key={expense.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', alignItems: 'center' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>{expense.title || 'Unnamed Expense'}</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit' }}>Rs. {parseFloat(expense.amount || 0).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             <div>
