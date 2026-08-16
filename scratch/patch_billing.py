@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import os
+
+content = """import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
-import CustomDropdown from '../components/CustomDropdown';
 
 export default function BillingTab({ isAdmin }) {
   const [members, setMembers] = useState([]);
@@ -16,10 +17,8 @@ export default function BillingTab({ isAdmin }) {
 
   // New State for Role-Based Views
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'create'
-  const [layoutMode, setLayoutMode] = useState('table'); // 'table' | 'card'
   const [savedBills, setSavedBills] = useState([]);
   const [selectedBillId, setSelectedBillId] = useState('');
-  const [editingBillId, setEditingBillId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
@@ -154,8 +153,7 @@ export default function BillingTab({ isAdmin }) {
         isManualOverride: false
       };
       
-      setBillingTitle(fetched.month);
-      await saveWapdaBill(fetched.month, billData);
+      await saveWapdaBill(billingTitle, billData);
       
       setWapdaBillDetails(billData);
       setWapdaBill(billData.amount);
@@ -223,30 +221,11 @@ export default function BillingTab({ isAdmin }) {
         try {
           const fetchedEntries = await getRegisterEntries(startDate, endDate);
           setEntries(fetchedEntries);
-          
-          if (fetchedEntries.length > 0) {
-            let minStart = Infinity;
-            let maxEnd = -Infinity;
-            fetchedEntries.forEach(entry => {
-              const start = parseFloat(entry.startReading);
-              const end = parseFloat(entry.endReading);
-              if (!isNaN(start) && start < minStart) minStart = start;
-              if (!isNaN(end) && end > maxEnd) maxEnd = end;
-            });
-            
-            if (minStart !== Infinity) setCycleStartReading(minStart.toString());
-            if (maxEnd !== -Infinity) setCycleEndReading(maxEnd.toString());
-          } else {
-            setCycleStartReading('');
-            setCycleEndReading('');
-          }
         } catch (e) {
           console.error("Error fetching entries for validation", e);
         }
       } else {
         setEntries([]);
-        setCycleStartReading('');
-        setCycleEndReading('');
       }
     };
     fetchEntries();
@@ -390,10 +369,6 @@ export default function BillingTab({ isAdmin }) {
         billingResult
       };
       
-      if (editingBillId) {
-        billData.id = editingBillId;
-      }
-      
       const saved = await saveGeneratedBill(billData);
       
       // Refresh list
@@ -401,7 +376,6 @@ export default function BillingTab({ isAdmin }) {
       setSavedBills(bills);
       setSelectedBillId(saved.id);
       setViewMode('list');
-      setEditingBillId(null);
       alert("Bill saved and published successfully!");
     } catch(e) {
       console.error(e);
@@ -426,35 +400,10 @@ export default function BillingTab({ isAdmin }) {
     }
   };
 
-  const handleEditBill = (id) => {
-    const billToEdit = savedBills.find(b => b.id === id);
-    if (!billToEdit) return;
-    
-    setEditingBillId(id);
-    setBillingTitle(billToEdit.billingTitle);
-    setStartDate(billToEdit.startDate);
-    setEndDate(billToEdit.endDate);
-    setCycleStartReading(billToEdit.cycleStartReading || '');
-    setCycleEndReading(billToEdit.cycleEndReading || '');
-    setWapdaBill(billToEdit.wapdaBill || '');
-    setWapdaRefNo(billToEdit.wapdaRefNo || '');
-    setWapdaBillDetails(billToEdit.wapdaBillDetails || null);
-    setFixedExpenses(billToEdit.fixedExpenses || []);
-    setBillingResult(billToEdit.billingResult);
-    
-    setViewMode('create');
-  };
-
   const startCreateMode = () => {
     setViewMode('create');
-    setEditingBillId(null);
     setBillingResult(null);
     setWapdaBillDetails(null);
-  };
-
-  const handleCancelCreateMode = () => {
-    setViewMode('list');
-    setEditingBillId(null);
   };
 
   return (
@@ -471,37 +420,30 @@ export default function BillingTab({ isAdmin }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>Select Billing Month</h2>
-              <CustomDropdown
-                value={selectedBillId}
-                onChange={(val) => setSelectedBillId(val)}
-                options={
-                  savedBills.length === 0 
-                    ? [{ value: '', label: 'No bills published yet' }]
-                    : savedBills.map(b => ({ value: b.id, label: b.billingTitle }))
-                }
+              <select 
+                className="input-field" 
+                value={selectedBillId} 
+                onChange={(e) => setSelectedBillId(e.target.value)}
                 style={{ width: '250px' }}
-                disabled={savedBills.length === 0}
-              />
+              >
+                {savedBills.length === 0 ? (
+                  <option value="">No bills published yet</option>
+                ) : (
+                  savedBills.map(b => (
+                    <option key={b.id} value={b.id}>{b.billingTitle}</option>
+                  ))
+                )}
+              </select>
               
               {isAdmin && selectedBillId && (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleEditBill(selectedBillId)}
-                    style={{ padding: '8px 12px' }}
-                    title="Edit this bill"
-                  >
-                    <Edit3 size={16} /> Edit
-                  </button>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleDeleteBill(selectedBillId)}
-                    style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '8px 12px' }}
-                    title="Delete this bill"
-                  >
-                    <Trash2 size={16} /> Delete
-                  </button>
-                </div>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => handleDeleteBill(selectedBillId)}
+                  style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '8px 12px' }}
+                  title="Delete this bill"
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
               )}
             </div>
             
@@ -516,21 +458,17 @@ export default function BillingTab({ isAdmin }) {
         /* Input Panel (Create Mode) */
         <div className="card" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>
-              {editingBillId ? 'Edit Bill Details' : 'Create New Bill Details'}
-            </h2>
-            <button className="btn btn-secondary" onClick={handleCancelCreateMode}>
+            <h2 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0 }}>Create New Bill Details</h2>
+            <button className="btn btn-secondary" onClick={() => setViewMode('list')}>
               Cancel
             </button>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-            {/* Left Column - Form */}
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: '0' }}>
+            {/* Left Column - General Info */}
+            <div>
               <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Calendar size={14} color="var(--text-secondary)" /> Billing Month
-                </label>
+                <label className="form-label">Billing Title</label>
                 <input 
                   type="text" 
                   className="input-field" 
@@ -540,11 +478,9 @@ export default function BillingTab({ isAdmin }) {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Calendar size={14} color="var(--text-secondary)" /> Start Date
-                  </label>
+                  <label className="form-label">Start Date</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -553,9 +489,7 @@ export default function BillingTab({ isAdmin }) {
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Calendar size={14} color="var(--text-secondary)" /> End Date
-                  </label>
+                  <label className="form-label">End Date</label>
                   <input 
                     type="date" 
                     className="input-field" 
@@ -565,11 +499,9 @@ export default function BillingTab({ isAdmin }) {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Gauge size={14} color="var(--text-secondary)" /> Cycle Start Reading
-                  </label>
+                  <label className="form-label">Cycle Start Reading</label>
                   <input 
                     type="number" 
                     className="input-field" 
@@ -579,9 +511,7 @@ export default function BillingTab({ isAdmin }) {
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Gauge size={14} color="var(--text-secondary)" /> Cycle End Reading
-                  </label>
+                  <label className="form-label">Cycle End Reading</label>
                   <input 
                     type="number" 
                     className="input-field" 
@@ -604,13 +534,11 @@ export default function BillingTab({ isAdmin }) {
               )}
 
               <div style={{ marginBottom: '24px', background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <label className="form-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Receipt size={16} color="var(--text-secondary)" /> WAPDA Bill
-                  </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>WAPDA Bill</label>
                   <button 
                     onClick={() => setIsWapdaManualMode(!isWapdaManualMode)}
-                    style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
+                    style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Edit3 size={14} />
                     {isWapdaManualMode ? 'Cancel Edit' : 'Edit Manually'}
@@ -623,7 +551,6 @@ export default function BillingTab({ isAdmin }) {
                       type="number" 
                       className="input-field" 
                       placeholder="Total WAPDA Bill (Rs.)"
-                      style={{ background: 'var(--bg-surface)' }}
                       value={wapdaBill}
                       onChange={(e) => setWapdaBill(e.target.value)}
                     />
@@ -637,9 +564,9 @@ export default function BillingTab({ isAdmin }) {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {wapdaBillDetails ? (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
                         <div>
-                          <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>Rs. {parseFloat(wapdaBillDetails.amount).toLocaleString()}</div>
+                          <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'Outfit' }}>Rs. {parseFloat(wapdaBillDetails.amount).toLocaleString()}</div>
                           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                             {wapdaBillDetails.isManualOverride ? 'Manually Entered' : `Fetched: ${wapdaBillDetails.month} (${wapdaBillDetails.readingDate})`}
                           </div>
@@ -650,7 +577,7 @@ export default function BillingTab({ isAdmin }) {
                               <button 
                                 className="btn btn-secondary" 
                                 onClick={() => setShowWapdaHtml(true)}
-                                style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+                                style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)' }}
                               >
                                 View Full Bill
                               </button>
@@ -660,29 +587,29 @@ export default function BillingTab({ isAdmin }) {
                         )}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontStyle: 'italic', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-default)', textAlign: 'center' }}>No bill loaded for this month.</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>No bill loaded for this month.</div>
                     )}
 
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Reference Number</label>
+                        <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px', display: 'block', textTransform: 'uppercase' }}>Reference Number</label>
                         <input 
                           type="text" 
                           className="input-field" 
                           value={wapdaRefNo}
                           onChange={(e) => setWapdaRefNo(e.target.value)}
                           placeholder="14-digit Ref No"
-                          style={{ padding: '8px 12px', fontSize: '13px', background: 'var(--bg-surface)' }}
+                          style={{ padding: '8px 12px', fontSize: '13px' }}
                         />
                       </div>
                       <button 
                         className="btn btn-secondary" 
                         onClick={handleFetchWapdaBill}
                         disabled={isFetchingWapda || !wapdaRefNo}
-                        style={{ padding: '8px 16px', height: '37px', background: 'var(--bg-surface)' }}
+                        style={{ padding: '8px 16px', height: '37px' }}
                       >
-                        <RefreshCw size={14} className={isFetchingWapda ? "spin" : ""} />
-                        <span style={{ fontSize: '13px' }}>{isFetchingWapda ? 'Fetching...' : (wapdaBillDetails ? 'Refetch' : 'Fetch Bill')}</span>
+                        <RefreshCw size={16} />
+                        {isFetchingWapda ? 'Fetching...' : (wapdaBillDetails ? 'Refetch' : 'Fetch Bill')}
                       </button>
                     </div>
                   </div>
@@ -692,54 +619,43 @@ export default function BillingTab({ isAdmin }) {
 
             {/* Right Column - Fixed Expenses */}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flex: 1, marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <label className="form-label" style={{ marginBottom: 0 }}>Fixed Expenses</label>
-                  <button 
-                    onClick={handleAddExpense}
-                    style={{ fontSize: '13px', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    <Plus size={14} /> Add Expense
-                  </button>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
-                  {fixedExpenses.map((expense, _i) => (
-                    <div key={expense.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input 
-                        type="text" 
-                        className="input-field" 
-                        placeholder="Title (e.g. Salary)"
-                        style={{ flex: 1, background: 'var(--bg-surface)' }}
-                        value={expense.title}
-                        onChange={(e) => handleExpenseChange(expense.id, 'title', e.target.value)}
-                      />
-                      <div style={{ position: 'relative', width: '130px' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: 500 }}>Rs.</span>
-                        <input 
-                          type="number" 
-                          className="input-field" 
-                          placeholder="0"
-                          style={{ width: '100%', paddingLeft: '36px', background: 'var(--bg-surface)' }}
-                          value={expense.amount}
-                          onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
-                        />
-                      </div>
-                      <button 
-                        onClick={() => handleRemoveExpense(expense.id)}
-                        style={{ background: 'var(--danger-light)', border: '1px solid transparent', color: 'var(--danger)', cursor: 'pointer', padding: '8px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        title="Remove"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                  {fixedExpenses.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-tertiary)', fontSize: '13px', fontStyle: 'italic' }}>
-                      No fixed expenses added.
-                    </div>
-                  )}
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>Fixed Expenses</label>
+                <button 
+                  onClick={handleAddExpense}
+                  style={{ fontSize: '13px', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  + Add Item
+                </button>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', flex: 1 }}>
+                {fixedExpenses.map((expense, _i) => (
+                  <div key={expense.id} style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      placeholder="Title (e.g. Salary)"
+                      style={{ flex: 1 }}
+                      value={expense.title}
+                      onChange={(e) => handleExpenseChange(expense.id, 'title', e.target.value)}
+                    />
+                    <input 
+                      type="number" 
+                      className="input-field" 
+                      placeholder="Rs."
+                      style={{ width: '100px' }}
+                      value={expense.amount}
+                      onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
+                    />
+                    <button 
+                      onClick={() => handleRemoveExpense(expense.id)}
+                      style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0 4px' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <button 
@@ -806,138 +722,55 @@ export default function BillingTab({ isAdmin }) {
 
       {billingResult && (
         <div>
-          {/* Layout Toggle */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>Breakdown by Member</h3>
-            <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-muted)', padding: '4px', borderRadius: '8px' }}>
-              <button 
-                onClick={() => setLayoutMode('table')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 12px', borderRadius: '6px',
-                  border: 'none',
-                  background: layoutMode === 'table' ? 'var(--bg-surface)' : 'transparent',
-                  color: layoutMode === 'table' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  fontWeight: 600, fontSize: '13px', cursor: 'pointer',
-                  boxShadow: layoutMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <List size={16} /> Table
-              </button>
-              <button 
-                onClick={() => setLayoutMode('card')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 12px', borderRadius: '6px',
-                  border: 'none',
-                  background: layoutMode === 'card' ? 'var(--bg-surface)' : 'transparent',
-                  color: layoutMode === 'card' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  fontWeight: 600, fontSize: '13px', cursor: 'pointer',
-                  boxShadow: layoutMode === 'card' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <LayoutGrid size={16} /> Cards
-              </button>
-            </div>
-          </div>
-
-          {layoutMode === 'table' ? (
-            /* Breakdown Table */
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                  <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', tableLayout: 'fixed' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ width: '30%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'left', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member / Tenant</th>
-                        <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>METER (H)</th>
-                        <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>WEEKLY (H)</th>
-                        <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>WAPDA (Rs.)</th>
-                        <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>FIXED (Rs.)</th>
-                        <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TOTAL (Rs.)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {billingResult.breakdowns.map((b, idx) => (
-                        <tr key={b.id} style={{ borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none' }}>
-                          <td style={{ padding: '16px 24px', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ minWidth: '32px', width: '32px', height: '32px', borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700 }}>
-                                {b.code}
-                              </div>
-                              <div style={{ minWidth: 0 }}>
-                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
-                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{b.type === 'tenant' ? 'Tenant' : 'Owner'}</div>
-                              </div>
+          {/* Breakdown Table */}
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', tableLayout: 'fixed' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '30%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'left', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member / Tenant</th>
+                      <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>METER (H)</th>
+                      <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>WEEKLY (H)</th>
+                      <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>WAPDA (Rs.)</th>
+                      <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>FIXED (Rs.)</th>
+                      <th style={{ width: '14%', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-default)', padding: '16px 24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TOTAL (Rs.)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {billingResult.breakdowns.map((b, idx) => (
+                      <tr key={b.id} style={{ borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none' }}>
+                        <td style={{ padding: '16px 24px', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ minWidth: '32px', width: '32px', height: '32px', borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700 }}>
+                              {b.code}
                             </div>
-                          </td>
-                          <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
-                            {b.consumedHours ? b.consumedHours.toFixed(2) : '0.00'}
-                          </td>
-                          <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
-                            {b.effectiveHours.toFixed(1)}
-                          </td>
-                          <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
-                            {b.usageShare.toLocaleString()}
-                          </td>
-                          <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
-                            {b.fixedShare.toLocaleString()}
-                          </td>
-                          <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', fontWeight: 700, color: 'var(--text-primary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
-                            {b.totalBill.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-          ) : (
-            /* Breakdown Cards */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-              {billingResult.breakdowns.map((b) => (
-                <div key={b.id} className="card" style={{ padding: '24px', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div style={{ minWidth: '48px', width: '48px', height: '48px', borderRadius: '50%', background: b.type === 'tenant' ? 'var(--warning-light)' : 'var(--primary-light)', color: b.type === 'tenant' ? 'var(--warning-dark)' : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700 }}>
-                      {b.code}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
-                      <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>{b.type === 'tenant' ? 'Tenant' : 'Owner'}</div>
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-muted)', padding: '12px 16px', borderRadius: 'var(--radius-md)' }}>
-                    <div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', fontWeight: 600 }}>Meter (H)</div>
-                      <div style={{ fontFamily: 'Outfit', color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{b.consumedHours ? b.consumedHours.toFixed(2) : '0.00'}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', fontWeight: 600 }}>Weekly (H)</div>
-                      <div style={{ fontFamily: 'Outfit', color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{b.effectiveHours.toFixed(1)}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>WAPDA Share</span>
-                      <span style={{ fontFamily: 'Outfit', fontWeight: 600, color: 'var(--text-primary)' }}>Rs. {b.usageShare.toLocaleString()}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>Fixed Share</span>
-                      <span style={{ fontFamily: 'Outfit', fontWeight: 600, color: 'var(--text-primary)' }}>Rs. {b.fixedShare.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <div style={{ paddingTop: '16px', borderTop: '1px dashed var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '15px' }}>Total Bill</span>
-                    <span style={{ fontFamily: 'Outfit', fontWeight: 800, color: 'var(--primary)', fontSize: '24px' }}>Rs. {b.totalBill.toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'Outfit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name || 'Unknown'}</div>
+                              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{b.type === 'tenant' ? 'Tenant' : 'Owner'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
+                          {b.consumedHours ? b.consumedHours.toFixed(2) : '0.00'}
+                        </td>
+                        <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
+                          {b.effectiveHours.toFixed(1)}
+                        </td>
+                        <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
+                          {b.usageShare.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', color: 'var(--text-secondary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
+                          {b.fixedShare.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '16px 24px', textAlign: 'center', fontFamily: 'Outfit', fontWeight: 700, color: 'var(--text-primary)', borderBottom: idx !== billingResult.breakdowns.length - 1 ? '1px solid var(--border-default)' : 'none', whiteSpace: 'nowrap' }}>
+                          {b.totalBill.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
-        </div>
-      )}
 
           {/* Raw HTML Modal */}
           {showWapdaHtml && wapdaBillDetails?.rawHtml && (
@@ -963,3 +796,7 @@ export default function BillingTab({ isAdmin }) {
         </div>
   );
 }
+"""
+
+with open("p:/TURBINE/tubewell-bill-system/src/pages/BillingTab.jsx", "w", encoding="utf-8") as f:
+    f.write(content)

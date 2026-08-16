@@ -53,7 +53,9 @@ export async function fetchBillFromAPI(refNo) {
     try {
       const errData = await res.json();
       errMsg = errData.error || errMsg;
-    } catch(_e) {}
+    } catch (e) {
+      console.warn('Could not parse error response json:', e);
+    }
     throw new Error(errMsg);
   }
 
@@ -89,7 +91,7 @@ export async function fetchBillFromAPI(refNo) {
   const month = monthMatch ? monthMatch[1].trim() : 'Unknown';
   const readDate = readDateMatch ? readDateMatch[1].trim() : 'Unknown';
 
-  const styledHtml = html.replace('<head>', '<head><base href="http://bill.pitc.com.pk/mepcobill/" /><meta name="referrer" content="no-referrer" />');
+  const styledHtml = html.replace('<head>', '<head><base href="http://bill.pitc.com.pk/mepcobill/" /><meta name="referrer" content="no-referrer" /><style>#loader-container { display: none !important; }</style>');
 
   return {
     amount,

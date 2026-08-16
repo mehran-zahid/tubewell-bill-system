@@ -5,7 +5,6 @@ import ScheduleTab from './pages/ScheduleTab';
 import MembersTab from './pages/MembersTab';
 import RegisterTab from './pages/RegisterTab';
 import BillingTab from './pages/BillingTab';
-import FetchBillTab from './pages/FetchBillTab';
 import ConfirmModal from './components/ConfirmModal';
 import { initFirebaseAsync } from './config/firebase';
 
@@ -93,7 +92,6 @@ function App() {
         {activeTab === 'members' && <MembersTab isAdmin={isAdmin} />}
         {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
         {activeTab === 'billing' && <BillingTab isAdmin={isAdmin} />}
-        {activeTab === 'fetch-bill' && <FetchBillTab />}
       </MainLayout>
 
       <ConfirmModal 
