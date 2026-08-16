@@ -598,7 +598,6 @@ export default function MembersTab({ isAdmin }) {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Members Directory</h1>
-          <p>Manage the {members.length} active tubewell share members</p>
         </div>
         {isAdmin && (
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

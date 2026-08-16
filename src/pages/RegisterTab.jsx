@@ -302,11 +302,8 @@ export default function RegisterTab({ isAdmin }) {
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
         <div>
           <h1 style={{ fontFamily: 'Outfit', fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Tubewell Logbook
+            Register Readings
           </h1>
-          <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)' }}>
-            Chronological record of tubewell runs. Start and end readings for each member.
-          </p>
         </div>
         
         {isAdmin && (
