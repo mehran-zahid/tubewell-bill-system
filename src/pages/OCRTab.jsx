@@ -1,16 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, UploadCloud, Loader2, FileText, CheckCircle2, AlertTriangle, Save, Trash2, X } from 'lucide-react';
+import { Camera, UploadCloud, Loader2, FileText, CheckCircle2, AlertTriangle, Save, Trash2, X, Plus, ImagePlus } from 'lucide-react';
 import { extractRegisterData } from '../services/ocrService';
 import { addRegisterEntries } from '../services/registerService';
 import { useToast } from '../context/ToastContext';
 import { initFirebaseAsync } from '../config/firebase';
+import { useOCR } from '../context/OCRContext';
 
 export default function OCRTab() {
   const { showToast } = useToast();
-  const [images, setImages] = useState([]);
+  const { images, setImages, extractedData, setExtractedData, scanError, setScanError, clearOCRState } = useOCR();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [scanError, setScanError] = useState(null);
-  const [extractedData, setExtractedData] = useState(null);
   const [members, setMembers] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,10 +102,25 @@ export default function OCRTab() {
       return;
     }
 
-    let filesToProcess = imageFiles;
-    if (imageFiles.length > 8) {
-      showToast('Maximum 8 images allowed. Using the first 8 images.', 'warning');
-      filesToProcess = imageFiles.slice(0, 8);
+    // Filter out duplicates
+    const uniqueFiles = imageFiles.filter(file => {
+      // Check if we already have this file by name and size
+      // Alternatively we can use file.lastModified, but name + size is usually enough for local UI checks
+      const isDuplicate = images.some(existing => existing.name === file.name && existing.size === file.size);
+      if (isDuplicate) {
+        showToast(`Skipped duplicate: ${file.name}`, 'warning');
+      }
+      return !isDuplicate;
+    });
+
+    if (uniqueFiles.length === 0) return;
+
+    let filesToProcess = uniqueFiles;
+    if (images.length + uniqueFiles.length > 8) {
+      showToast('Maximum 8 images allowed. Only adding what fits.', 'warning');
+      const spaceLeft = Math.max(0, 8 - images.length);
+      filesToProcess = uniqueFiles.slice(0, spaceLeft);
+      if (filesToProcess.length === 0) return;
     }
 
     // Set processing state early so user knows we are working on it
@@ -118,7 +132,9 @@ export default function OCRTab() {
           const compressedDataUrl = await resizeImage(file);
           resolve({
             preview: compressedDataUrl,
-            base64Data: compressedDataUrl
+            base64Data: compressedDataUrl,
+            name: file.name,
+            size: file.size
           });
         } catch (e) {
           console.error('Error resizing image', e);
@@ -127,7 +143,9 @@ export default function OCRTab() {
           reader.onload = (e) => {
             resolve({
               preview: e.target.result,
-              base64Data: e.target.result
+              base64Data: e.target.result,
+              name: file.name,
+              size: file.size
             });
           };
           reader.readAsDataURL(file);
@@ -135,8 +153,7 @@ export default function OCRTab() {
       });
     }));
 
-    setImages(newImages);
-    setExtractedData(null);
+    setImages(prev => [...prev, ...newImages]);
     setScanError(null);
     setIsProcessing(false);
   };
@@ -166,16 +183,25 @@ export default function OCRTab() {
   };
 
   const handleScan = async () => {
+    const unprocessedImages = images.filter(img => !img.processed);
+
     if (images.length === 0) {
       showToast('Please select at least one image first', 'warning');
+      return;
+    }
+    if (unprocessedImages.length === 0) {
+      showToast('All images have already been extracted.', 'info');
       return;
     }
 
     setIsProcessing(true);
     setScanError(null);
     try {
-      const base64Array = images.map(img => img.base64Data);
+      const base64Array = unprocessedImages.map(img => img.base64Data);
       const data = await extractRegisterData(base64Array);
+      
+      const startIndex = extractedData ? extractedData.length : 0;
+      
       const mappedData = data.map((row, idx) => {
         let formattedDate = row.date;
         if (formattedDate) {
@@ -188,13 +214,32 @@ export default function OCRTab() {
           }
         }
         return {
-          id: `ocr_row_${idx}`,
+          id: `ocr_row_${startIndex + idx}_${Date.now()}`,
           ...row,
           date: formattedDate
         };
       });
-      setExtractedData(mappedData);
-      showToast('Data extracted successfully. Please review.', 'success');
+      
+      setExtractedData(prev => {
+        const combined = prev ? [...prev, ...mappedData] : mappedData;
+        return [...combined].sort((a, b) => {
+          const dateA = a.date || '';
+          const dateB = b.date || '';
+          const dateDiff = dateA.localeCompare(dateB);
+          if (dateDiff !== 0) return dateDiff;
+          const startA = parseFloat(a.startReading) || 0;
+          const startB = parseFloat(b.startReading) || 0;
+          return startA - startB;
+        });
+      });
+      
+      setImages(prev => prev.map(img => 
+        unprocessedImages.some(ui => ui.name === img.name && ui.size === img.size) 
+          ? { ...img, processed: true } 
+          : img
+      ));
+      
+      showToast(`Successfully extracted ${mappedData.length} new entries.`, 'success');
     } catch (error) {
       console.error('Scan Error:', error);
       const errMsg = error.message || 'Unknown error';
@@ -284,7 +329,7 @@ export default function OCRTab() {
             
             <div 
               className={`dropzone ${isDragging ? 'active' : ''} ${images.length > 0 ? 'has-image' : ''}`}
-              onClick={() => !isProcessing && fileInputRef.current?.click()}
+              onClick={() => !isProcessing && images.length === 0 && fileInputRef.current?.click()}
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}
@@ -301,7 +346,7 @@ export default function OCRTab() {
               
               {images.length > 0 ? (
                 <div className="dropzone-preview">
-                  <div className={`image-grid ${isProcessing ? 'processing' : ''} ${images.length === 1 ? 'single-image' : ''}`}>
+                  <div className={`image-grid ${isProcessing ? 'processing' : ''}`}>
                     {images.map((img, i) => (
                       <div key={i} className="preview-container">
                         <img src={img.preview} alt={`Register Preview ${i + 1}`} />
@@ -314,6 +359,29 @@ export default function OCRTab() {
                         </button>
                       </div>
                     ))}
+                    {!isProcessing && (
+                      <div 
+                        className="preview-container add-more" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRef.current?.click();
+                        }}
+                        style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          border: '2px dashed var(--border-default)', 
+                          borderRadius: '12px', 
+                          cursor: 'pointer', 
+                          background: 'rgba(255, 255, 255, 0.02)', 
+                          minHeight: '120px' 
+                        }}
+                      >
+                         <Plus size={24} color="var(--text-secondary)" />
+                         <span style={{ fontSize: '12px', marginTop: '8px', color: 'var(--text-secondary)', fontWeight: 500 }}>Add more</span>
+                      </div>
+                    )}
                     {isProcessing && (
                       <div className="scan-overlay">
                         <div className="scan-line"></div>
@@ -322,39 +390,44 @@ export default function OCRTab() {
                   </div>
                   {!isProcessing && (
                     <div className="dropzone-hint">
-                      <UploadCloud size={16} /> Selected {images.length} image{images.length > 1 ? 's' : ''}. Tap or drag to replace.
+                      <ImagePlus size={16} /> Selected {images.length} image{images.length > 1 ? 's' : ''}. Use 'Add more' to append.
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="dropzone-empty">
-                  <div className="dropzone-icon">
-                    <UploadCloud size={32} />
+                  <div className="dropzone-icon-wrapper">
+                    <ImagePlus size={28} strokeWidth={2} />
                   </div>
-                  <p className="dropzone-title">Click to upload or drag and drop</p>
-                  <p className="dropzone-subtitle">Supported formats: JPG, PNG</p>
+                  <p className="dropzone-title">Drop your images here</p>
+                  <p className="dropzone-subtitle">or click to browse from your device</p>
                 </div>
               )}
             </div>
 
-            <button 
-              className="btn btn-primary" 
-              onClick={handleScan}
-              disabled={images.length === 0 || isProcessing}
-              style={{ width: '100%', marginTop: '20px', padding: '14px', fontSize: '16px' }}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="spinner" size={20} />
-                  Extracting from {images.length} image{images.length > 1 ? 's' : ''}...
-                </>
-              ) : (
-                <>
-                  <FileText size={20} />
-                  Extract Data
-                </>
-              )}
-            </button>
+            {images.length > 0 && (
+              <button 
+                className="btn btn-primary" 
+                onClick={handleScan}
+                disabled={isProcessing || images.filter(img => !img.processed).length === 0}
+                style={{ width: '100%', marginTop: '20px', padding: '14px', fontSize: '16px' }}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="spinner" size={20} />
+                    Extracting from {images.filter(img => !img.processed).length} new image{images.filter(img => !img.processed).length > 1 ? 's' : ''}...
+                  </>
+                ) : (
+                  <>
+                    <FileText size={20} />
+                    {images.filter(img => !img.processed).length === 0 
+                      ? 'All Images Extracted' 
+                      : `Extract Data (${images.filter(img => !img.processed).length} New)`
+                    }
+                  </>
+                )}
+              </button>
+            )}
 
             {scanError && (
               <div style={{ marginTop: '16px', padding: '16px', background: 'var(--danger-light)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-md)', color: 'var(--danger)' }}>
@@ -380,11 +453,11 @@ export default function OCRTab() {
                 </h2>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button 
-                    onClick={() => setExtractedData(null)}
+                    onClick={clearOCRState}
                     className="btn btn-secondary"
                     disabled={isSaving}
                   >
-                    Clear
+                    Clear All
                   </button>
                   <button 
                     onClick={handleSave}
@@ -413,10 +486,14 @@ export default function OCRTab() {
                     </tr>
                   </thead>
                   <tbody>
-                    {extractedData.map((row) => {
+                    {extractedData.map((row, index) => {
                       const start = parseFloat(row.startReading);
                       const end = parseFloat(row.endReading);
                       const hasReadingError = !isNaN(start) && !isNaN(end) && start > end;
+                      const isContinuation = index > 0 && 
+                                            !isNaN(start) && 
+                                            !isNaN(parseFloat(extractedData[index - 1].endReading)) &&
+                                            start === parseFloat(extractedData[index - 1].endReading);
                       const mem = getMemberDetails(row.memberId);
                       
                       return (
@@ -453,14 +530,21 @@ export default function OCRTab() {
                             />
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                            <input 
-                              type="text"
-                              inputMode="decimal"
-                              value={row.endReading ?? ''}
-                              onChange={(e) => handleCellChange(row.id, 'endReading', e.target.value)}
-                              className="input-field"
-                              style={{ padding: '8px', width: '90px', textAlign: 'center', borderColor: hasReadingError ? 'var(--danger)' : 'var(--border-default)' }}
-                            />
+                            <div style={{ display: 'inline-flex', alignItems: 'center', position: 'relative' }}>
+                              <input 
+                                type="text"
+                                inputMode="decimal"
+                                value={row.endReading ?? ''}
+                                onChange={(e) => handleCellChange(row.id, 'endReading', e.target.value)}
+                                className="input-field"
+                                style={{ padding: '8px', width: '90px', textAlign: 'center', borderColor: hasReadingError ? 'var(--danger)' : 'var(--border-default)' }}
+                              />
+                              {isContinuation && (
+                                <div style={{ position: 'absolute', right: '-24px', color: 'var(--success)', display: 'flex' }} title="Continuous reading (Matches previous row)">
+                                  <CheckCircle2 size={16} strokeWidth={2.5} />
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                             <button onClick={() => handleRemoveRow(row.id)} className="btn-icon btn-icon-danger">
@@ -474,11 +558,15 @@ export default function OCRTab() {
                 </table>
               </div>
 
-              <div className="mobile-list-view" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="mobile-list-view" style={{ padding: '16px', gap: '16px' }}>
                 {extractedData.map((row, index) => {
                   const start = parseFloat(row.startReading);
                   const end = parseFloat(row.endReading);
                   const hasReadingError = !isNaN(start) && !isNaN(end) && start > end;
+                  const isContinuation = index > 0 && 
+                                        !isNaN(start) && 
+                                        !isNaN(parseFloat(extractedData[index - 1].endReading)) &&
+                                        start === parseFloat(extractedData[index - 1].endReading);
                   const mem = getMemberDetails(row.memberId);
 
                   return (

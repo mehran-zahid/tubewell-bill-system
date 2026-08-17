@@ -8,6 +8,7 @@ import BillingTab from './pages/BillingTab';
 import OCRTab from './pages/OCRTab';
 import ConfirmModal from './components/ConfirmModal';
 import { ToastProvider, useToast } from './context/ToastContext';
+import { OCRProvider } from './context/OCRContext';
 import { initFirebaseAsync } from './config/firebase';
 
 function AppContent() {
@@ -126,7 +127,9 @@ function AppContent() {
 function App() {
   return (
     <ToastProvider>
-      <AppContent />
+      <OCRProvider>
+        <AppContent />
+      </OCRProvider>
     </ToastProvider>
   );
 }

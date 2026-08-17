@@ -1,7 +1,7 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const FALLBACK_MODELS = [
-  'gemini-3.1-flash-lite',
   'gemini-3.7-flash',
+  'gemini-3.6-flash',
   'gemini-3.5-flash'
 ];
 
@@ -12,18 +12,20 @@ const FALLBACK_MODELS = [
  */
 export const extractRegisterData = async (base64ImagesArray) => {
   try {
+    const currentYear = new Date().getFullYear();
     const prompt = `You are an OCR and data extraction assistant. 
 Extract the following information from the provided image(s) of a physical register page:
-1. Date (If a date is blank or not mentioned for a row, assume it is the SAME as the date from the previous/upper row. Every row must have a date).
+1. Date: Look for the date written on the page. Dates here are usually written in D-M-YY or DD-MM-YY format (e.g., '7-8-26' means August 7, 2026). People often don't write leading zeros. If the year is missing, assume it is ${currentYear}. You MUST convert whatever is written strictly into the YYYY-MM-DD format (e.g., '2026-08-07'). If a row has no date next to it, copy the exact date from the row directly above it. Every single row must have a date. NOTE: The rows are written in chronological order from top to bottom. Use this context to correctly read messy handwriting (e.g., don't jump backward in months).
 2. Member ID (a handwritten number between 1 and 24 on the far left. Note: it might have a leading zero like '01').
 3. Start Reading (a numerical value).
 4. End Reading (a numerical value).
 
 The images contain MULTIPLE rows of data. You must extract every single row you can read across all provided images.
+
 Respond ONLY with valid JSON. Do not use Markdown formatting or code blocks. The JSON should match exactly this format (an array of objects):
 [
   {
-    "date": "Strictly YYYY-MM-DD format (convert any written dates to this format)",
+    "date": "YYYY-MM-DD",
     "memberId": "extracted ID as string",
     "startReading": number,
     "endReading": number

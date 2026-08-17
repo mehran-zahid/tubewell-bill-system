@@ -1052,24 +1052,90 @@ select.input-field {
 
 /* OCR Dropzone and Scanning UI */
 .dropzone {
-  border: 2px dashed var(--border);
+  border: 2px dashed var(--border-default);
   border-radius: var(--radius-lg);
-  padding: 48px 24px;
+  padding: 32px 24px;
   text-align: center;
-  transition: all 0.2s ease;
-  background-color: var(--surface);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: var(--bg-surface);
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
+.dropzone:hover {
+  border-color: var(--primary);
+  background-color: rgba(79, 70, 229, 0.02);
+}
+
 .dropzone.drag-active {
   border-color: var(--primary);
   background-color: var(--primary-light);
+  transform: scale(1.01);
 }
 
 .dropzone.has-image {
   padding: 16px;
+  cursor: default;
+}
+
+.dropzone-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.dropzone-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.12);
+}
+
+.dropzone:hover .dropzone-icon-wrapper {
+  transform: scale(1.08) translateY(-4px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+}
+
+.dropzone-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.dropzone-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 400;
+}
+
+.badge-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.file-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--bg-background);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  letter-spacing: 0.05em;
 }
 
 .dropzone-preview {
