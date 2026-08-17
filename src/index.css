@@ -151,6 +151,13 @@ select.input-field {
   padding: 10px 36px 10px 16px; /* Custom padding to prevent text overlap with custom arrow */
 }
 
+select option {
+  font-family: var(--font-body);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;

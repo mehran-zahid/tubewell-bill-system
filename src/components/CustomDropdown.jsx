@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from './Icons';
 
-export default function CustomDropdown({ value, onChange, options, style = {}, disabled = false, className = '' }) {
+export default function CustomDropdown({ value, onChange, options, style = {}, disabled = false, className = '', error = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -31,7 +31,8 @@ export default function CustomDropdown({ value, onChange, options, style = {}, d
           background: 'var(--bg-surface)',
           padding: '10px 16px',
           width: '100%',
-          textAlign: 'left'
+          textAlign: 'left',
+          borderColor: error ? 'var(--danger)' : 'var(--border-default)'
         }}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >

@@ -94,9 +94,9 @@ export default function RegisterTab({ isAdmin }) {
         });
         // Inject the System Adjustment Member
         membersData.push({
-          id: 'SYSTEM_FAULT',
-          userCode: 'FAULT',
-          nameEn: '⚠️ Faulty Meter / Adjustment',
+          id: '404',
+          userCode: '404',
+          nameEn: 'Faulty Meter / Adjustment',
           isSystem: true
         });
 
@@ -577,27 +577,12 @@ export default function RegisterTab({ isAdmin }) {
                     </td>
                     <td data-label="MEMBER" style={{ borderBottom: '1px solid var(--border-default)', padding: isEditMode ? '8px' : '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>
                       {isEditMode ? (
-                        <select
-                          value={
-                            (() => {
-                              const mem = members.find(m => 
-                                m.id === String(draft.memberId) || 
-                                String(m.userCode) === String(draft.memberId) ||
-                                (parseInt(m.userCode, 10) === parseInt(draft.memberId, 10) && !isNaN(parseInt(m.userCode, 10)))
-                              );
-                              return mem ? mem.id : draft.memberId;
-                            })()
-                          }
-                          onChange={(e) => handleCellChange(entry.id, 'memberId', e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
-                          ref={el => inputRefs.current[`${rowIndex}-1`] = el}
-                          className="input-field"
-                          style={{ padding: '8px' }}
-                        >
-                          {members.map(m => (
-                            <option key={m.id} value={m.id}>{m.nameEn} - {m.userCode}</option>
-                          ))}
-                        </select>
+                        <CustomDropdown
+                          value={draft.memberId}
+                          onChange={(val) => handleCellChange(entry.id, 'memberId', val)}
+                          options={members.map(m => ({ value: m.id, label: `${m.nameEn} - ${m.userCode}` }))}
+                          style={{ minWidth: '180px' }}
+                        />
                       ) : (
                         (() => {
                           const mem = members.find(m => 
@@ -703,14 +688,13 @@ export default function RegisterTab({ isAdmin }) {
                         </div>
                       )}
                       {isEditMode ? (
-                        <select 
-                          value={mem ? mem.id : draft.memberId} 
-                          onChange={(e) => handleCellChange(entry.id, 'memberId', e.target.value)} 
-                          className="input-field" 
-                          style={{ padding: '8px', minWidth: '140px' }}
-                        >
-                          {members.map(m => <option key={m.id} value={m.id}>{m.nameEn} - {m.userCode}</option>)}
-                        </select>
+                        <CustomDropdown
+                          value={mem ? mem.id : ''}
+                          onChange={(val) => handleCellChange(entry.id, 'memberId', val)}
+                          options={members.map(m => ({ value: m.id, label: `${m.nameEn} - ${m.userCode}` }))}
+                          style={{ minWidth: '180px' }}
+                          error={!mem}
+                        />
                       ) : (
                         <>
                           <div className="mobile-entry-avatar" style={{ background: mem?.isTenant ? 'var(--warning-light)' : 'var(--primary-light)', color: mem?.isTenant ? 'var(--warning)' : 'var(--primary)' }}>

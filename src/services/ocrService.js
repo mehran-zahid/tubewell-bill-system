@@ -32,31 +32,34 @@ Respond ONLY with valid JSON. Do not use Markdown formatting or code blocks. The
   }
 ]`;
 
-    const parts = [{ text: prompt }];
+    const allExtractedData = [];
 
-    base64ImagesArray.forEach(base64Image => {
+    for (let i = 0; i < base64ImagesArray.length; i++) {
+      const base64Image = base64ImagesArray[i];
       const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
       const mimeType = base64Image.includes(',') ? base64Image.split(';')[0].split(':')[1] : 'image/jpeg';
-      parts.push({
-        inline_data: {
-          mime_type: mimeType,
-          data: base64Data
-        }
-      });
-    });
 
-    const requestBody = {
-      contents: [
-        {
-          parts: parts
+      const requestBody = {
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              {
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64Data
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.1
         }
-      ],
-      generationConfig: {
-        temperature: 0.1 // Keep it low for more deterministic OCR results
-      }
-    };
+      };
 
-    let lastError = null;
+      let imageSuccess = false;
+      let lastError = null;
 
     // Loop through fallback models
     for (const model of FALLBACK_MODELS) {
@@ -92,19 +95,25 @@ Respond ONLY with valid JSON. Do not use Markdown formatting or code blocks. The
         textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const parsedJson = JSON.parse(textResponse);
-        console.log(`Successfully extracted data using ${model}!`);
-        return parsedJson;
+        console.log(`Successfully extracted data from image ${i + 1} using ${model}!`);
+        allExtractedData.push(...parsedJson);
+        imageSuccess = true;
+        break; // Break out of the fallback loop since this image succeeded
 
       } catch (err) {
-        console.warn(`Exception caught while using ${model}:`, err);
+        console.warn(`Exception caught while using ${model} for image ${i + 1}:`, err);
         lastError = err;
-        continue; // Move to the next model in the array
+        continue; // Try the next fallback model
       }
     }
 
-    // If we reach here, all models in the fallback array failed
-    console.error('All fallback models failed.');
-    throw lastError || new Error('All OCR models failed.');
+    if (!imageSuccess) {
+      console.error(`All fallback models failed for image ${i + 1}.`);
+      throw lastError || new Error(`All OCR models failed for image ${i + 1}.`);
+    }
+  } // End of images loop
+
+  return allExtractedData;
 
   } catch (error) {
     console.error('Error in extractRegisterData:', error);
