@@ -499,10 +499,10 @@ export default function OCRTab() {
 
           {extractedData && (
             <div className="card results-card" style={{ padding: '0', overflow: 'hidden' }}>
-              <div style={{ padding: '20px', borderBottom: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--success-light)' }}>
-                <h2 style={{ fontFamily: 'Outfit', fontSize: '16px', fontWeight: 600, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                  <CheckCircle2 size={20} />
-                  Extraction Results ({extractedData.length} entries)
+              <div style={{ padding: '20px', borderBottom: '1px solid var(--border-default)', display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'center', background: 'var(--success-light)' }}>
+                <h2 style={{ fontFamily: 'Outfit', fontSize: '16px', fontWeight: 600, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, flex: '1 1 auto' }}>
+                  <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
+                  <span>Extraction Results ({extractedData.length} entries)</span>
                 </h2>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button 
