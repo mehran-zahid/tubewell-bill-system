@@ -6,11 +6,12 @@ const FALLBACK_MODELS = [
 ];
 
 /**
- * Extracts data from an array of base64 image strings using the Gemini API.
+ * Extracts data from an array of base64 image strings using the Gemini API sequentially.
  * @param {string[]} base64ImagesArray - Array of base64 strings of the images.
- * @returns {Promise<Object>} - The extracted JSON data containing date, memberId, startReading, and endReading.
+ * @param {Function} [onProgress] - Optional callback function reporting progress `(currentImageIndex, totalImages)`.
+ * @returns {Promise<Object[]>} - The extracted JSON data containing date, memberId, startReading, and endReading.
  */
-export const extractRegisterData = async (base64ImagesArray) => {
+export const extractRegisterData = async (base64ImagesArray, onProgress) => {
   try {
     const currentYear = new Date().getFullYear();
     const prompt = `You are an OCR and data extraction assistant. 
@@ -33,8 +34,12 @@ Respond ONLY with valid JSON. Do not use Markdown formatting or code blocks. The
 ]`;
 
     const allExtractedData = [];
+    const totalImages = base64ImagesArray.length;
 
-    for (let i = 0; i < base64ImagesArray.length; i++) {
+    for (let i = 0; i < totalImages; i++) {
+      if (onProgress) {
+        onProgress(i + 1, totalImages);
+      }
       const base64Image = base64ImagesArray[i];
       const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
       const mimeType = base64Image.includes(',') ? base64Image.split(';')[0].split(':')[1] : 'image/jpeg';

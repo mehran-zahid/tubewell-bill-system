@@ -14,6 +14,7 @@ export default function OCRTab() {
   const [members, setMembers] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
   
   const fileInputRef = useRef(null);
 
@@ -196,10 +197,13 @@ export default function OCRTab() {
     }
 
     setIsProcessing(true);
+    setScanProgress({ current: 0, total: unprocessedImages.length });
     setScanError(null);
     try {
       const base64Array = unprocessedImages.map(img => img.base64Data);
-      const data = await extractRegisterData(base64Array);
+      const data = await extractRegisterData(base64Array, (current, total) => {
+        setScanProgress({ current, total });
+      });
       
       const startIndex = extractedData ? extractedData.length : 0;
       
@@ -371,9 +375,42 @@ export default function OCRTab() {
                 disabled={isProcessing}
               />
               
-              {images.length > 0 ? (
-                <div className="dropzone-preview">
-                  <div className={`image-grid ${isProcessing ? 'processing' : ''}`}>
+              {isProcessing ? (
+                <div className="loading-overlay" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                  <div className="loading-spinner-wrapper" style={{ marginBottom: '24px' }}>
+                    <Loader2 className="spinner" size={48} color="var(--primary)" />
+                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Processing Images
+                  </h3>
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                    Extracting meter readings using AI...
+                  </p>
+                  
+                  <div className="progress-bar-container" style={{ width: '100%', maxWidth: '300px', margin: '0 auto', background: 'var(--bg-card)', borderRadius: '8px', padding: '4px', border: '1px solid var(--border-default)' }}>
+                    <div 
+                      className="progress-bar-fill" 
+                      style={{ 
+                        height: '8px', 
+                        background: 'linear-gradient(90deg, var(--primary), var(--primary-light))', 
+                        borderRadius: '4px', 
+                        width: `${scanProgress.total > 0 ? (scanProgress.current / scanProgress.total) * 100 : 0}%`,
+                        transition: 'width 0.4s ease-out'
+                      }}
+                    ></div>
+                  </div>
+                  
+                  <div style={{ marginTop: '16px', fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                    {scanProgress.current > 0 ? (
+                      <span>Image {scanProgress.current} of {scanProgress.total}</span>
+                    ) : (
+                      <span>Initializing...</span>
+                    )}
+                  </div>
+                </div>
+              ) : images.length > 0 ? (
+                <div className="upload-preview" onClick={(e) => e.stopPropagation()}>
+                  <div className="image-grid">
                     {images.map((img, i) => (
                       <div key={i} className="preview-container">
                         <img src={img.preview} alt={`Register Preview ${i + 1}`} />
@@ -386,40 +423,31 @@ export default function OCRTab() {
                         </button>
                       </div>
                     ))}
-                    {!isProcessing && (
-                      <div 
-                        className="preview-container add-more" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          fileInputRef.current?.click();
-                        }}
-                        style={{ 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          border: '2px dashed var(--border-default)', 
-                          borderRadius: '12px', 
-                          cursor: 'pointer', 
-                          background: 'rgba(255, 255, 255, 0.02)', 
-                          minHeight: '120px' 
-                        }}
-                      >
-                         <Plus size={24} color="var(--text-secondary)" />
-                         <span style={{ fontSize: '12px', marginTop: '8px', color: 'var(--text-secondary)', fontWeight: 500 }}>Add more</span>
-                      </div>
-                    )}
-                    {isProcessing && (
-                      <div className="scan-overlay">
-                        <div className="scan-line"></div>
-                      </div>
-                    )}
-                  </div>
-                  {!isProcessing && (
-                    <div className="dropzone-hint">
-                      <ImagePlus size={16} /> Selected {images.length} image{images.length > 1 ? 's' : ''}. Use 'Add more' to append.
+                    <div 
+                      className="preview-container add-more" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                      style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        border: '2px dashed var(--border-default)', 
+                        borderRadius: '12px', 
+                        cursor: 'pointer', 
+                        background: 'rgba(255, 255, 255, 0.02)', 
+                        minHeight: '120px' 
+                      }}
+                    >
+                        <Plus size={24} color="var(--text-secondary)" />
+                        <span style={{ fontSize: '12px', marginTop: '8px', color: 'var(--text-secondary)', fontWeight: 500 }}>Add more</span>
                     </div>
-                  )}
+                  </div>
+                  <div className="dropzone-hint">
+                    <ImagePlus size={16} /> Selected {images.length} image{images.length > 1 ? 's' : ''}. Use 'Add more' to append.
+                  </div>
                 </div>
               ) : (
                 <div className="dropzone-empty">
@@ -442,15 +470,14 @@ export default function OCRTab() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="spinner" size={20} />
-                    Extracting from {images.filter(img => !img.processed).length} new image{images.filter(img => !img.processed).length > 1 ? 's' : ''}...
+                    Extracting... ({scanProgress.current}/{scanProgress.total})
                   </>
                 ) : (
                   <>
                     <FileText size={20} />
                     {images.filter(img => !img.processed).length === 0 
-                      ? 'All Images Extracted' 
-                      : `Extract Data (${images.filter(img => !img.processed).length} New)`
-                    }
+                      ? 'All Images Processed' 
+                      : `Extract Data from ${images.filter(img => !img.processed).length} Image${images.filter(img => !img.processed).length > 1 ? 's' : ''}`}
                   </>
                 )}
               </button>
