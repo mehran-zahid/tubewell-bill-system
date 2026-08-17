@@ -683,6 +683,17 @@ select option {
     flex-direction: column;
   }
   
+  .ocr-label {
+    font-size: 8.5px;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+  }
+
+  .ocr-action-btn {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+  
   .mobile-header {
     display: flex;
   }

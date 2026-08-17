@@ -17,7 +17,7 @@ export default function MainLayout({
     { id: 'members', label: 'Directory', icon: Users },
     { id: 'register', label: 'Readings', icon: BookText },
     { id: 'billing', label: 'Billing', icon: Calculator },
-    { id: 'ocr', label: 'Scan Register', icon: Camera }
+    ...(isAdmin ? [{ id: 'ocr', label: 'Scan Register', icon: Camera }] : [])
   ];
 
 
@@ -230,7 +230,7 @@ export default function MainLayout({
               className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             >
               <IconComponent size={20} />
-              <span>{item.label}</span>
+              <span className={item.id === 'ocr' ? 'ocr-label' : ''}>{item.label}</span>
             </button>
           );
         })}

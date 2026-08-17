@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { initFirebaseAsync } from '../config/firebase';
 import { useOCR } from '../context/OCRContext';
 import CustomDropdown from '../components/CustomDropdown';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function OCRTab() {
   const { showToast } = useToast();
@@ -14,6 +15,7 @@ export default function OCRTab() {
   const [members, setMembers] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
   
   const fileInputRef = useRef(null);
@@ -345,9 +347,6 @@ export default function OCRTab() {
         <h1 style={{ fontFamily: 'Outfit', fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
           Scan Register
         </h1>
-        <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-          Upload a photo of the physical register to automatically extract readings.
-        </p>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '32px' }}>
@@ -507,15 +506,15 @@ export default function OCRTab() {
                 </h2>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button 
-                    onClick={clearOCRState}
-                    className="btn btn-secondary"
+                    onClick={() => setIsClearModalOpen(true)}
+                    className="btn btn-secondary ocr-action-btn"
                     disabled={isSaving}
                   >
                     Clear All
                   </button>
                   <button 
                     onClick={handleSave}
-                    className="btn btn-primary"
+                    className="btn btn-primary ocr-action-btn"
                     style={{ background: 'var(--success)', border: 'none', color: 'white' }}
                     disabled={isSaving}
                   >
@@ -711,6 +710,17 @@ export default function OCRTab() {
 
         </div>
       </div>
+      <ConfirmModal
+        isOpen={isClearModalOpen}
+        title="Clear Extraction Results"
+        message="Are you sure you want to clear all extracted data? This action cannot be undone."
+        onConfirm={() => {
+          clearOCRState();
+          setIsClearModalOpen(false);
+        }}
+        onCancel={() => setIsClearModalOpen(false)}
+        confirmText="Clear All"
+      />
     </div>
   );
 }

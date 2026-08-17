@@ -109,7 +109,7 @@ function AppContent() {
         {activeTab === 'members' && <MembersTab isAdmin={isAdmin} />}
         {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
         {activeTab === 'billing' && <BillingTab isAdmin={isAdmin} />}
-        {activeTab === 'ocr' && <OCRTab />}
+        {activeTab === 'ocr' && isAdmin && <OCRTab />}
       </MainLayout>
 
       <ConfirmModal 
