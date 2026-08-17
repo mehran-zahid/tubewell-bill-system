@@ -504,7 +504,7 @@ export default function OCRTab() {
                   <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
                   <span>Extraction Results ({extractedData.length} entries)</span>
                 </h2>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
                   <button 
                     onClick={() => setIsClearModalOpen(true)}
                     className="btn btn-secondary ocr-action-btn"
