@@ -43,8 +43,9 @@ export default function MembersTab({ isAdmin }) {
 
   const startScrolling = (direction) => {
     if (scrollRAF.current) return;
+    const scrollContainer = document.querySelector('main') || window;
     const scrollStep = () => {
-      window.scrollBy(0, direction * 8); // Smooth 8px per frame
+      scrollContainer.scrollBy(0, direction * 12); // Smooth 12px per frame
       scrollRAF.current = requestAnimationFrame(scrollStep);
     };
     scrollRAF.current = requestAnimationFrame(scrollStep);
@@ -251,7 +252,15 @@ export default function MembersTab({ isAdmin }) {
         updatedMembers.push({ id: `temp_${Date.now()}`, ...newMemberData });
       }
 
-      updatedMembers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
+      // Sort by existing turnOrder, fallback to userCode for the newly added member
+      updatedMembers.sort((a, b) => {
+        const orderA = a.turnOrder !== undefined ? a.turnOrder : parseInt(a.userCode);
+        const orderB = b.turnOrder !== undefined ? b.turnOrder : parseInt(b.userCode);
+        return orderA - orderB;
+      });
+      // Reassign turnOrders sequentially to keep them clean
+      updatedMembers.forEach((m, idx) => m.turnOrder = idx + 1);
+      
       updatedMembers = autoRechainSchedule(updatedMembers);
 
       const batch = firebase.writeBatch(db);
@@ -289,10 +298,25 @@ export default function MembersTab({ isAdmin }) {
     try {
       const { db, firebase } = await initFirebaseAsync();
       const metaRef = firebase.doc(db, 'metadata', 'scheduleAnchor');
-      await firebase.setDoc(metaRef, { date: anchorDate });
+      
+      const batch = firebase.writeBatch(db);
+      batch.set(metaRef, { date: anchorDate });
+      
+      // Recompute all members' start/end times using the new anchor
+      let updatedMembers = [...members];
+      const cycleStart = { day: anchorDate.startDay, time: anchorDate.startTime };
+      updatedMembers = autoRechainSchedule(updatedMembers, cycleStart);
+      
+      updatedMembers.forEach(member => {
+        const docRef = firebase.doc(db, 'members', member.id);
+        batch.set(docRef, member, { merge: true });
+      });
+
+      await batch.commit();
+
       setScheduleAnchor(anchorDate);
       setIsAnchorModalOpen(false);
-      showToast("Schedule anchor saved", "success");
+      showToast("Schedule start time shifted successfully", "success");
     } catch (e) {
       console.error("Error saving schedule anchor", e);
       showToast("Failed to save schedule anchor.", "error");
@@ -324,13 +348,25 @@ export default function MembersTab({ isAdmin }) {
       const { db, firebase } = await initFirebaseAsync();
       const batch = firebase.writeBatch(db);
       
-      newOrder.forEach((member, idx) => {
+      // 1. Update turnOrder in the local array based on their new visual position
+      const reorderedMembers = newOrder.map((member, idx) => ({ ...member, turnOrder: idx + 1 }));
+      
+      // 2. Re-chain the schedule so their start/end times reflect their new physical order
+      const finalMembers = autoRechainSchedule(reorderedMembers);
+      
+      finalMembers.forEach((member) => {
         const docRef = firebase.doc(db, 'members', member.id);
-        batch.update(docRef, { turnOrder: idx + 1 });
+        batch.update(docRef, { 
+          turnOrder: member.turnOrder,
+          startDay: member.startDay,
+          startTime: member.startTime,
+          endDay: member.endDay,
+          endTime: member.endTime
+        });
       });
       await batch.commit();
       
-      setMembers(newOrder);
+      setMembers(finalMembers);
       showToast("Schedule order saved", "success");
     } catch (e) {
       console.error("Error saving schedule order", e);
@@ -528,7 +564,15 @@ export default function MembersTab({ isAdmin }) {
         
         const { db, firebase } = await initFirebaseAsync();
         
-        importedUsers.sort((a, b) => parseInt(a.userCode) - parseInt(b.userCode));
+        // Respect the order from the JSON file by default, or fallback to userCode
+        importedUsers.sort((a, b) => {
+          const orderA = a.turnOrder !== undefined ? a.turnOrder : parseInt(a.userCode);
+          const orderB = b.turnOrder !== undefined ? b.turnOrder : parseInt(b.userCode);
+          return orderA - orderB;
+        });
+        
+        // Ensure clean sequential turnOrder
+        importedUsers.forEach((m, idx) => m.turnOrder = idx + 1);
         importedUsers = autoRechainSchedule(importedUsers);
 
         const batch = firebase.writeBatch(db);
