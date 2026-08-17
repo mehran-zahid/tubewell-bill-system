@@ -138,3 +138,16 @@ export async function deleteRegisterEntry(id) {
   const docRef = firebase.doc(db, COLLECTION_NAME, id);
   await firebase.deleteDoc(docRef);
 }
+
+export async function deleteRegisterEntries(ids) {
+  const { db, firebase } = await initFirebaseAsync();
+  const batch = firebase.writeBatch(db);
+  
+  ids.forEach(id => {
+    const docRef = firebase.doc(db, COLLECTION_NAME, id);
+    batch.delete(docRef);
+  });
+  
+  await batch.commit();
+}
+

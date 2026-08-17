@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Plus, Filter, Trash2, MoreVertical } from '../components/Icons';
-import { addRegisterEntry, getRegisterEntries, getLatestEndReading, updateRegisterEntries, deleteRegisterEntry } from '../services/registerService';
+import { addRegisterEntry, getRegisterEntries, getLatestEndReading, updateRegisterEntries, deleteRegisterEntry, deleteRegisterEntries } from '../services/registerService';
 import { initFirebaseAsync } from '../config/firebase';
 import NewRegisterEntryModal from '../components/NewRegisterEntryModal';
 import RegisterStats from '../components/RegisterStats';
@@ -124,6 +124,13 @@ export default function RegisterTab({ isAdmin }) {
   // Effect 2: Fetch logbook entries whenever filters change
   useEffect(() => {
     const fetchEntries = async () => {
+      // If timeframe is custom, but no dates are entered yet, do not fetch anything.
+      if (timeframe === 'custom' && !customStartDate && !customEndDate) {
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const { startDate, endDate } = getCalculatedDateRange();
@@ -199,23 +206,27 @@ export default function RegisterTab({ isAdmin }) {
 
   const executeDeleteSelected = async () => {
     setConfirmDeleteOpen(false);
+    if (selectedRows.length === 0) return;
+    
+    // 1. Optimistic UI update: instantly hide rows and reset selection so it doesn't feel stuck
+    const rowsToDelete = [...selectedRows];
+    setSelectedRows([]);
+    setEntries(prev => prev.filter(e => !rowsToDelete.includes(e.id)));
+    setDraftEntries(prev => {
+      const newDrafts = { ...prev };
+      rowsToDelete.forEach(id => delete newDrafts[id]);
+      return newDrafts;
+    });
+
     try {
       setIsSaving(true);
-      for (const id of selectedRows) {
-        await deleteRegisterEntry(id);
-      }
-      setEntries(prev => prev.filter(e => !selectedRows.includes(e.id)));
-      setSelectedRows([]);
-      // Clean up drafts if they are in edit mode
-      setDraftEntries(prev => {
-        const newDrafts = { ...prev };
-        selectedRows.forEach(id => delete newDrafts[id]);
-        return newDrafts;
-      });
+      // 2. Perform the actual batch deletion in the background
+      await deleteRegisterEntries(rowsToDelete);
       showToast("Selected entries deleted.", "success");
     } catch (e) {
       console.error("Failed to delete selected:", e);
       showToast("Failed to delete selected entries.", "error");
+      // If it fails, we could potentially reload data here, but error toast is fine for now
     } finally {
       setIsSaving(false);
     }
@@ -496,10 +507,12 @@ export default function RegisterTab({ isAdmin }) {
             <Filter size={32} />
           </div>
           <h3 style={{ fontFamily: 'Outfit', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-            No Readings Found
+            {timeframe === 'custom' && !customStartDate && !customEndDate ? 'Select Date Range' : 'No Readings Found'}
           </h3>
           <p style={{ fontFamily: 'Inter', fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '400px', marginBottom: '24px' }}>
-            Try adjusting your filters to see more history.
+            {timeframe === 'custom' && !customStartDate && !customEndDate 
+              ? 'Please pick a start or end date to view readings.' 
+              : 'Try adjusting your filters to see more history.'}
           </p>
         </div>
       ) : (
