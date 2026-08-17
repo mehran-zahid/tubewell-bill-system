@@ -22,6 +22,33 @@ export async function addRegisterEntry(entryData) {
   return { ...newEntry, id: docRef.id };
 }
 
+export async function addRegisterEntries(entriesArray) {
+  const { db, firebase } = await initFirebaseAsync();
+  const batch = firebase.writeBatch(db);
+  const addedEntries = [];
+
+  entriesArray.forEach(entryData => {
+    const startReading = parseFloat(entryData.startReading);
+    const endReading = parseFloat(entryData.endReading);
+    const unitsConsumed = endReading - startReading;
+
+    const newEntry = {
+      ...entryData,
+      startReading,
+      endReading,
+      unitsConsumed,
+      createdAt: firebase.serverTimestamp(),
+    };
+
+    const docRef = firebase.doc(firebase.collection(db, COLLECTION_NAME));
+    batch.set(docRef, newEntry);
+    addedEntries.push({ ...newEntry, id: docRef.id });
+  });
+
+  await batch.commit();
+  return addedEntries;
+}
+
 export async function getRegisterEntries(startDate = null, endDate = null) {
   const { db, firebase } = await initFirebaseAsync();
   

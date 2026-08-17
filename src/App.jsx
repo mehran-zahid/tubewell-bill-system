@@ -5,6 +5,7 @@ import ScheduleTab from './pages/ScheduleTab';
 import MembersTab from './pages/MembersTab';
 import RegisterTab from './pages/RegisterTab';
 import BillingTab from './pages/BillingTab';
+import OCRTab from './pages/OCRTab';
 import ConfirmModal from './components/ConfirmModal';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { initFirebaseAsync } from './config/firebase';
@@ -107,6 +108,7 @@ function AppContent() {
         {activeTab === 'members' && <MembersTab isAdmin={isAdmin} />}
         {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
         {activeTab === 'billing' && <BillingTab isAdmin={isAdmin} />}
+        {activeTab === 'ocr' && <OCRTab />}
       </MainLayout>
 
       <ConfirmModal 

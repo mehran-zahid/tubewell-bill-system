@@ -92,7 +92,20 @@ export default function RegisterTab({ isAdmin }) {
             });
           }
         });
-        membersData.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
+        // Inject the System Adjustment Member
+        membersData.push({
+          id: 'SYSTEM_FAULT',
+          userCode: 'FAULT',
+          nameEn: '⚠️ Faulty Meter / Adjustment',
+          isSystem: true
+        });
+
+        membersData.sort((a, b) => {
+          if (a.isSystem) return -1;
+          if (b.isSystem) return 1;
+          return a.nameEn.localeCompare(b.nameEn);
+        });
+
         setMembers(membersData);
       } catch (error) {
         console.error("Error fetching members:", error);
@@ -770,6 +783,32 @@ export default function RegisterTab({ isAdmin }) {
         onSubmit={handleAddEntry}
         members={members}
         latestEndReading={latestEndReading}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDeleteOpen}
+        title="Delete Selected Entries?"
+        message={`Are you sure you want to delete ${selectedRows.length} entry/entries? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={executeDeleteSelected}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        isDestructive={true}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDiscardOpen}
+        title="Discard Changes?"
+        message="You are in edit mode. Are you sure you want to discard your changes?"
+        confirmText="Discard"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setConfirmDiscardOpen(false);
+          setIsEditMode(false);
+          setDraftEntries({});
+        }}
+        onCancel={() => setConfirmDiscardOpen(false)}
+        isDestructive={true}
       />
     </div>
   );

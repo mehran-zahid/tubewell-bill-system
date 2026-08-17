@@ -1,5 +1,6 @@
 import React from 'react';
 import { CalendarClock, Users, LogOut, Shield, BookText, Calculator } from './Icons';
+import { Camera } from 'lucide-react';
 import Logo from './Logo';
 
 export default function MainLayout({ 
@@ -15,8 +16,10 @@ export default function MainLayout({
     { id: 'schedule', label: 'Schedule', icon: CalendarClock },
     { id: 'members', label: 'Directory', icon: Users },
     { id: 'register', label: 'Readings', icon: BookText },
-    { id: 'billing', label: 'Billing', icon: Calculator }
+    { id: 'billing', label: 'Billing', icon: Calculator },
+    { id: 'ocr', label: 'Scan Register', icon: Camera }
   ];
+
 
   return (
     <div className="app-layout">
@@ -62,16 +65,7 @@ export default function MainLayout({
                 <Shield size={14} />
                 Admin
               </button>
-              {import.meta.env.DEV && (
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={handleDevLogin}
-                  style={{ padding: '6px 12px', fontSize: '12px', gap: '4px' }}
-                  title="Dev Bypass"
-                >
-                  Dev
-                </button>
-              )}
+              {/* Removed dev button to fix ReferenceError */}
             </div>
           )}
         </div>
