@@ -64,7 +64,8 @@ Respond ONLY with valid JSON. Do not use Markdown formatting or code blocks. The
           }
         ],
         generationConfig: {
-          temperature: 0.1
+          temperature: 0.1,
+          responseMimeType: "application/json"
         }
       };
 
