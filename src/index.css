@@ -667,6 +667,10 @@ select.input-field {
   font-weight: 500;
 }
 
+.mobile-list-view {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .app-layout {
     flex-direction: column;
