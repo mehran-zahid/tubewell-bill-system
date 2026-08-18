@@ -80,3 +80,73 @@ export function autoRechainSchedule(members, cycleStart = null) {
 
   return members;
 }
+
+const DAY_NAMES_URDU = {
+  'Sunday': 'اتوار',
+  'Monday': 'پیر',
+  'Tuesday': 'منگل',
+  'Wednesday': 'بدھ',
+  'Thursday': 'جمعرات',
+  'Friday': 'جمعہ',
+  'Saturday': 'ہفتہ'
+};
+
+export function formatUrduTime(timeStr) {
+  if (!timeStr) return '';
+  const [hStr, mStr] = timeStr.split(':');
+  const h = parseInt(hStr, 10);
+  
+  let period = '';
+  if (h >= 0 && h < 5) period = 'رات';
+  else if (h >= 5 && h < 12) period = 'صبح';
+  else if (h >= 12 && h < 15) period = 'دوپہر'; 
+  else if (h >= 15 && h < 19) period = 'شام'; 
+  else period = 'رات'; 
+  
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${mStr} ${period}`;
+}
+
+export function generateWhatsAppSchedule(members, language = 'urdu') {
+  const isUrdu = language === 'urdu';
+  
+  let msg = isUrdu 
+    ? `ٹیوب ویل باری شیڈول\n\nہفتہ وار ترتیب:\n—————————————\n`
+    : `TUBEWELL SCHEDULE\n\nWEEKLY TURN TIME SLOTS:\n-------------\n`;
+
+  members.forEach((u, idx) => {
+    const biliName = isUrdu ? (u.nameUr || u.nameEn) : u.nameEn;
+    
+    const startDay = isUrdu ? (DAY_NAMES_URDU[u.startDay] || u.startDay) : u.startDay;
+    const endDay = isUrdu ? (DAY_NAMES_URDU[u.endDay] || u.endDay) : u.endDay;
+
+    const h = parseInt(u.durationHours, 10) || 0;
+    const m = parseInt(u.durationMinutes, 10) || 0;
+    
+    const durationStr = isUrdu
+      ? (m > 0 ? `${h} گھنٹے ${m} منٹ` : `${h} گھنٹے`)
+      : (m > 0 ? `${h}h ${m}m` : `${h}h`);
+
+    msg += isUrdu
+      ? `${idx + 1}. ${biliName} (کوڈ: ${u.userCode})\n`
+      : `${idx + 1}. ${biliName} (Code: ${u.userCode})\n`;
+      
+    msg += isUrdu 
+      ? `   ${startDay} ${formatUrduTime(u.startTime)} – ${endDay} ${formatUrduTime(u.endTime)} (${durationStr})\n`
+      : `   ${startDay} ${format12Hour(u.startTime)} – ${endDay} ${format12Hour(u.endTime)} (${durationStr})\n`;
+
+    msg += `\n`;
+  });
+
+  if (isUrdu) {
+    msg += `—————————————\n`;
+    msg += `نوٹ: مہربانی فرما کر اپنی باری پر وقت کی پابندی کریں۔\n`;
+    msg += `ٹیوب ویل انتظامیہ\n`;
+  } else {
+    msg += `-------------\n`;
+    msg += `Note: Please strictly follow your scheduled turn times.\n`;
+    msg += `Tubewell Management\n`;
+  }
+
+  return msg;
+}

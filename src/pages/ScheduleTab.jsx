@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Users } from '../components/Icons';
 import { initFirebaseAsync } from '../config/firebase';
-import { format12Hour } from '../utils/scheduleLogic';
+import { format12Hour, generateWhatsAppSchedule } from '../utils/scheduleLogic';
 import { SkeletonScheduleTable } from '../components/Skeleton';
+import { Share2 } from 'lucide-react';
+import ShareScheduleModal from '../components/ShareScheduleModal';
+import { useToast } from '../context/ToastContext';
 
 const DAYS = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
 
@@ -17,6 +20,25 @@ export default function ScheduleTab() {
   const [loading, setLoading] = useState(true);
   const [currentDayStr, setCurrentDayStr] = useState('');
   const [currentMinutes, setCurrentMinutes] = useState(0);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const { showToast } = useToast();
+
+  const handleCopySchedule = (language) => {
+    // Sort members for schedule generation (same as state)
+    const sortedMembers = [...members].sort((a, b) => {
+      const orderA = a.turnOrder !== undefined ? a.turnOrder : parseInt(a.userCode);
+      const orderB = b.turnOrder !== undefined ? b.turnOrder : parseInt(b.userCode);
+      return orderA - orderB;
+    });
+    
+    const text = generateWhatsAppSchedule(sortedMembers, language);
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Schedule copied to clipboard!', 'success');
+    }).catch(err => {
+      console.error('Failed to copy', err);
+      showToast('Failed to copy schedule.', 'error');
+    });
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -134,6 +156,16 @@ export default function ScheduleTab() {
           <p style={{ fontSize: '12px', marginTop: '4px', color: 'var(--text-secondary)' }}>
             Live tubewell rotation. Today is <strong style={{ color: 'var(--primary)' }}>{currentDayStr}</strong>
           </p>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+          <button 
+            className="btn btn-outline" 
+            onClick={() => setIsShareModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)' }}
+          >
+            <Share2 size={16} />
+            Share Schedule
+          </button>
         </div>
       </div>
 
@@ -267,6 +299,12 @@ export default function ScheduleTab() {
           );
         })}
       </div>
+
+      <ShareScheduleModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        onCopyText={handleCopySchedule}
+      />
     </div>
   );
 }
