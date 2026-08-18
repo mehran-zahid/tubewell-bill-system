@@ -123,7 +123,7 @@ const generateUrduText = (member, billingResult, billTitle, fixedExpenses, membe
     text += `کوئی ریڈنگ موجود نہیں\n`;
   }
   
-  return text.trimEnd() + '\n\n\n.\n';
+  return text.trimEnd();
 };
 
 const generateEnglishText = (member, billingResult, billTitle, fixedExpenses, membersList) => {
@@ -186,5 +186,5 @@ const generateEnglishText = (member, billingResult, billTitle, fixedExpenses, me
     text += `No readings found\n`;
   }
   
-  return text.trimEnd() + '\n\n\n.\n';
+  return text.trimEnd();
 };

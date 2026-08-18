@@ -8,6 +8,7 @@ import GraphicReceipt from '../components/GraphicReceipt';
 import CustomDropdown from '../components/CustomDropdown';
 import { toJpeg } from 'html-to-image';
 import { generateWhatsAppText } from '../utils/billingTextGenerator';
+import { generateWhatsAppSchedule } from '../utils/scheduleLogic';
 import { SkeletonBulkShare } from '../components/Skeleton';
 
 // Formats a local Pakistani number (03XX) to international format for wa.me (923XX)
@@ -35,6 +36,7 @@ export default function BulkShareTab() {
   // Generation
   const [isGenerating, setIsGenerating] = useState(false);
   const [billingData, setBillingData] = useState([]);
+  const [generatedMembersCount, setGeneratedMembersCount] = useState(0);
   const [currentRenderMember, setCurrentRenderMember] = useState(null);
   const offScreenReceiptRef = useRef(null);
 
@@ -61,6 +63,7 @@ export default function BulkShareTab() {
           settings[m.id] = {
             sendText: true,
             sendImage: true,
+            sendSchedule: false,
             language: 'urdu'
           };
           
@@ -80,6 +83,7 @@ export default function BulkShareTab() {
               settings[tId] = {
                 sendText: true,
                 sendImage: true,
+                sendSchedule: false,
                 language: 'urdu'
               };
             });
@@ -182,10 +186,11 @@ export default function BulkShareTab() {
       
       const { billingResult } = bill;
       const payload = [];
+      let processedCount = 0;
       
       for (const member of members) {
         const settings = memberSettings[member.id];
-        if (!settings.sendText && !settings.sendImage) continue;
+        if (!settings.sendText && !settings.sendImage && !settings.sendSchedule) continue;
         
         const phone = phoneNumbers[member.id];
         if (!phone || phone.trim() === '') continue;
@@ -223,18 +228,41 @@ export default function BulkShareTab() {
           }
         }
         
-        // Don't add to payload if there's nothing to send
-        if (!text && !imageBase64) continue;
+        // Push Billing Text + Image Payload
+        if (text || imageBase64) {
+          payload.push({
+            phone: formatPhoneForWhatsApp(phone),
+            text: text,
+            image: imageBase64
+          });
+        }
         
-        payload.push({
-          phone: formatPhoneForWhatsApp(phone),
-          text: text,
-          image: imageBase64
-        });
+        // Push Schedule as a completely separate Payload message
+        if (settings.sendSchedule) {
+          const membersForSchedule = members
+            .filter(m => m.type === 'owner')
+            .sort((a, b) => {
+              const orderA = a.turnOrder !== undefined ? a.turnOrder : parseInt(a.userCode) || 9999;
+              const orderB = b.turnOrder !== undefined ? b.turnOrder : parseInt(b.userCode) || 9999;
+              return orderA - orderB;
+            });
+          const scheduleText = generateWhatsAppSchedule(membersForSchedule, settings.language);
+          
+          payload.push({
+            phone: formatPhoneForWhatsApp(phone),
+            text: scheduleText,
+            image: null
+          });
+        }
+        
+        if (text || imageBase64 || settings.sendSchedule) {
+          processedCount++;
+        }
       }
       
       setBillingData(payload);
-      showToast(`Payload generated for ${payload.length} members. Start the extension!`, "success");
+      setGeneratedMembersCount(processedCount);
+      showToast(`Payload generated for ${processedCount} members. Start the extension!`, "success");
     } catch (e) {
       console.error(e);
       showToast("Error generating payload", "error");
@@ -261,6 +289,7 @@ export default function BulkShareTab() {
 
   const isAllTextSelected = displayMembers.length > 0 && displayMembers.every(m => memberSettings[m.id]?.sendText);
   const isAllImageSelected = displayMembers.length > 0 && displayMembers.every(m => memberSettings[m.id]?.sendImage);
+  const isAllScheduleSelected = displayMembers.length > 0 && displayMembers.every(m => memberSettings[m.id]?.sendSchedule);
 
   const toggleAllText = () => {
     const newValue = !isAllTextSelected;
@@ -282,6 +311,19 @@ export default function BulkShareTab() {
       displayMembers.forEach(m => {
         if (updated[m.id]) {
           updated[m.id] = { ...updated[m.id], sendImage: newValue };
+        }
+      });
+      return updated;
+    });
+  };
+
+  const toggleAllSchedule = () => {
+    const newValue = !isAllScheduleSelected;
+    setMemberSettings(prev => {
+      const updated = { ...prev };
+      displayMembers.forEach(m => {
+        if (updated[m.id]) {
+          updated[m.id] = { ...updated[m.id], sendSchedule: newValue };
         }
       });
       return updated;
@@ -342,6 +384,15 @@ export default function BulkShareTab() {
                           style={{ width: '14px', height: '14px', accentColor: 'var(--primary)', cursor: 'pointer' }}
                         />
                         All Image
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', textTransform: 'none', fontWeight: 500 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isAllScheduleSelected}
+                          onChange={toggleAllSchedule}
+                          style={{ width: '14px', height: '14px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                        />
+                        All Schedule
                       </label>
                     </div>
                   </div>
@@ -414,6 +465,15 @@ export default function BulkShareTab() {
                             style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
                           />
                           Image
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={memberSettings[member.id]?.sendSchedule || false} 
+                            onChange={() => toggleSetting(member.id, 'sendSchedule')}
+                            style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                          />
+                          Schedule
                         </label>
                       </div>
                       
@@ -489,7 +549,7 @@ export default function BulkShareTab() {
             <CheckCircle2 size={18} /> Ready to Send!
           </h3>
           <p style={{ margin: 0, color: '#14532d', fontSize: '14px', lineHeight: 1.5 }}>
-            Generated data for <strong>{billingData.length}</strong> members. 
+            Generated data for <strong>{generatedMembersCount}</strong> members. 
             Click the WhatsApp extension icon in your browser toolbar and click <strong>"Start Bulk Send"</strong>.
           </p>
         </div>
