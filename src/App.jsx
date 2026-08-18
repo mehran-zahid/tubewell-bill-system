@@ -6,6 +6,7 @@ import MembersTab from './pages/MembersTab';
 import RegisterTab from './pages/RegisterTab';
 import BillingTab from './pages/BillingTab';
 import OCRTab from './pages/OCRTab';
+import BulkShareTab from './pages/BulkShareTab';
 import ConfirmModal from './components/ConfirmModal';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { OCRProvider } from './context/OCRContext';
@@ -110,6 +111,7 @@ function AppContent() {
         {activeTab === 'register' && <RegisterTab isAdmin={isAdmin} />}
         {activeTab === 'billing' && <BillingTab isAdmin={isAdmin} />}
         {activeTab === 'ocr' && isAdmin && <OCRTab />}
+        {activeTab === 'bulkshare' && isAdmin && <BulkShareTab />}
       </MainLayout>
 
       <ConfirmModal 

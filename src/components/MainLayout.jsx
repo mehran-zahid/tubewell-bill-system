@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarClock, Users, LogOut, Shield, BookText, Calculator } from './Icons';
-import { Camera } from 'lucide-react';
+import { Camera, Send } from 'lucide-react';
 import Logo from './Logo';
 
 export default function MainLayout({ 
@@ -17,7 +17,10 @@ export default function MainLayout({
     { id: 'members', label: 'Directory', icon: Users },
     { id: 'register', label: 'Readings', icon: BookText },
     { id: 'billing', label: 'Billing', icon: Calculator },
-    ...(isAdmin ? [{ id: 'ocr', label: 'Scan Register', icon: Camera }] : [])
+    ...(isAdmin ? [
+      { id: 'ocr', label: 'Scan Register', icon: Camera },
+      { id: 'bulkshare', label: 'Bulk Share', icon: Send }
+    ] : [])
   ];
 
 
@@ -219,7 +222,7 @@ export default function MainLayout({
 
       {/* Bottom Navbar (Mobile) */}
       <nav className="bottom-nav">
-        {navItems.map(item => {
+        {navItems.filter(item => item.id !== 'bulkshare').map(item => {
           const isActive = activeTab === item.id;
           const IconComponent = item.icon;
           
