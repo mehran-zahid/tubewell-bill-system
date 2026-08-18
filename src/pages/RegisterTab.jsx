@@ -80,7 +80,7 @@ export default function RegisterTab({ isAdmin }) {
           // Also push tenants with a tenantCode as unified members
           if (m.tenants && Array.isArray(m.tenants)) {
             m.tenants.forEach(t => {
-              if (t.tenantCode) {
+              if (t.tenantCode && t.tenantType !== 'existing') {
                 membersData.push({
                   id: `tenant_${doc.id}_${t.tenantCode}`,
                   userCode: t.tenantCode.toString(),
