@@ -1,0 +1,104 @@
+/* GraphicOverallBill.css - Styles for the overall graphic bill */
+@import url('https://fonts.googleapis.com/css2?family=Gulzar&family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
+
+.graphic-overall-bill {
+  background: white;
+  width: 1200px;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.1);
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  text-align: left;
+  direction: ltr;
+}
+
+.graphic-overall-bill.urdu {
+  font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', serif;
+  text-align: right;
+  direction: rtl;
+}
+
+.graphic-overall-header {
+  background: #f8fafc;
+  padding: 3rem;
+  text-align: center;
+  border-bottom: 3px dashed #cbd5e1;
+}
+
+.graphic-overall-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: #0f172a;
+}
+
+.graphic-overall-body {
+  padding: 3rem;
+}
+
+.graphic-overall-totals {
+  background: #eff6ff;
+  padding: 2.5rem;
+  border-radius: 16px;
+  margin-bottom: 3rem;
+}
+
+.graphic-overall-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  font-size: 2rem;
+}
+
+.graphic-overall-row.bold {
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-top: 2rem;
+  border-top: 3px solid #bfdbfe;
+  padding-top: 2rem;
+}
+
+.graphic-overall-table-container {
+  margin-top: 2.5rem;
+}
+
+.graphic-overall-table-title {
+  font-size: 2.75rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #1e293b;
+  text-align: center;
+}
+
+.graphic-overall-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.graphic-overall-table th,
+.graphic-overall-table td {
+  border: 2px solid #e2e8f0;
+  padding: 1.5rem 1.25rem;
+  font-size: 1.8rem;
+}
+
+.graphic-overall-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+  text-align: left;
+}
+
+.graphic-overall-bill.urdu .graphic-overall-table th {
+  text-align: right;
+}
+
+.graphic-overall-footer {
+  background: #f8fafc;
+  padding: 2.5rem;
+  text-align: center;
+  border-top: 2px dashed #cbd5e1;
+  font-size: 1.8rem;
+  color: #64748b;
+}

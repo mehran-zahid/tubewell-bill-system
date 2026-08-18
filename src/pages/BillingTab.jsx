@@ -13,6 +13,7 @@ import { useToast } from '../context/ToastContext';
 import { SkeletonBillingList } from '../components/Skeleton';
 import { toPng, toBlob } from 'html-to-image';
 import GraphicReceipt from '../components/GraphicReceipt';
+import GraphicOverallBill from '../components/GraphicOverallBill';
 import { translateToUrdu } from '../utils/translate';
 
 export default function BillingTab({ isAdmin }) {
@@ -34,7 +35,9 @@ export default function BillingTab({ isAdmin }) {
   const [isResultStale, setIsResultStale] = useState(false);
   const [shareModalData, setShareModalData] = useState(null);
   const [generatingImage, setGeneratingImage] = useState(null);
+  const [generatingOverallImage, setGeneratingOverallImage] = useState(null);
   const offScreenReceiptRef = useRef(null);
+  const offScreenOverallReceiptRef = useRef(null);
 
   const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
   const [wapdaRefNo, setWapdaRefNo] = useState('');
@@ -772,6 +775,45 @@ export default function BillingTab({ isAdmin }) {
     }
   }, [generatingImage, showToast]);
 
+  const handleShareOverallImage = (language) => {
+    setGeneratingOverallImage({ language });
+  };
+
+  useEffect(() => {
+    if (generatingOverallImage && offScreenOverallReceiptRef.current) {
+      const { language } = generatingOverallImage;
+      setTimeout(() => {
+        if (!offScreenOverallReceiptRef.current) {
+          setGeneratingOverallImage(null);
+          return;
+        }
+        toBlob(offScreenOverallReceiptRef.current, {
+          quality: 1.0,
+          pixelRatio: 4,
+          skipFonts: false,
+          cacheBust: true,
+        })
+          .then((blob) => {
+            if (!blob) throw new Error("Failed to generate blob");
+            const dataUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `Overall_Bill_${language}.png`;
+            link.href = dataUrl;
+            link.click();
+            URL.revokeObjectURL(dataUrl);
+            showToast("Overall Summary Image downloaded successfully!", "success");
+          })
+          .catch((err) => {
+            console.error('Error generating image:', err);
+            showToast("Failed to generate image.", "error");
+          })
+          .finally(() => {
+            setGeneratingOverallImage(null);
+          });
+      }, 500);
+    }
+  }, [generatingOverallImage, showToast]);
+
   const handleSaveAndPublish = async () => {
     setIsSaving(true);
     try {
@@ -1207,6 +1249,14 @@ export default function BillingTab({ isAdmin }) {
             {/* Action Bar for PDF Generation */}
             <div className="print-hidden billing-action-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
               <button 
+                onClick={() => handleShareOverallImage('urdu')}
+                disabled={!!generatingOverallImage}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s', opacity: generatingOverallImage ? 0.5 : 1 }}
+              >
+                <Download size={16} />
+                {generatingOverallImage ? 'Generating...' : 'Download Image Summary'}
+              </button>
+              <button 
                 onClick={handleCopyGlobalWhatsApp}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: copiedStates.global ? 'var(--success)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
               >
@@ -1527,6 +1577,19 @@ export default function BillingTab({ isAdmin }) {
                 globalFixedExpenses={fixedExpenses}
                 viewMode={viewMode}
                 language={generatingImage.language}
+              />
+            )}
+            {generatingOverallImage && (
+              <GraphicOverallBill
+                ref={offScreenOverallReceiptRef}
+                billingResult={billingResult}
+                fixedExpenses={
+                  viewMode === 'list' && selectedBillId
+                    ? savedBills.find(b => b.id === selectedBillId)?.fixedExpenses
+                    : fixedExpenses
+                }
+                viewMode={viewMode}
+                language={generatingOverallImage.language}
               />
             )}
           </div>
