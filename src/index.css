@@ -1288,3 +1288,46 @@ select option {
 @keyframes spin {
   100% { transform: rotate(360deg); }
 }
+
+.offscreen-container {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
+
+@media print {
+  html {
+    font-size: 10px !important;
+  }
+  
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  /* Hide the main app so it doesn't take up layout space */
+  #root {
+    display: none !important;
+  }
+  
+  .print-only-container {
+    display: block !important;
+    position: relative !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Specific fix to ensure table rows don't break */
+  .graphic-overall-table tr {
+    page-break-inside: avoid;
+  }
+
+  .graphic-overall-bill {
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

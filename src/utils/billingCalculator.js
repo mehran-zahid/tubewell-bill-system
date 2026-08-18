@@ -121,6 +121,17 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
   // Sort by Total Bill (Descending)
   breakdowns.sort((a, b) => b.totalBill - a.totalBill);
 
+  // Reconcile rounding differences to ensure the sum of individual bills matches the exact total
+  const exactTotal = Math.round(totalWapda + totalFixed);
+  const roundingDiff = exactTotal - grandTotalBilled;
+  
+  if (roundingDiff !== 0 && breakdowns.length > 0) {
+    breakdowns[0].totalBill += roundingDiff;
+    // Absorb the difference in the usage share to keep the math consistent
+    breakdowns[0].usageShare += roundingDiff;
+    grandTotalBilled += roundingDiff;
+  }
+
   // Total Hourly Rate including fixed expenses
   const totalHourlyRate = totalConsumedHours > 0 ? ((totalWapda + totalFixed) / totalConsumedHours) : 0;
 

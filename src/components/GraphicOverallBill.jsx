@@ -1,7 +1,36 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
+import { translateToUrdu } from '../utils/translate';
 import './GraphicOverallBill.css';
 
 const GraphicOverallBill = forwardRef(({ billingResult, fixedExpenses, language }, ref) => {
+  const [translatedNames, setTranslatedNames] = useState({});
+
+  useEffect(() => {
+    let isMounted = true;
+    if (language === 'urdu' && billingResult?.breakdowns) {
+      const translateAll = async () => {
+        const translations = {};
+        const promises = billingResult.breakdowns.map(async (m) => {
+          if (m.urduName || m.nameUr) {
+            translations[m.name] = m.urduName || m.nameUr;
+          } else {
+            try {
+              translations[m.name] = await translateToUrdu(m.name);
+            } catch (e) {
+              translations[m.name] = m.name;
+            }
+          }
+        });
+        await Promise.all(promises);
+        if (isMounted) {
+          setTranslatedNames(translations);
+        }
+      };
+      translateAll();
+    }
+    return () => { isMounted = false; };
+  }, [billingResult, language]);
+
   if (!billingResult) return null;
 
   const isUrdu = language === 'urdu';
@@ -70,7 +99,7 @@ const GraphicOverallBill = forwardRef(({ billingResult, fixedExpenses, language 
                 <th>{isUrdu ? 'ممبر' : 'Member'}</th>
                 <th>{isUrdu ? 'استعمال' : 'Usage'}</th>
                 <th>{isUrdu ? 'بجلی حصہ' : 'Elec. Share'}</th>
-                <th>{isUrdu ? 'اضافی حصہ' : 'Extra Share'}</th>
+                <th>{isUrdu ? 'اضافی اخراجات' : 'Extra Expenses'}</th>
                 <th>{isUrdu ? 'کل بل' : 'Total Due'}</th>
               </tr>
             </thead>
@@ -83,9 +112,9 @@ const GraphicOverallBill = forwardRef(({ billingResult, fixedExpenses, language 
                 return (
                   <tr key={idx}>
                     <td>{idx + 1}</td>
-                    <td>{isUrdu ? (m.urduName || m.nameUr || m.nameEn || m.name) : (m.nameEn || m.name)}</td>
+                    <td>{isUrdu ? (translatedNames[m.name] || m.name) : (m.nameEn || m.name)}</td>
                     <td style={{direction: 'ltr', textAlign: isUrdu ? 'right' : 'left'}}>
-                      {m.consumedHours.toFixed(1)}h <span style={{color: '#64748b', fontSize: '1.5rem'}}>({pct}%)</span>
+                      {m.consumedHours.toFixed(1)}h
                     </td>
                     <td>{m.usageShare.toLocaleString()}</td>
                     <td>{m.fixedShare.toLocaleString()}</td>
@@ -98,9 +127,6 @@ const GraphicOverallBill = forwardRef(({ billingResult, fixedExpenses, language 
         </div>
       </div>
       
-      <div className="graphic-overall-footer">
-        {isUrdu ? 'نوٹ: تمام ممبران سے گزارش ہے کہ اپنا بل بروقت جمع کروائیں۔ شکریہ!' : 'Note: Please submit your bill payment promptly. Thank you!'}
-      </div>
     </div>
   );
 });

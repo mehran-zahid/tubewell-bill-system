@@ -20,6 +20,12 @@
   direction: rtl;
 }
 
+.graphic-overall-bill.urdu .graphic-overall-title {
+  font-family: 'Gulzar', 'Noto Nastaliq Urdu', serif;
+  font-weight: 400;
+  font-size: 4rem; /* Gulzar is a bit smaller visually */
+}
+
 .graphic-overall-header {
   background: #f8fafc;
   padding: 3rem;

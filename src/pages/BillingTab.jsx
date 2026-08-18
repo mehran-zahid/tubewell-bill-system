@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
@@ -9,9 +10,10 @@ import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '..
 import CustomDropdown from '../components/CustomDropdown';
 import ConfirmModal from '../components/ConfirmModal';
 import ShareModal from '../components/ShareModal';
+import PdfDownloadModal from '../components/PdfDownloadModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonBillingList } from '../components/Skeleton';
-import { toPng, toBlob } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 import GraphicReceipt from '../components/GraphicReceipt';
 import GraphicOverallBill from '../components/GraphicOverallBill';
 import { translateToUrdu } from '../utils/translate';
@@ -35,7 +37,8 @@ export default function BillingTab({ isAdmin }) {
   const [isResultStale, setIsResultStale] = useState(false);
   const [shareModalData, setShareModalData] = useState(null);
   const [generatingImage, setGeneratingImage] = useState(null);
-  const [generatingOverallImage, setGeneratingOverallImage] = useState(null);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [generatingPdfLanguage, setGeneratingPdfLanguage] = useState(null);
   const offScreenReceiptRef = useRef(null);
   const offScreenOverallReceiptRef = useRef(null);
 
@@ -439,65 +442,6 @@ export default function BillingTab({ isAdmin }) {
 
   const [copiedStates, setCopiedStates] = useState({});
 
-  const handleCopyGlobalWhatsApp = () => {
-    if (!billingResult) return;
-    const title = getBillTitle();
-    const urduTitleMonth = formatUrduMonthYear(title);
-    
-    // Find the fixed expenses array depending on view mode
-    let currentFixedExpenses = [];
-    if (viewMode === 'list' && selectedBillId) {
-      const b = savedBills.find(b => b.id === selectedBillId);
-      if (b) currentFixedExpenses = b.fixedExpenses || [];
-    } else {
-      currentFixedExpenses = fixedExpenses;
-    }
-    
-    let text = `*ٹربائن بل خلاصہ — ${urduTitleMonth}*\n`;
-    text += `====================================\n\n`;
-    
-    text += `*کل اخراجات کا خلاصہ:*\n`;
-    text += `• کل ٹیوب ویل استعمال: *${billingResult.totalConsumedHours.toFixed(1)} گھنٹے*\n`;
-    text += `• میپکو بجلی بل: *${billingResult.wapdaBill.toLocaleString()} روپے*\n\n`;
-    
-    text += `*تفصیل اضافی اخراجات:*\n`;
-    if (currentFixedExpenses.length > 0) {
-      currentFixedExpenses.forEach(ex => {
-        const exTitle = ex.title || 'Expense';
-        const amt = parseFloat(ex.amount || 0);
-        const formattedAmount = /[a-zA-Z]/.test(exTitle) 
-          ? `\u200Eروپے\u200E ${amt.toLocaleString()}` 
-          : `${amt.toLocaleString()} روپے`;
-        text += `  • ${exTitle} : ${formattedAmount}\n`;
-      });
-    } else {
-      text += `  • کوئی اضافی اخراجات نہیں\n`;
-    }
-    text += `  • *کل اضافی اخراجات:* *${billingResult.totalFixedExpenses.toLocaleString()} روپے*\n\n`;
-    
-    text += `*کل واجب الادا رقم:* *${billingResult.grandTotalBilled.toLocaleString()} روپے*\n`;
-    text += `====================================\n\n`;
-    
-    text += `*تمام ممبران کے واجب الادا بل:*\n\n`;
-    
-    billingResult.breakdowns.forEach((m, idx) => {
-      text += `*${idx + 1}. ${m.name}*\n`;
-      const pct = billingResult.totalConsumedHours > 0 ? ((m.consumedHours / billingResult.totalConsumedHours) * 100).toFixed(1) : 0;
-      text += `   • استعمال: ${m.consumedHours.toFixed(1)} گھنٹے (${pct}%)\n`;
-      text += `   • بجلی بل: ${m.usageShare.toLocaleString()} روپے | اضافی اخراجات: ${m.fixedShare.toLocaleString()} روپے\n`;
-      text += `   • *کل واجب الادا بل: ${m.totalBill.toLocaleString()} روپے*\n\n`;
-    });
-    
-    text += `------------------------------------\n`;
-    text += `نوٹ: تمام ممبران سے گزارش ہے کہ اپنا بل بروقت جمع کروائیں۔\n`;
-    text += `شکریہ! — ٹربائن انتظامیہ\n`;
-    
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedStates(prev => ({ ...prev, global: true }));
-      setTimeout(() => setCopiedStates(prev => ({ ...prev, global: false })), 2000);
-    });
-  };
-
   const formatUrduDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -781,44 +725,35 @@ export default function BillingTab({ isAdmin }) {
     }
   }, [generatingImage, showToast]);
 
-  const handleShareOverallImage = (language) => {
-    setGeneratingOverallImage({ language });
+  const handleDownloadPdfSummary = (language) => {
+    setGeneratingPdfLanguage(language);
   };
 
   useEffect(() => {
-    if (generatingOverallImage && offScreenOverallReceiptRef.current) {
-      const { language } = generatingOverallImage;
+    if (generatingPdfLanguage && billingResult) {
+      // Delay to let React render GraphicOverallBill in the DOM, then wait for fonts
       setTimeout(() => {
-        if (!offScreenOverallReceiptRef.current) {
-          setGeneratingOverallImage(null);
-          return;
-        }
-        toBlob(offScreenOverallReceiptRef.current, {
-          quality: 1.0,
-          pixelRatio: 4,
-          skipFonts: false,
-          cacheBust: true,
-        })
-          .then((blob) => {
-            if (!blob) throw new Error("Failed to generate blob");
-            const dataUrl = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = `Overall_Bill_${language}.png`;
-            link.href = dataUrl;
-            link.click();
-            URL.revokeObjectURL(dataUrl);
-            showToast("Overall Summary Image downloaded successfully!", "success");
-          })
-          .catch((err) => {
-            console.error('Error generating image:', err);
-            showToast("Failed to generate image.", "error");
-          })
-          .finally(() => {
-            setGeneratingOverallImage(null);
-          });
-      }, 500);
+        document.fonts.ready.then(() => {
+          window.print();
+        });
+        
+        // Use an event listener to close the modal and reset state after print dialog closes
+        const afterPrint = () => {
+          setGeneratingPdfLanguage(null);
+          setIsPdfModalOpen(false);
+          window.removeEventListener('afterprint', afterPrint);
+        };
+        window.addEventListener('afterprint', afterPrint);
+        
+        // Fallback for browsers that don't fire afterprint reliably
+        setTimeout(() => {
+          setGeneratingPdfLanguage(null);
+          setIsPdfModalOpen(false);
+          window.removeEventListener('afterprint', afterPrint);
+        }, 6000); // Increased timeout to account for font loading
+      }, generatingPdfLanguage === 'urdu' ? 1500 : 300); 
     }
-  }, [generatingOverallImage, showToast]);
+  }, [generatingPdfLanguage, billingResult, fixedExpenses]);
 
   const handleSaveAndPublish = async () => {
     setIsSaving(true);
@@ -1255,27 +1190,12 @@ export default function BillingTab({ isAdmin }) {
             {/* Action Bar for PDF Generation */}
             <div className="print-hidden billing-action-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
               <button 
-                onClick={() => handleShareOverallImage('urdu')}
-                disabled={!!generatingOverallImage}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s', opacity: generatingOverallImage ? 0.5 : 1 }}
-              >
-                <Download size={16} />
-                {generatingOverallImage ? 'Generating...' : 'Download Image Summary'}
-              </button>
-              <button 
-                onClick={handleCopyGlobalWhatsApp}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: copiedStates.global ? 'var(--success)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
-              >
-                {copiedStates.global ? <CheckCircle2 size={16} /> : <Copy size={16} />}
-                {copiedStates.global ? 'Copied!' : 'Copy WhatsApp Summary'}
-              </button>
-              <button 
+                onClick={() => setIsPdfModalOpen(true)}
                 className="billing-pdf-btn"
-                onClick={() => window.print()}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, fontFamily: 'Inter', transition: 'color 0.2s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary)', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)' }}
               >
                 <Download size={16} />
-                Download PDF Report
+                Download PDF Summary
               </button>
             </div>
 
@@ -1568,8 +1488,15 @@ export default function BillingTab({ isAdmin }) {
             isGenerating={!!generatingImage}
           />
 
+          <PdfDownloadModal
+            isOpen={isPdfModalOpen}
+            onClose={() => setIsPdfModalOpen(false)}
+            onDownloadPdf={handleDownloadPdfSummary}
+            isGenerating={!!generatingPdfLanguage}
+          />
+
           {/* Off-screen container for rendering the image receipt */}
-          <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+          <div className="offscreen-container">
             {generatingImage && (
               <GraphicReceipt
                 ref={offScreenReceiptRef}
@@ -1585,9 +1512,11 @@ export default function BillingTab({ isAdmin }) {
                 language={generatingImage.language}
               />
             )}
-            {generatingOverallImage && (
+          </div>
+            
+          {generatingPdfLanguage && createPortal(
+            <div className="print-only-container">
               <GraphicOverallBill
-                ref={offScreenOverallReceiptRef}
                 billingResult={billingResult}
                 fixedExpenses={
                   viewMode === 'list' && selectedBillId
@@ -1595,10 +1524,11 @@ export default function BillingTab({ isAdmin }) {
                     : fixedExpenses
                 }
                 viewMode={viewMode}
-                language={generatingOverallImage.language}
+                language={generatingPdfLanguage}
               />
-            )}
-          </div>
+            </div>,
+            document.body
+          )}
         </div>
   );
 }
