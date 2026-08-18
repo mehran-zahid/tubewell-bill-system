@@ -179,7 +179,18 @@ function formatUrduTime(timeStr) {
   const parts = timeStr.split(':');
   const hours = parseInt(parts[0], 10) || 0;
   const minutes = parts[1];
-  const ampm = hours >= 12 ? 'دوپہر/شام' : 'صبح';
+  
+  let ampm = 'صبح';
+  if (hours >= 12 && hours < 16) {
+    ampm = 'دوپہر'; // 12 PM - 3:59 PM
+  } else if (hours >= 16 && hours < 20) {
+    ampm = 'شام'; // 4 PM - 7:59 PM
+  } else if (hours >= 20 || hours < 4) {
+    ampm = 'رات'; // 8 PM - 3:59 AM
+  } else {
+    ampm = 'صبح'; // 4 AM - 11:59 AM
+  }
+
   const h12 = hours % 12 || 12;
   return `${ampm} ${h12.toString().padStart(2, '0')}:${minutes}`;
 }

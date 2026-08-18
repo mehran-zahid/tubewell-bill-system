@@ -6,8 +6,9 @@ import { getAllGeneratedBills } from '../services/billingService';
 import { useToast } from '../context/ToastContext';
 import GraphicReceipt from '../components/GraphicReceipt';
 import CustomDropdown from '../components/CustomDropdown';
-import { toPng } from 'html-to-image';
+import { toJpeg } from 'html-to-image';
 import { generateWhatsAppText } from '../utils/billingTextGenerator';
+import { SkeletonBulkShare } from '../components/Skeleton';
 
 // Formats a local Pakistani number (03XX) to international format for wa.me (923XX)
 const formatPhoneForWhatsApp = (num) => {
@@ -189,45 +190,41 @@ export default function BulkShareTab() {
         const phone = phoneNumbers[member.id];
         if (!phone || phone.trim() === '') continue;
         
+        const breakdown = billingResult.breakdowns.find(b => {
+          if (member.type === 'tenant') {
+            return b.type === 'tenant' && b.ownerId === member.ownerId && b.code === member.tenantCode;
+          }
+          return b.id === member.id;
+        });
+        
+        if (!breakdown) continue; // Skip if they aren't part of this bill
+        
         let text = '';
         if (settings.sendText) {
-          const breakdown = billingResult.breakdowns.find(b => {
-            if (member.type === 'tenant') {
-              return b.type === 'tenant' && b.ownerId === member.ownerId && b.code === member.tenantCode;
-            }
-            return b.id === member.id;
-          });
-          if (breakdown) {
-            const enrichedMember = { ...member, ...breakdown };
-            text = generateWhatsAppText(enrichedMember, billingResult, bill.billingTitle, bill.fixedExpenses, settings.language, members);
-          }
+          const enrichedMember = { ...member, ...breakdown };
+          text = generateWhatsAppText(enrichedMember, billingResult, bill.billingTitle, bill.fixedExpenses, settings.language, members);
         }
         
         let imageBase64 = null;
         if (settings.sendImage) {
-          const breakdown = billingResult.breakdowns.find(b => {
-            if (member.type === 'tenant') {
-              return b.type === 'tenant' && b.ownerId === member.ownerId && b.code === member.tenantCode;
-            }
-            return b.id === member.id;
+          const enrichedMember = { ...member, ...breakdown };
+          setCurrentRenderMember({
+            member: enrichedMember,
+            language: settings.language,
+            billingResult: billingResult,
+            billTitle: bill.billingTitle
           });
-          if (breakdown) {
-            const enrichedMember = { ...member, ...breakdown };
-            setCurrentRenderMember({
-              member: enrichedMember,
-              language: settings.language,
-              billingResult: billingResult,
-              billTitle: bill.billingTitle
-            });
-            
-            // Wait a moment for React to render the off-screen component
-            await new Promise(r => setTimeout(r, 300));
-            
-            if (offScreenReceiptRef.current) {
-              imageBase64 = await toPng(offScreenReceiptRef.current, { quality: 1.0, pixelRatio: 2, cacheBust: true });
-            }
+          
+          // Wait a moment for React to render the off-screen component
+          await new Promise(r => setTimeout(r, 300));
+          
+          if (offScreenReceiptRef.current) {
+            imageBase64 = await toJpeg(offScreenReceiptRef.current, { quality: 0.8, pixelRatio: 1.5 });
           }
         }
+        
+        // Don't add to payload if there's nothing to send
+        if (!text && !imageBase64) continue;
         
         payload.push({
           phone: formatPhoneForWhatsApp(phone),
@@ -248,7 +245,7 @@ export default function BulkShareTab() {
   };
 
   if (isLoading) {
-    return <div style={{ padding: '24px' }}>Loading...</div>;
+    return <SkeletonBulkShare rows={5} />;
   }
 
   const selectedBill = savedBills.find(b => b.id === selectedBillId);
@@ -261,6 +258,35 @@ export default function BulkShareTab() {
       return b.id === member.id;
     });
   });
+
+  const isAllTextSelected = displayMembers.length > 0 && displayMembers.every(m => memberSettings[m.id]?.sendText);
+  const isAllImageSelected = displayMembers.length > 0 && displayMembers.every(m => memberSettings[m.id]?.sendImage);
+
+  const toggleAllText = () => {
+    const newValue = !isAllTextSelected;
+    setMemberSettings(prev => {
+      const updated = { ...prev };
+      displayMembers.forEach(m => {
+        if (updated[m.id]) {
+          updated[m.id] = { ...updated[m.id], sendText: newValue };
+        }
+      });
+      return updated;
+    });
+  };
+
+  const toggleAllImage = () => {
+    const newValue = !isAllImageSelected;
+    setMemberSettings(prev => {
+      const updated = { ...prev };
+      displayMembers.forEach(m => {
+        if (updated[m.id]) {
+          updated[m.id] = { ...updated[m.id], sendImage: newValue };
+        }
+      });
+      return updated;
+    });
+  };
 
   return (
     <div className="tab-pane active" style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -295,7 +321,31 @@ export default function BulkShareTab() {
               <tr style={{ background: 'var(--bg-surface-active)', borderBottom: '2px solid var(--border-default)' }}>
                 <th style={{ padding: '16px 24px', fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>Member</th>
                 <th style={{ padding: '16px 24px', fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>Phone Number</th>
-                <th style={{ padding: '16px 24px', fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>Options</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                    <span>Options</span>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', textTransform: 'none', fontWeight: 500 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isAllTextSelected}
+                          onChange={toggleAllText}
+                          style={{ width: '14px', height: '14px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                        />
+                        All Text
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', textTransform: 'none', fontWeight: 500 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isAllImageSelected}
+                          onChange={toggleAllImage}
+                          style={{ width: '14px', height: '14px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                        />
+                        All Image
+                      </label>
+                    </div>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
