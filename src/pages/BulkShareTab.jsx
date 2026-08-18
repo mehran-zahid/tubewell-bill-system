@@ -65,7 +65,7 @@ export default function BulkShareTab() {
           
           if (data.tenants && Array.isArray(data.tenants)) {
             data.tenants.forEach(t => {
-              const tId = `tenant-${t.tenantCode}`;
+              const tId = `tenant_${m.id}_${t.tenantCode}`;
               const tEntity = {
                 ...t,
                 id: tId,
