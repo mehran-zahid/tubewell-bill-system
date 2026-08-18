@@ -6,6 +6,7 @@ import { Settings2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonMemberCard, SkeletonMembersTable } from '../components/Skeleton';
+import CustomDropdown from '../components/CustomDropdown';
 
 export default function MembersTab({ isAdmin }) {
   const { showToast } = useToast();
@@ -150,7 +151,7 @@ export default function MembersTab({ isAdmin }) {
       ...formData,
       tenants: [
         ...formData.tenants,
-        { tenantNameEn: '', tenantCode: '', tenantLeasedHours: 0, tenantLeasedMinutes: 0, tenantLeasedAcres: 0, id: Date.now().toString() }
+        { tenantNameEn: '', tenantCode: '', tenantLeasedHours: 0, tenantLeasedMinutes: 0, tenantLeasedAcres: 0, tenantType: 'external', linkedMemberId: null, id: Date.now().toString() }
       ]
     });
   };
@@ -163,7 +164,34 @@ export default function MembersTab({ isAdmin }) {
 
   const handleTenantChange = (index, field, value) => {
     const newTenants = [...formData.tenants];
-    newTenants[index][field] = value;
+    
+    if (field === 'tenantType') {
+      newTenants[index] = {
+        ...newTenants[index],
+        tenantType: value,
+        ...(value === 'external' ? { linkedMemberId: null, tenantNameEn: '', tenantCode: '' } : {})
+      };
+    } else if (field === 'linkedMemberId') {
+      const linkedMember = members.find(m => m.id === value);
+      if (linkedMember) {
+        newTenants[index] = {
+          ...newTenants[index],
+          linkedMemberId: value,
+          tenantNameEn: linkedMember.nameEn,
+          tenantCode: linkedMember.userCode
+        };
+      } else {
+        newTenants[index] = {
+          ...newTenants[index],
+          linkedMemberId: null,
+          tenantNameEn: '',
+          tenantCode: ''
+        };
+      }
+    } else {
+      newTenants[index][field] = value;
+    }
+    
     setFormData({ ...formData, tenants: newTenants });
   };
 
@@ -186,7 +214,7 @@ export default function MembersTab({ isAdmin }) {
         }
         if (m.tenants && Array.isArray(m.tenants)) {
           m.tenants.forEach(t => {
-            if (t.tenantCode) {
+            if (t.tenantCode && t.tenantType !== 'existing') {
               const num = parseInt(t.tenantCode, 10);
               if (!isNaN(num)) allOtherCodes.add(num);
             }
@@ -200,7 +228,7 @@ export default function MembersTab({ isAdmin }) {
 
     if (formData.isLeased && formData.tenants) {
       formData.tenants.forEach(t => {
-        if (t.tenantCode) {
+        if (t.tenantCode && t.tenantType !== 'existing') {
           const tNum = parseInt(t.tenantCode, 10);
           if (!isNaN(tNum)) codes.push(tNum);
         }
@@ -675,7 +703,12 @@ export default function MembersTab({ isAdmin }) {
                               {tenant.tenantCode || '?'}
                             </div>
                             <div>
-                              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{tDisplayName}</div>
+                              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {tDisplayName}
+                                {tenant.tenantType === 'existing' && (
+                                  <span style={{ fontSize: '9px', padding: '2px 6px', background: 'var(--primary-light)', color: 'var(--primary-dark)', borderRadius: '10px', fontWeight: 700, letterSpacing: '0.5px' }}>LINKED</span>
+                                )}
+                              </div>
                               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{timeStr ? `Leased: ${timeStr}` : 'No specific time'}</div>
                             </div>
                           </div>
@@ -778,14 +811,44 @@ export default function MembersTab({ isAdmin }) {
                     <div key={idx} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '12px', background: 'var(--bg-surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                          <div style={{ flex: 2 }}>
-                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Name</label>
-                            <input type="text" placeholder="e.g. Ali Raza" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantNameEn} onChange={e => handleTenantChange(idx, 'tenantNameEn', e.target.value)} required />
-                          </div>
                           <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Code</label>
-                            <input type="number" placeholder="e.g. 17" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantCode} onChange={e => handleTenantChange(idx, 'tenantCode', e.target.value)} required />
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Type</label>
+                            <CustomDropdown 
+                              value={t.tenantType || 'external'} 
+                              onChange={val => handleTenantChange(idx, 'tenantType', val)}
+                              options={[
+                                { value: 'external', label: 'External / New' },
+                                { value: 'existing', label: 'Existing Member' }
+                              ]}
+                            />
                           </div>
+                          {t.tenantType === 'existing' ? (
+                            <div style={{ flex: 2 }}>
+                              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Select Member</label>
+                              <CustomDropdown 
+                                value={t.linkedMemberId || ''} 
+                                onChange={val => handleTenantChange(idx, 'linkedMemberId', val)}
+                                options={[
+                                  { value: '', label: '-- Choose a member --' },
+                                  ...members.filter(m => m.id !== editingMemberId).map(m => ({
+                                    value: m.id,
+                                    label: `${m.nameEn} (Code: ${m.userCode})`
+                                  }))
+                                ]}
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Name</label>
+                                <input type="text" placeholder="e.g. Ali Raza" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantNameEn} onChange={e => handleTenantChange(idx, 'tenantNameEn', e.target.value)} required />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Tenant Code</label>
+                                <input type="number" placeholder="e.g. 17" className="input-field" style={{ padding: '6px 10px' }} value={t.tenantCode} onChange={e => handleTenantChange(idx, 'tenantCode', e.target.value)} required />
+                              </div>
+                            </>
+                          )}
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>

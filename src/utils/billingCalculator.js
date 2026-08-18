@@ -8,45 +8,59 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
   const userStats = new Map();
   let totalEffectiveHours = 0;
 
+  // Pass 1: Initialize all main owners with their base hours
   members.forEach(owner => {
-    // Owner base hours
     const ownerDuration = (parseFloat(owner.durationHours) || 0) + ((parseFloat(owner.durationMinutes) || 0) / 60);
-    
-    // Sum leased hours
-    let totalLeasedHours = 0;
-    if (owner.isLeased && Array.isArray(owner.tenants)) {
-      owner.tenants.forEach(tenant => {
-        const leased = (parseFloat(tenant.tenantLeasedHours) || 0) + ((parseFloat(tenant.tenantLeasedMinutes) || 0) / 60);
-        totalLeasedHours += leased;
-        
-        const uniqueTenantId = `tenant_${owner.id}_${tenant.id || tenant.tenantCode || Math.random().toString(36).substr(2, 9)}`;
-        userStats.set(uniqueTenantId, {
-          id: uniqueTenantId,
-          code: tenant.tenantCode,
-          name: tenant.tenantNameEn,
-          type: 'tenant',
-          ownerId: owner.id,
-          effectiveHours: leased,
-          consumedHours: 0,
-          memberEntries: []
-        });
-        totalEffectiveHours += leased;
-      });
-    }
-
-    // Owner's remaining hours (cannot be negative)
-    const ownerEffectiveHours = Math.max(0, ownerDuration - totalLeasedHours);
     userStats.set(owner.id, {
       id: owner.id,
       code: owner.userCode,
       name: owner.nameEn,
       type: 'owner',
-      effectiveHours: ownerEffectiveHours,
+      effectiveHours: ownerDuration, // Base hours initially
       consumedHours: 0,
       memberEntries: []
     });
-    totalEffectiveHours += ownerEffectiveHours;
   });
+
+  // Pass 2: Process all tenants (leases)
+  members.forEach(owner => {
+    if (owner.isLeased && Array.isArray(owner.tenants)) {
+      owner.tenants.forEach(tenant => {
+        const leased = (parseFloat(tenant.tenantLeasedHours) || 0) + ((parseFloat(tenant.tenantLeasedMinutes) || 0) / 60);
+        
+        // Deduct leased hours from the main owner
+        const ownerStats = userStats.get(owner.id);
+        if (ownerStats) {
+          ownerStats.effectiveHours = Math.max(0, ownerStats.effectiveHours - leased);
+        }
+
+        // Add to linked member OR create new external tenant entry
+        if (tenant.tenantType === 'existing' && tenant.linkedMemberId && userStats.has(tenant.linkedMemberId)) {
+          // Existing member absorbs the leased hours directly into their main bill
+          const linkedStats = userStats.get(tenant.linkedMemberId);
+          linkedStats.effectiveHours += leased;
+        } else {
+          // External tenant gets a separate bill line item
+          const uniqueTenantId = `tenant_${owner.id}_${tenant.id || tenant.tenantCode || Math.random().toString(36).substr(2, 9)}`;
+          userStats.set(uniqueTenantId, {
+            id: uniqueTenantId,
+            code: tenant.tenantCode,
+            name: tenant.tenantNameEn,
+            type: 'tenant',
+            ownerId: owner.id,
+            effectiveHours: leased,
+            consumedHours: 0,
+            memberEntries: []
+          });
+        }
+      });
+    }
+  });
+
+  // Calculate final total effective hours across the system
+  for (const stats of userStats.values()) {
+    totalEffectiveHours += stats.effectiveHours;
+  }
 
   // 2. Aggregate consumed hours from entries (Meter difference / 100 = Hours)
   let totalConsumedHours = 0;
