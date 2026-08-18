@@ -39,7 +39,7 @@ export default function BillingTab({ isAdmin }) {
   const offScreenReceiptRef = useRef(null);
   const offScreenOverallReceiptRef = useRef(null);
 
-  const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
+  const [wapdaBill, setWapdaBill] = useState('');
   const [wapdaRefNo, setWapdaRefNo] = useState('');
   const [isWapdaManualMode, setIsWapdaManualMode] = useState(false);
   const [isFetchingWapda, setIsFetchingWapda] = useState(false);
@@ -47,47 +47,40 @@ export default function BillingTab({ isAdmin }) {
   const [showWapdaHtml, setShowWapdaHtml] = useState(false);
 
   // Helper to load from localStorage
-  function loadStored(key, defaultVal) {
-    try {
-      const stored = localStorage.getItem(`billing_${key}`);
-      return stored ? JSON.parse(stored) : defaultVal;
-    } catch {
-      return defaultVal;
-    }
-  };
-
   // Inputs
   const [billingTitle, setBillingTitle] = useState(() => {
-    return loadStored('billingTitle', (() => {
-      const d = new Date();
-      return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
-    })());
+    const d = new Date();
+    return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
   });
-  const [startDate, setStartDate] = useState(() => loadStored('startDate', ''));
-  const [endDate, setEndDate] = useState(() => loadStored('endDate', ''));
-  const [cycleStartReading, setCycleStartReading] = useState(() => loadStored('cycleStartReading', ''));
-  const [cycleEndReading, setCycleEndReading] = useState(() => loadStored('cycleEndReading', ''));
-  const [fixedExpenses, setFixedExpenses] = useState(() => loadStored('fixedExpenses', [{ id: 1, title: 'Operator Salary', amount: '' }]));
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem('billing_billingTitle', JSON.stringify(billingTitle));
-    localStorage.setItem('billing_startDate', JSON.stringify(startDate));
-    localStorage.setItem('billing_endDate', JSON.stringify(endDate));
-    localStorage.setItem('billing_cycleStartReading', JSON.stringify(cycleStartReading));
-    localStorage.setItem('billing_cycleEndReading', JSON.stringify(cycleEndReading));
-    localStorage.setItem('billing_wapdaBill', JSON.stringify(wapdaBill));
-    localStorage.setItem('billing_fixedExpenses', JSON.stringify(fixedExpenses));
-  }, [billingTitle, startDate, endDate, cycleStartReading, cycleEndReading, wapdaBill, fixedExpenses]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [cycleStartReading, setCycleStartReading] = useState('');
+  const [cycleEndReading, setCycleEndReading] = useState('');
+  const [fixedExpenses, setFixedExpenses] = useState([{ id: 1, title: 'Operator Salary', amount: '' }]);
 
   // Clears all form inputs and localStorage after a bill is published
-  const resetForm = () => {
+  const resetForm = (latestBills = savedBills) => {
     const d = new Date();
     const defaultTitle = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
     setBillingTitle(defaultTitle);
-    setStartDate('');
+    
+    let defaultStartDate = '';
+    let defaultCycleStartReading = '';
+    if (latestBills && latestBills.length > 0) {
+      const lastBill = latestBills[0];
+      if (lastBill.endDate) {
+        const nextDate = new Date(lastBill.endDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        defaultStartDate = nextDate.toISOString().split('T')[0];
+      }
+      if (lastBill.cycleEndReading) {
+        defaultCycleStartReading = lastBill.cycleEndReading.toString();
+      }
+    }
+    
+    setStartDate(defaultStartDate);
     setEndDate('');
-    setCycleStartReading('');
+    setCycleStartReading(defaultCycleStartReading);
     setCycleEndReading('');
     setWapdaBill('');
     setWapdaRefNo('');
@@ -95,9 +88,6 @@ export default function BillingTab({ isAdmin }) {
     setFixedExpenses([{ id: 1, title: 'Operator Salary', amount: '' }]);
     setBillingResult(null);
     setIsResultStale(false);
-    // Clear localStorage so the next new bill is always blank
-    ['billingTitle','startDate','endDate','cycleStartReading','cycleEndReading','wapdaBill','fixedExpenses']
-      .forEach(k => localStorage.removeItem(`billing_${k}`));
   };
 
   const [liveWarnings, setLiveWarnings] = useState([]);
@@ -118,6 +108,22 @@ export default function BillingTab({ isAdmin }) {
         setSavedBills(bills);
         if (bills.length > 0) {
           setSelectedBillId(bills[0].id);
+          
+          const lastBill = bills[0];
+          setStartDate(prev => {
+            if (prev) return prev;
+            if (lastBill.endDate) {
+              const nextDate = new Date(lastBill.endDate);
+              nextDate.setDate(nextDate.getDate() + 1);
+              return nextDate.toISOString().split('T')[0];
+            }
+            return '';
+          });
+          
+          setCycleStartReading(prev => {
+            if (prev) return prev;
+            return lastBill.cycleEndReading ? lastBill.cycleEndReading.toString() : '';
+          });
         }
       } catch (e) {
         console.error("Error loading bills", e);
