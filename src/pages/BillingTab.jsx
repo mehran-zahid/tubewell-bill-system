@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2 } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
 import ConfirmModal from '../components/ConfirmModal';
+import ShareModal from '../components/ShareModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonBillingList } from '../components/Skeleton';
+import { toPng, toBlob } from 'html-to-image';
+import GraphicReceipt from '../components/GraphicReceipt';
 
 export default function BillingTab({ isAdmin }) {
   const { showToast } = useToast();
@@ -28,6 +31,9 @@ export default function BillingTab({ isAdmin }) {
   const [isSaving, setIsSaving] = useState(false);
   const [billToDelete, setBillToDelete] = useState(null);
   const [isResultStale, setIsResultStale] = useState(false);
+  const [shareModalData, setShareModalData] = useState(null);
+  const [generatingImage, setGeneratingImage] = useState(null);
+  const offScreenReceiptRef = useRef(null);
 
   const [wapdaBill, setWapdaBill] = useState(() => loadStored('wapdaBill', ''));
   const [wapdaRefNo, setWapdaRefNo] = useState('');
@@ -426,16 +432,55 @@ export default function BillingTab({ isAdmin }) {
   const handleCopyGlobalWhatsApp = () => {
     if (!billingResult) return;
     const title = getBillTitle();
-    let text = `${title}\n-------------------------\n`;
-    text += `WAPDA Bill: Rs. ${billingResult.wapdaBill.toLocaleString()}\n`;
-    text += `Fixed Expenses: Rs. ${billingResult.totalFixedExpenses.toLocaleString()}\n`;
-    text += `Total Billed: Rs. ${billingResult.grandTotalBilled.toLocaleString()}\n\n`;
-    text += `Electricity Rate: Rs. ${billingResult.wapdaHourlyRate.toLocaleString(undefined, {minimumFractionDigits: 2})} / hr\n`;
-    text += `Total Rate: Rs. ${billingResult.totalHourlyRate.toLocaleString(undefined, {minimumFractionDigits: 2})} / hr\n\n`;
-    text += `--- Breakdown ---\n`;
+    const urduTitleMonth = formatUrduMonthYear(title);
+    
+    // Find the fixed expenses array depending on view mode
+    let currentFixedExpenses = [];
+    if (viewMode === 'list' && selectedBillId) {
+      const b = savedBills.find(b => b.id === selectedBillId);
+      if (b) currentFixedExpenses = b.fixedExpenses || [];
+    } else {
+      currentFixedExpenses = fixedExpenses;
+    }
+    
+    let text = `*ٹربائن بل خلاصہ — ${urduTitleMonth}*\n`;
+    text += `====================================\n\n`;
+    
+    text += `*کل اخراجات کا خلاصہ:*\n`;
+    text += `• کل ٹیوب ویل استعمال: *${billingResult.totalConsumedHours.toFixed(1)} گھنٹے*\n`;
+    text += `• میپکو بجلی بل: *${billingResult.wapdaBill.toLocaleString()} روپے*\n\n`;
+    
+    text += `*تفصیل اضافی اخراجات:*\n`;
+    if (currentFixedExpenses.length > 0) {
+      currentFixedExpenses.forEach(ex => {
+        const exTitle = ex.title || 'Expense';
+        const amt = parseFloat(ex.amount || 0);
+        const formattedAmount = /[a-zA-Z]/.test(exTitle) 
+          ? `\u200Eروپے\u200E ${amt.toLocaleString()}` 
+          : `${amt.toLocaleString()} روپے`;
+        text += `  • ${exTitle} : ${formattedAmount}\n`;
+      });
+    } else {
+      text += `  • کوئی اضافی اخراجات نہیں\n`;
+    }
+    text += `  • *کل اضافی اخراجات:* *${billingResult.totalFixedExpenses.toLocaleString()} روپے*\n\n`;
+    
+    text += `*کل واجب الادا رقم:* *${billingResult.grandTotalBilled.toLocaleString()} روپے*\n`;
+    text += `====================================\n\n`;
+    
+    text += `*تمام ممبران کے واجب الادا بل:*\n\n`;
+    
     billingResult.breakdowns.forEach((m, idx) => {
-      text += `${idx + 1}. ${m.name}: Rs. ${m.totalBill.toLocaleString()}\n`;
+      text += `*${idx + 1}. ${m.name}*\n`;
+      const pct = billingResult.totalConsumedHours > 0 ? ((m.consumedHours / billingResult.totalConsumedHours) * 100).toFixed(1) : 0;
+      text += `   • استعمال: ${m.consumedHours.toFixed(1)} گھنٹے (${pct}%)\n`;
+      text += `   • بجلی بل: ${m.usageShare.toLocaleString()} روپے | اضافی اخراجات: ${m.fixedShare.toLocaleString()} روپے\n`;
+      text += `   • *کل واجب الادا بل: ${m.totalBill.toLocaleString()} روپے*\n\n`;
     });
+    
+    text += `------------------------------------\n`;
+    text += `نوٹ: تمام ممبران سے گزارش ہے کہ اپنا بل بروقت جمع کروائیں۔\n`;
+    text += `شکریہ! — ٹربائن انتظامیہ\n`;
     
     navigator.clipboard.writeText(text).then(() => {
       setCopiedStates(prev => ({ ...prev, global: true }));
@@ -443,20 +488,281 @@ export default function BillingTab({ isAdmin }) {
     });
   };
 
+  const formatUrduDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+    const day = date.getDate();
+    const months = ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'];
+    return `${day} ${months[date.getMonth()]}`;
+  };
+
+  const formatUrduMonthYear = (title) => {
+    if (!title) return '';
+    const parts = title.split(' ');
+    if (parts.length < 2) return title;
+    const monthsMap = {
+      'january': 'جنوری', 'february': 'فروری', 'march': 'مارچ', 'april': 'اپریل', 'may': 'مئی', 'june': 'جون', 
+      'july': 'جولائی', 'august': 'اگست', 'september': 'ستمبر', 'october': 'اکتوبر', 'november': 'نومبر', 'december': 'دسمبر'
+    };
+    const urduMonth = monthsMap[parts[0].toLowerCase()] || parts[0];
+    return `${urduMonth} ${parts[1]}`;
+  };
+
   const handleCopyMemberWhatsApp = (member) => {
     if (!billingResult) return;
     const title = getBillTitle();
-    let text = `${title}\nMember: ${member.name}\n-------------------------\n`;
-    text += `Total Bill: Rs. ${member.totalBill.toLocaleString()}\n\n`;
-    text += `Meter Hours: ${member.consumedHours ? member.consumedHours.toFixed(1) : '0.0'}h\n`;
-    text += `WAPDA Share: Rs. ${member.usageShare.toLocaleString()}\n`;
-    text += `Fixed Share: Rs. ${member.fixedShare.toLocaleString()}\n`;
+    const urduTitleMonth = formatUrduMonthYear(title);
+    
+    let text = `ٹربائن کا بل — ${urduTitleMonth}\n`;
+    text += `${member.name}\n\n`;
+    text += `*کل بل: ${member.totalBill.toLocaleString()} روپے*\n\n`;
+    text += `—————————————\n`;
+    
+    const totalEffectiveHours = member.effectiveHours ? Number(Number(member.effectiveHours).toFixed(2)) : 0;
+    let scheduleText = `${totalEffectiveHours} گھنٹے`;
+    
+    // Try to find the scheduled day for both owners and tenants
+    const sourceMember = members.find(m => m.id === member.ownerId || m.id === member.id);
+    
+    const formatUrduTime = (timeStr) => {
+      if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return timeStr;
+      const parts = timeStr.split(':');
+      const hours = parseInt(parts[0], 10) || 0;
+      const minutes = parts[1];
+      let period = 'صبح';
+      if (hours === 12) period = 'دوپہر';
+      else if (hours > 12 && hours < 17) period = 'سہ پہر';
+      else if (hours >= 17 && hours <= 19) period = 'شام';
+      else if (hours > 19 || hours < 4) period = 'رات';
+      
+      const h12 = hours % 12 || 12;
+      return `${period} ${h12.toString().padStart(2, '0')}:${minutes}`;
+    };
+
+    if (sourceMember && sourceMember.startDay) {
+      const daysUrdu = {
+        'Sunday': 'اتوار', 'Monday': 'پیر', 'Tuesday': 'منگل', 'Wednesday': 'بدھ',
+        'Thursday': 'جمعرات', 'Friday': 'جمعہ', 'Saturday': 'ہفتہ'
+      };
+      const startDayUrdu = daysUrdu[sourceMember.startDay] || sourceMember.startDay;
+      const endDayUrdu = daysUrdu[sourceMember.endDay] || sourceMember.endDay || '';
+      
+      const sTime = formatUrduTime(sourceMember.startTime);
+      const eTime = formatUrduTime(sourceMember.endTime);
+      
+      if (sourceMember.startDay === sourceMember.endDay || !sourceMember.endDay) {
+        scheduleText = `${startDayUrdu}، ${sTime} تا ${eTime} (${totalEffectiveHours} گھنٹے)`;
+      } else {
+        scheduleText = `${startDayUrdu} ${sTime} تا ${endDayUrdu} ${eTime} (${totalEffectiveHours} گھنٹے)`;
+      }
+    }
+    
+    text += `باری کا وقت: ${scheduleText}\n`;
+    text += `—————————————\n`;
+    text += `اخراجات کی معلومات:\n`;
+    text += `بجلی کا بل: ${member.usageShare.toLocaleString()} روپے\n`;
+    text += `دیگر اخراجات: ${member.fixedShare.toLocaleString()} روپے\n`;
+    text += `—————————————\n`;
+    
+    let currentFixedExpenses = [];
+    if (viewMode === 'list' && selectedBillId) {
+      const b = savedBills.find(b => b.id === selectedBillId);
+      if (b) currentFixedExpenses = b.fixedExpenses || [];
+    } else {
+      currentFixedExpenses = fixedExpenses;
+    }
+
+    if (currentFixedExpenses.length > 0) {
+      text += `مرمت و دیگر اخراجات میں آپ کے حصے کی تفصیلات:\n`;
+      const fraction = billingResult.totalFixedExpenses > 0 ? (member.fixedShare / billingResult.totalFixedExpenses) : 0;
+      currentFixedExpenses.forEach(ex => {
+        const myShare = Math.round(parseFloat(ex.amount || 0) * fraction);
+        const exTitle = ex.title || 'اخراجات';
+        const formattedAmount = /[a-zA-Z]/.test(exTitle) 
+          ? `\u200Eروپے\u200E ${myShare.toLocaleString()}` 
+          : `${myShare.toLocaleString()} روپے`;
+        text += `• ${exTitle} : ${formattedAmount}\n`;
+      });
+      text += `—————————————\n\n`;
+    } else {
+      text += `\n`;
+    }
+    
+    text += `میٹر ریڈنگ کی تفصیل:\n\n`;
+    
+    if (member.memberEntries && member.memberEntries.length > 0) {
+      // Sort entries by date ascending
+      const sortedEntries = [...member.memberEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+      sortedEntries.forEach(entry => {
+        const uDate = formatUrduDate(entry.date);
+        const start = Number(entry.startReading);
+        const end = Number(entry.endReading);
+        const diff = Number(Math.max(0, (entry.endReading - entry.startReading) / 100).toFixed(2));
+        
+        text += `${uDate} — (*${diff} گھنٹے*)\n`;
+        text += `ریڈنگ: ${end} تا ${start}\n\n`;
+      });
+    } else {
+      text += `کوئی ریڈنگ موجود نہیں\n`;
+    }
+    
+    // Add a dot at the end with spacing to prevent WhatsApp RTL layout issues on the last line
+    text = text.trimEnd() + '\n\n\n.\n';
     
     navigator.clipboard.writeText(text).then(() => {
       setCopiedStates(prev => ({ ...prev, [member.id]: true }));
       setTimeout(() => setCopiedStates(prev => ({ ...prev, [member.id]: false })), 2000);
+      showToast("Copied to clipboard!", "success");
     });
   };
+
+  const handleCopyMemberEnglish = (member) => {
+    if (!billingResult) return;
+    const title = getBillTitle();
+    
+    let text = `Tubewell Bill — ${title}\n`;
+    text += `${member.name}\n\n`;
+    text += `*Total Bill: Rs. ${member.totalBill.toLocaleString()}*\n\n`;
+    text += `—————————————\n`;
+    
+    const totalEffectiveHours = member.effectiveHours ? Number(Number(member.effectiveHours).toFixed(2)) : 0;
+    let scheduleText = `${totalEffectiveHours} Hours`;
+    
+    const sourceMember = members.find(m => m.id === member.ownerId || m.id === member.id);
+    
+    const formatEnglishTime = (timeStr) => {
+      if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return timeStr;
+      const parts = timeStr.split(':');
+      const hours = parseInt(parts[0], 10) || 0;
+      const minutes = parts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const h12 = hours % 12 || 12;
+      return `${h12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    };
+
+    if (sourceMember && sourceMember.startDay) {
+      const sTime = formatEnglishTime(sourceMember.startTime);
+      const eTime = formatEnglishTime(sourceMember.endTime);
+      
+      if (sourceMember.startDay === sourceMember.endDay || !sourceMember.endDay) {
+        scheduleText = `${sourceMember.startDay}, ${sTime} to ${eTime} (${totalEffectiveHours} Hours)`;
+      } else {
+        scheduleText = `${sourceMember.startDay} ${sTime} to ${sourceMember.endDay} ${eTime} (${totalEffectiveHours} Hours)`;
+      }
+    }
+    
+    text += `Turn Schedule: ${scheduleText}\n`;
+    text += `—————————————\n`;
+    text += `Expense Details:\n`;
+    text += `Electricity Bill: Rs. ${member.usageShare.toLocaleString()}\n`;
+    text += `Other Expenses: Rs. ${member.fixedShare.toLocaleString()}\n`;
+    text += `—————————————\n`;
+    
+    let currentFixedExpenses = [];
+    if (viewMode === 'list' && selectedBillId) {
+      const b = savedBills.find(b => b.id === selectedBillId);
+      if (b) currentFixedExpenses = b.fixedExpenses || [];
+    } else {
+      currentFixedExpenses = fixedExpenses;
+    }
+
+    if (currentFixedExpenses.length > 0) {
+      text += `Your details of Share in Maintenance & Other Expenses:\n`;
+      const fraction = billingResult.totalFixedExpenses > 0 ? (member.fixedShare / billingResult.totalFixedExpenses) : 0;
+      currentFixedExpenses.forEach(ex => {
+        const myShare = Math.round(parseFloat(ex.amount || 0) * fraction);
+        const exTitle = ex.title || 'Expense';
+        text += `• ${exTitle} : Rs. ${myShare.toLocaleString()}\n`;
+      });
+      text += `—————————————\n\n`;
+    } else {
+      text += `\n`;
+    }
+    
+    text += `Meter Reading Details:\n\n`;
+    
+    if (member.memberEntries && member.memberEntries.length > 0) {
+      const sortedEntries = [...member.memberEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+      sortedEntries.forEach(entry => {
+        const dateObj = new Date(entry.date);
+        const dateStr = !isNaN(dateObj) ? `${dateObj.getDate()} ${dateObj.toLocaleString('default', { month: 'long' })}` : entry.date;
+        const start = Number(entry.startReading);
+        const end = Number(entry.endReading);
+        const diff = Number(Math.max(0, (entry.endReading - entry.startReading) / 100).toFixed(2));
+        
+        text += `${dateStr} — (*${diff} Hours*)\n`;
+        text += `Reading: ${start} to ${end}\n\n`;
+      });
+    } else {
+      text += `No readings found\n`;
+    }
+    
+    text = text.trimEnd() + '\n\n\n.\n';
+    
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedStates(prev => ({ ...prev, [member.id]: true }));
+      setTimeout(() => setCopiedStates(prev => ({ ...prev, [member.id]: false })), 2000);
+      showToast("Copied to clipboard!", "success");
+    });
+  };
+
+  const handleShareText = (language, member) => {
+    if (language === 'urdu') {
+      handleCopyMemberWhatsApp(member);
+    } else {
+      handleCopyMemberEnglish(member);
+    }
+  };
+
+  const handleShareImage = (language, member) => {
+    const sourceMember = members.find(m => m.id === member.id);
+    const enrichedMember = { ...sourceMember, ...member };
+    setGeneratingImage({ language, member: enrichedMember });
+  };
+
+  useEffect(() => {
+    if (generatingImage && offScreenReceiptRef.current) {
+      const { language, member } = generatingImage;
+      // Allow a short tick for the DOM to render the off-screen GraphicReceipt properly
+      setTimeout(() => {
+        if (!offScreenReceiptRef.current) {
+          setGeneratingImage(null);
+          return;
+        }
+        toBlob(offScreenReceiptRef.current, {
+          quality: 1.0,
+          pixelRatio: 2,
+          skipFonts: false,
+          cacheBust: true,
+        })
+          .then(async (blob) => {
+            if (!blob) throw new Error("Failed to generate blob");
+            try {
+              const item = new ClipboardItem({ 'image/png': blob });
+              await navigator.clipboard.write([item]);
+              showToast("Receipt copied to clipboard!", "success");
+            } catch (clipboardErr) {
+              console.warn('Clipboard copy failed, falling back to download:', clipboardErr);
+              const dataUrl = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.download = `Bill_${member.name.replace(/\\s+/g, '_')}_${language}.png`;
+              link.href = dataUrl;
+              link.click();
+              URL.revokeObjectURL(dataUrl);
+              showToast("Receipt image downloaded successfully!", "success");
+            }
+          })
+          .catch((err) => {
+            console.error('Error generating image:', err);
+            showToast("Failed to generate image.", "error");
+          })
+          .finally(() => {
+            setGeneratingImage(null);
+          });
+      }, 500); // give DOM a moment
+    }
+  }, [generatingImage, showToast]);
 
   const handleSaveAndPublish = async () => {
     setIsSaving(true);
@@ -1117,11 +1423,11 @@ export default function BillingTab({ isAdmin }) {
                     </div>
                     <button 
                       className="print-hidden"
-                      onClick={() => handleCopyMemberWhatsApp(b)}
+                      onClick={() => setShareModalData(b)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedStates[b.id] ? 'var(--success)' : 'var(--text-tertiary)', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}
-                      title="Copy WhatsApp Summary"
+                      title="Share Receipt"
                     >
-                      {copiedStates[b.id] ? <CheckCircle2 size={18} /> : <Copy size={18} />}
+                      {copiedStates[b.id] ? <CheckCircle2 size={18} /> : <Share2 size={18} />}
                     </button>
                   </div>
                   
@@ -1189,6 +1495,32 @@ export default function BillingTab({ isAdmin }) {
             onCancel={() => setBillToDelete(null)}
             confirmText="Delete"
           />
+
+          <ShareModal 
+            isOpen={!!shareModalData}
+            onClose={() => setShareModalData(null)}
+            onCopyText={(lang) => handleShareText(lang, shareModalData)}
+            onCopyImage={(lang) => handleShareImage(lang, shareModalData)}
+          />
+
+          {/* Off-screen container for rendering the image receipt */}
+          <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+            {generatingImage && (
+              <GraphicReceipt
+                ref={offScreenReceiptRef}
+                member={generatingImage.member}
+                billingResult={billingResult}
+                savedFixedExpenses={
+                  viewMode === 'list' && selectedBillId
+                    ? savedBills.find(b => b.id === selectedBillId)?.fixedExpenses
+                    : null
+                }
+                globalFixedExpenses={fixedExpenses}
+                viewMode={viewMode}
+                language={generatingImage.language}
+              />
+            )}
+          </div>
         </div>
   );
 }

@@ -27,7 +27,8 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
           type: 'tenant',
           ownerId: owner.id,
           effectiveHours: leased,
-          consumedHours: 0
+          consumedHours: 0,
+          memberEntries: []
         });
         totalEffectiveHours += leased;
       });
@@ -41,7 +42,8 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
       name: owner.nameEn,
       type: 'owner',
       effectiveHours: ownerEffectiveHours,
-      consumedHours: 0
+      consumedHours: 0,
+      memberEntries: []
     });
     totalEffectiveHours += ownerEffectiveHours;
   });
@@ -70,6 +72,8 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
     if (matchedId) {
       const stats = userStats.get(matchedId);
       stats.consumedHours += hoursFromMeter;
+      if (!stats.memberEntries) stats.memberEntries = [];
+      stats.memberEntries.push(entry);
       totalConsumedHours += hoursFromMeter;
     }
   });

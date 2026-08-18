@@ -1,0 +1,165 @@
+/* GraphicReceipt.css - Styles for the graphic receipt image generation */
+@import url('https://fonts.googleapis.com/css2?family=Gulzar&family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
+
+.graphic-receipt {
+  background: white;
+  width: 400px; /* Fixed width for consistent image generation */
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  text-align: left;
+  direction: ltr;
+}
+
+.graphic-receipt-header {
+  background: #f8fafc;
+  padding: 1.5rem;
+  text-align: center;
+  border-bottom: 2px dashed #cbd5e1;
+}
+
+.graphic-receipt-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #0f172a;
+}
+
+.graphic-receipt-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3b82f6;
+  margin: 0;
+}
+
+.graphic-receipt-body {
+  padding: 1.5rem;
+}
+
+.graphic-receipt-total {
+  background: #eff6ff;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.graphic-receipt-total-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.graphic-receipt-total-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.graphic-receipt-section {
+  margin-bottom: 1.5rem;
+}
+
+.graphic-receipt-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.graphic-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.graphic-receipt-row-label {
+  color: #475569;
+}
+
+.graphic-receipt-row-value {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.graphic-receipt-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.graphic-receipt-list li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.graphic-receipt-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #94a3b8;
+}
+
+/* Urdu specific overrides */
+.graphic-receipt.urdu,
+.graphic-receipt.urdu h3,
+.graphic-receipt.urdu p,
+.graphic-receipt.urdu div,
+.graphic-receipt.urdu span,
+.graphic-receipt.urdu li {
+  font-family: 'Noto Nastaliq Urdu', 'Gulzar', 'Noto Sans Arabic', serif;
+}
+
+.graphic-receipt.urdu {
+  direction: rtl;
+  text-align: right;
+}
+
+.graphic-receipt.urdu .graphic-receipt-list li {
+  padding-left: 0;
+  padding-right: 1rem;
+}
+
+.graphic-receipt.urdu .graphic-receipt-list li::before {
+  left: auto;
+  right: 0;
+}
+
+.graphic-receipt.urdu .graphic-receipt-title {
+  font-size: 1.35rem;
+  line-height: 2;
+}
+
+.graphic-receipt.urdu .graphic-receipt-name {
+  font-size: 1.2rem;
+  line-height: 2;
+}
+
+.graphic-receipt.urdu .graphic-receipt-section-title,
+.graphic-receipt.urdu .graphic-receipt-row,
+.graphic-receipt.urdu .graphic-receipt-list li {
+  font-size: 0.95rem;
+  line-height: 2;
+}
+
+.graphic-receipt.urdu .graphic-receipt-total-label {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.graphic-receipt.urdu .graphic-receipt-total-amount {
+  font-size: 2rem;
+  line-height: 1.5;
+}
