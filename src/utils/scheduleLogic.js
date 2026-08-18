@@ -128,8 +128,8 @@ export function generateWhatsAppSchedule(members, language = 'urdu') {
       : (m > 0 ? `${h}h ${m}m` : `${h}h`);
 
     msg += isUrdu
-      ? `${idx + 1}. ${biliName} (کوڈ: ${u.userCode})\n`
-      : `${idx + 1}. ${biliName} (Code: ${u.userCode})\n`;
+      ? `${idx + 1}. ${biliName}\n`
+      : `${idx + 1}. ${biliName}\n`;
       
     msg += isUrdu 
       ? `   ${startDay} ${formatUrduTime(u.startTime)} – ${endDay} ${formatUrduTime(u.endTime)} (${durationStr})\n`
@@ -138,15 +138,7 @@ export function generateWhatsAppSchedule(members, language = 'urdu') {
     msg += `\n`;
   });
 
-  if (isUrdu) {
-    msg += `—————————————\n`;
-    msg += `نوٹ: مہربانی فرما کر اپنی باری پر وقت کی پابندی کریں۔\n`;
-    msg += `ٹیوب ویل انتظامیہ\n`;
-  } else {
-    msg += `-------------\n`;
-    msg += `Note: Please strictly follow your scheduled turn times.\n`;
-    msg += `Tubewell Management\n`;
-  }
+  // Note removed
 
   return msg;
 }

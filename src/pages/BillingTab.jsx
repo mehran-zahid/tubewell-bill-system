@@ -13,6 +13,7 @@ import { useToast } from '../context/ToastContext';
 import { SkeletonBillingList } from '../components/Skeleton';
 import { toPng, toBlob } from 'html-to-image';
 import GraphicReceipt from '../components/GraphicReceipt';
+import { translateToUrdu } from '../utils/translate';
 
 export default function BillingTab({ isAdmin }) {
   const { showToast } = useToast();
@@ -715,9 +716,15 @@ export default function BillingTab({ isAdmin }) {
     }
   };
 
-  const handleShareImage = (language, member) => {
+  const handleShareImage = async (language, member) => {
     const sourceMember = members.find(m => m.id === member.id);
     const enrichedMember = { ...sourceMember, ...member };
+    
+    if (language === 'urdu' && !enrichedMember.urduName && !enrichedMember.nameUr) {
+      const translated = await translateToUrdu(enrichedMember.nameEn || enrichedMember.name);
+      enrichedMember.urduName = translated;
+    }
+    
     setGeneratingImage({ language, member: enrichedMember });
   };
 

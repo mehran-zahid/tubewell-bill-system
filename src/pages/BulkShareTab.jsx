@@ -10,6 +10,7 @@ import { toJpeg } from 'html-to-image';
 import { generateWhatsAppText } from '../utils/billingTextGenerator';
 import { generateWhatsAppSchedule } from '../utils/scheduleLogic';
 import { SkeletonBulkShare } from '../components/Skeleton';
+import { translateToUrdu } from '../utils/translate';
 
 // Formats a local Pakistani number (03XX) to international format for wa.me (923XX)
 const formatPhoneForWhatsApp = (num) => {
@@ -213,6 +214,12 @@ export default function BulkShareTab() {
         let imageBase64 = null;
         if (settings.sendImage) {
           const enrichedMember = { ...member, ...breakdown };
+          
+          if (settings.language === 'urdu' && !enrichedMember.urduName && !enrichedMember.nameUr) {
+             const translated = await translateToUrdu(enrichedMember.nameEn || enrichedMember.name);
+             enrichedMember.urduName = translated;
+          }
+
           setCurrentRenderMember({
             member: enrichedMember,
             language: settings.language,

@@ -51,7 +51,11 @@ const GraphicReceipt = forwardRef(({ member, billingResult, savedFixedExpenses, 
         <h3 className="graphic-receipt-title">
           {isUrdu ? `ٹربائن کا بل — ${getBillTitle()}` : `Tubewell Bill — ${getBillTitle()}`}
         </h3>
-        <p className="graphic-receipt-name">{isUrdu ? (member.urduName || member.name) : member.name}</p>
+        <p className="graphic-receipt-name">
+          {isUrdu 
+            ? ((member.urduName || member.nameUr) ? `${member.urduName || member.nameUr} (${member.nameEn || member.name})` : (member.nameEn || member.name)) 
+            : (member.nameEn || member.name)}
+        </p>
       </div>
       
       <div className="graphic-receipt-body">
