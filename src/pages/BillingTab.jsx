@@ -759,6 +759,7 @@ export default function BillingTab({ isAdmin }) {
           })
           .finally(() => {
             setGeneratingImage(null);
+            setShareModalData(null);
           });
       }, 500); // give DOM a moment
     }
@@ -1501,6 +1502,7 @@ export default function BillingTab({ isAdmin }) {
             onClose={() => setShareModalData(null)}
             onCopyText={(lang) => handleShareText(lang, shareModalData)}
             onCopyImage={(lang) => handleShareImage(lang, shareModalData)}
+            isGenerating={!!generatingImage}
           />
 
           {/* Off-screen container for rendering the image receipt */}
