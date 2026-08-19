@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarClock, Users, LogOut, BookText, Calculator } from './Icons';
-import { Camera, Send } from 'lucide-react';
+import { Camera, Send, Shield } from 'lucide-react';
 import Logo from './Logo';
 
 export default function MainLayout({ 
