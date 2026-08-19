@@ -40,33 +40,111 @@ export async function saveWapdaBill(monthId, billData) {
   return dataToSave;
 }
 
+/**
+ * Normalizes PITC's month string (e.g. "JUL 26", "JULY 2026", "Jul-26")
+ * into a consistent Firestore key: "July-2026"
+ */
+export function normalizeWapdaMonth(rawMonth) {
+  if (!rawMonth || rawMonth === 'Unknown') return null;
+
+  // Map short and full month names to full names
+  const monthMap = {
+    jan: 'January', feb: 'February', mar: 'March', apr: 'April',
+    may: 'May', jun: 'June', jul: 'July', aug: 'August',
+    sep: 'September', oct: 'October', nov: 'November', dec: 'December'
+  };
+
+  const cleaned = rawMonth.trim().replace(/[-_]/g, ' ');
+  const parts = cleaned.split(/\s+/);
+
+  // Try to find month name part and year part
+  let monthName = null;
+  let year = null;
+
+  for (const part of parts) {
+    const lower = part.toLowerCase().substring(0, 3);
+    if (monthMap[lower]) {
+      monthName = monthMap[lower];
+    }
+    // Year: handle "26" → "2026", or "2026" as-is
+    const num = parseInt(part, 10);
+    if (!isNaN(num)) {
+      year = num < 100 ? 2000 + num : num;
+    }
+  }
+
+  if (!monthName || !year) return rawMonth; // fallback: return as-is
+  return `${monthName}-${year}`; // e.g. "July-2026"
+}
+
+/**
+ * Sends a fetch request via the Chrome Extension bridge (postMessage).
+ * Returns raw HTML string from PITC.
+ */
+function fetchBillViaExtension(refNo) {
+  return new Promise((resolve, reject) => {
+    const reqId = Date.now().toString();
+
+    const timeout = setTimeout(() => {
+      window.removeEventListener('message', handler);
+      reject(new Error('Extension fetch timed out after 30 seconds.'));
+    }, 30000);
+
+    const handler = (event) => {
+      if (event.source !== window) return;
+      if (!event.data || event.data.type !== 'WAPDA_EXT_RESULT') return;
+      if (event.data.reqId !== reqId) return;
+
+      clearTimeout(timeout);
+      window.removeEventListener('message', handler);
+
+      if (event.data.error) {
+        reject(new Error(event.data.error));
+      } else if (event.data.payload && event.data.payload.success) {
+        resolve(event.data.payload.html);
+      } else {
+        reject(new Error((event.data.payload && event.data.payload.error) || 'Unknown extension error'));
+      }
+    };
+
+    window.addEventListener('message', handler);
+    window.postMessage({ type: 'FETCH_WAPDA_EXT', refNo, reqId }, '*');
+  });
+}
+
 export async function fetchBillFromAPI(refNo) {
   const cleanRef = String(refNo).replace(/\D/g, '');
   if (!cleanRef || cleanRef.length < 14) {
     throw new Error("Invalid Reference Number (must be at least 14 digits)");
   }
 
-  const res = await fetch(`/api/fetch-bill?refno=${cleanRef}&t=${Date.now()}`);
-  
-  if (!res.ok) {
-    let errMsg = 'Failed to fetch bill.';
-    try {
-      const errData = await res.json();
-      errMsg = errData.error || errMsg;
-    } catch (e) {
-      console.warn('Could not parse error response json:', e);
-    }
-    throw new Error(errMsg);
-  }
+  let html;
 
-  const html = await res.text();
+  if (window.__TUBEWELL_EXT_INSTALLED__) {
+    // Use Chrome Extension (fast, Pakistani IP, no CORS)
+    html = await fetchBillViaExtension(cleanRef);
+  } else {
+    // Fallback: old server proxy (may be on trial/expired)
+    const res = await fetch(`/api/fetch-bill?refno=${cleanRef}&t=${Date.now()}`);
+    if (!res.ok) {
+      let errMsg = 'Failed to fetch bill.';
+      try {
+        const errData = await res.json();
+        errMsg = errData.error || errMsg;
+      } catch (e) {
+        console.warn('Could not parse error response json:', e);
+      }
+      throw new Error(errMsg);
+    }
+    html = await res.text();
+  }
 
   if (html.includes('anti-forgery')) {
     throw new Error('PITC anti-forgery validation failed — token mismatch.');
   }
   
   if (html.includes('Bill not found') || html.includes('Invalid Reference Number')) {
-     throw new Error('Bill not found for this reference number.');
+    throw new Error('Bill not found for this reference number.');
   }
 
   // Parse details
@@ -90,6 +168,7 @@ export async function fetchBillFromAPI(refNo) {
   const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
   const month = monthMatch ? monthMatch[1].trim() : 'Unknown';
   const readDate = readDateMatch ? readDateMatch[1].trim() : 'Unknown';
+  const normalizedMonthKey = normalizeWapdaMonth(month);
 
   const styledHtml = html.replace('<head>', '<head><base href="http://bill.pitc.com.pk/mepcobill/" /><meta name="referrer" content="no-referrer" /><style>#loader-container { display: none !important; }</style>');
 
@@ -97,6 +176,8 @@ export async function fetchBillFromAPI(refNo) {
     amount,
     month,
     readDate,
+    normalizedMonthKey,
     rawHtml: styledHtml
   };
 }
+

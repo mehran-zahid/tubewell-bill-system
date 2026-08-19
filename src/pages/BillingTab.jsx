@@ -4,8 +4,8 @@ import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2, ExternalLink } from 'lucide-react';
-import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2, ExternalLink, Zap, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI, normalizeWapdaMonth } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
 import ConfirmModal from '../components/ConfirmModal';
@@ -48,6 +48,9 @@ export default function BillingTab({ isAdmin }) {
   const [isFetchingWapda, setIsFetchingWapda] = useState(false);
   const [wapdaBillDetails, setWapdaBillDetails] = useState(null);
   const [showWapdaHtml, setShowWapdaHtml] = useState(false);
+  const [isExtInstalled, setIsExtInstalled] = useState(false);
+  const [wapdaMonthSuggestion, setWapdaMonthSuggestion] = useState(null);
+  const [wapdaViewModalHtml, setWapdaViewModalHtml] = useState(null); // for published bill modal
 
   // Helper to load from localStorage
   // Inputs
@@ -170,61 +173,63 @@ export default function BillingTab({ isAdmin }) {
     loadSettings();
   }, []);
 
-  // Load Bill for Selected Month
+  // Detect extension on mount
   useEffect(() => {
-    const loadBillForMonth = async () => {
-      if (!billingTitle || viewMode !== 'create') return;
+    const check = () => setIsExtInstalled(!!window.__TUBEWELL_EXT_INSTALLED__);
+    check();
+    const t = setTimeout(check, 800);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Auto-fetch WAPDA bill when create mode opens
+  useEffect(() => {
+    if (viewMode !== 'create') return;
+    if (!isExtInstalled) return;
+    if (wapdaBillDetails) return; // already loaded
+
+    const autoFetch = async () => {
+      const settings = await getWapdaSettings();
+      const refNo = settings?.refNo;
+      if (!refNo) return;
+      setWapdaRefNo(refNo);
+      setIsFetchingWapda(true);
       try {
-        const bill = await getWapdaBillByMonth(billingTitle);
-        if (bill) {
-          setWapdaBillDetails(bill);
-          setWapdaBill(bill.amount);
-          setIsWapdaManualMode(false);
-        } else {
-          setWapdaBillDetails(null);
+        const fetched = await fetchBillFromAPI(refNo);
+        const normalizedKey = fetched.normalizedMonthKey || normalizeWapdaMonth(fetched.month);
+
+        const billData = {
+          amount: fetched.amount,
+          month: fetched.month,
+          readingDate: fetched.readDate || 'Unknown',
+          rawHtml: fetched.rawHtml,
+          normalizedMonthKey: normalizedKey,
+          isManualOverride: false
+        };
+
+        // Save to Firestore using the normalized WAPDA month key
+        if (normalizedKey) await saveWapdaBill(normalizedKey, billData);
+
+        setWapdaBillDetails(billData);
+        setWapdaBill(billData.amount);
+        setIsWapdaManualMode(false);
+
+        // Suggest the WAPDA billing month to the user
+        if (normalizedKey) {
+          setWapdaMonthSuggestion({ raw: fetched.month, normalized: normalizedKey });
         }
+
+        showToast('WAPDA bill auto-fetched ✓', 'success');
       } catch (e) {
-        console.error("Error loading WAPDA bill for month", e);
+        console.error('Auto-fetch WAPDA error:', e);
+        // Silent fail — user can still enter manually
+      } finally {
+        setIsFetchingWapda(false);
       }
     };
-    loadBillForMonth();
-  }, [billingTitle, viewMode]);
 
-  const handleFetchWapdaBill = async () => {
-    if (!wapdaRefNo) {
-      showToast("Please enter a Reference Number in the Settings or below first.", "warning");
-      setIsWapdaManualMode(true);
-      return;
-    }
-    
-    setIsFetchingWapda(true);
-    try {
-      await updateWapdaSettings(wapdaRefNo);
-      const fetched = await fetchBillFromAPI(wapdaRefNo);
-      
-      const billData = {
-        amount: fetched.amount,
-        month: fetched.month,
-        readingDate: fetched.readDate || 'Unknown',
-        rawHtml: fetched.rawHtml,
-        isManualOverride: false
-      };
-      
-      setBillingTitle(fetched.month);
-      await saveWapdaBill(fetched.month, billData);
-      
-      setWapdaBillDetails(billData);
-      setWapdaBill(billData.amount);
-      setIsWapdaManualMode(false);
-      showToast("Bill fetched successfully from WAPDA API.", "success");
-    } catch (e) {
-      console.error("Fetch bill error:", e);
-      showToast("Error fetching bill: " + e.message, "error");
-      setIsWapdaManualMode(true);
-    } finally {
-      setIsFetchingWapda(false);
-    }
-  };
+    autoFetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, isExtInstalled]);
 
   const handleManualWapdaSave = async () => {
     const amountNum = parseFloat(wapdaBill);
@@ -1010,24 +1015,47 @@ export default function BillingTab({ isAdmin }) {
               )}
 
               <div style={{ marginBottom: '24px', background: 'var(--bg-canvas)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                {/* Header row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <label className="form-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Receipt size={16} color="var(--text-secondary)" /> WAPDA Bill
                   </label>
-                  <button 
-                    onClick={() => setIsWapdaManualMode(!isWapdaManualMode)}
-                    style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
-                  >
-                    <Edit3 size={14} />
-                    {isWapdaManualMode ? 'Cancel Edit' : 'Edit Manually'}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {/* Extension status badge */}
+                    <span style={{ fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', color: isExtInstalled ? 'var(--success-dark)' : 'var(--warning-dark)', background: isExtInstalled ? 'var(--success-light)' : 'var(--warning-light)', padding: '2px 8px', borderRadius: '999px' }}>
+                      {isExtInstalled ? <Zap size={11} /> : <ShieldAlert size={11} />}
+                      {isExtInstalled ? 'Extension Active' : 'Extension Not Found'}
+                    </span>
+                    <button
+                      onClick={() => setIsWapdaManualMode(!isWapdaManualMode)}
+                      style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
+                    >
+                      <Edit3 size={14} />
+                      {isWapdaManualMode ? 'Cancel Edit' : 'Edit Manually'}
+                    </button>
+                  </div>
                 </div>
+
+                {/* Extension not installed warning */}
+                {!isExtInstalled && !isWapdaManualMode && (
+                  <div style={{ fontSize: '12px', color: 'var(--warning-dark)', background: 'var(--warning-light)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', marginBottom: '12px', border: '1px solid var(--warning)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '1px' }} /> Chrome Extension required to auto-fetch WAPDA bills. Install it from <code>chrome://extensions</code> then reload this page, or use <strong>Edit Manually</strong> to enter the bill amount.
+                  </div>
+                )}
+
+                {/* Auto-fetch loading state */}
+                {isFetchingWapda && !isWapdaManualMode && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', background: 'var(--primary-light)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)', marginBottom: '12px' }}>
+                    <RefreshCw size={16} className="spin" color="var(--primary)" />
+                    <span style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: 500 }}>Fetching WAPDA bill automatically...</span>
+                  </div>
+                )}
 
                 {isWapdaManualMode ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <input 
-                      type="number" 
-                      className="input-field" 
+                    <input
+                      type="number"
+                      className="input-field"
                       placeholder="Total WAPDA Bill (Rs.)"
                       style={{ background: 'var(--bg-surface)' }}
                       value={wapdaBill}
@@ -1046,15 +1074,20 @@ export default function BillingTab({ isAdmin }) {
                       <div className="billing-wapda-detail" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
                         <div>
                           <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>Rs. {parseFloat(wapdaBillDetails.amount).toLocaleString()}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            {wapdaBillDetails.isManualOverride ? 'Manually Entered' : `Fetched: ${wapdaBillDetails.month} (${wapdaBillDetails.readingDate})`}
-                          </div>
+                          {wapdaBillDetails.isManualOverride ? (
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Manually Entered</div>
+                          ) : (
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span>{wapdaBillDetails.month}</span>
+                              <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={11} /> Reading Date: {wapdaBillDetails.readingDate}</span>
+                            </div>
+                          )}
                         </div>
                         {wapdaBillDetails.isManualOverride ? null : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             {wapdaBillDetails.rawHtml && (
-                              <button 
-                                className="btn btn-secondary" 
+                              <button
+                                className="btn btn-secondary"
                                 onClick={() => setShowWapdaHtml(true)}
                                 style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
                               >
@@ -1065,32 +1098,30 @@ export default function BillingTab({ isAdmin }) {
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontStyle: 'italic', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-default)', textAlign: 'center' }}>No bill loaded for this month.</div>
-                    )}
-
-                    <div className="billing-wapda-ref-row" style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: '4px' }}>
-                      <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Reference Number</label>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          value={wapdaRefNo}
-                          onChange={(e) => setWapdaRefNo(e.target.value)}
-                          placeholder="14-digit Ref No"
-                          style={{ padding: '8px 12px', fontSize: '13px', background: 'var(--bg-surface)' }}
-                        />
+                    ) : !isFetchingWapda ? (
+                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontStyle: 'italic', background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-default)', textAlign: 'center' }}>
+                        {isExtInstalled ? 'Auto-fetching bill...' : 'No bill loaded for this month.'}
                       </div>
-                      <button 
-                        className="btn btn-secondary" 
-                        onClick={handleFetchWapdaBill}
-                        disabled={isFetchingWapda || !wapdaRefNo}
-                        style={{ padding: '8px 16px', height: '37px', background: 'var(--bg-surface)' }}
-                      >
-                        <RefreshCw size={14} className={isFetchingWapda ? "spin" : ""} />
-                        <span style={{ fontSize: '13px' }}>{isFetchingWapda ? 'Fetching...' : (wapdaBillDetails ? 'Refetch' : 'Fetch Bill')}</span>
-                      </button>
-                    </div>
+                    ) : null}
+
+                    {/* Month suggestion banner */}
+                    {wapdaMonthSuggestion && !wapdaBillDetails?.isManualOverride && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--primary-light)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)', gap: '12px' }}>
+                        <span style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Lightbulb size={14} /> WAPDA billing month is <strong>{wapdaMonthSuggestion.normalized}</strong> — use this as your billing title?
+                        </span>
+                        <button
+                          className="btn btn-primary"
+                          style={{ padding: '4px 12px', fontSize: '12px', flexShrink: 0 }}
+                          onClick={() => {
+                            setBillingTitle(wapdaMonthSuggestion.normalized);
+                            setWapdaMonthSuggestion(null);
+                          }}
+                        >
+                          Use This
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1161,8 +1192,8 @@ export default function BillingTab({ isAdmin }) {
               {billingResult && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {isResultStale && (
-                    <div style={{ fontSize: '12px', color: 'var(--warning-dark)', background: 'var(--warning-light)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', textAlign: 'center' }}>
-                      ⚠️ Inputs changed — regenerate the bill before saving.
+                    <div style={{ fontSize: '12px', color: 'var(--warning-dark)', background: 'var(--warning-light)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={13} /> Inputs changed — regenerate the bill before saving.
                     </div>
                   )}
                   <button 
@@ -1200,8 +1231,25 @@ export default function BillingTab({ isAdmin }) {
       ) : (
           <div className="card billing-results-card" style={{ padding: '20px', marginBottom: '24px' }}>
             {/* Action Bar for PDF Generation */}
-            <div className="print-hidden billing-action-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginBottom: '24px' }}>
-              <button 
+            <div className="print-hidden billing-action-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              {/* View WAPDA Bill button - only when bill has rawHtml */}
+              {(() => {
+                const activeBill = viewMode === 'list'
+                  ? savedBills.find(b => b.id === selectedBillId)
+                  : null;
+                const rawHtml = activeBill?.wapdaBillDetails?.rawHtml || wapdaBillDetails?.rawHtml;
+                if (!rawHtml) return null;
+                return (
+                  <button
+                    onClick={() => setWapdaViewModalHtml(rawHtml)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', cursor: 'pointer', padding: '8px 16px', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter', transition: 'all 0.2s' }}
+                  >
+                    <Receipt size={16} />
+                    View WAPDA Bill
+                  </button>
+                );
+              })()}
+              <button
                 onClick={() => setIsPdfModalOpen(true)}
                 className="billing-pdf-btn"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary)', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)' }}
@@ -1461,27 +1509,78 @@ export default function BillingTab({ isAdmin }) {
         </>
       )}
 
-          {/* Raw HTML Modal */}
-          {showWapdaHtml && wapdaBillDetails?.rawHtml && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', flexDirection: 'column', padding: '24px' }}>
-              <div style={{ background: 'var(--bg-card)', borderRadius: '8px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ padding: '16px', borderBottom: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, fontFamily: 'Outfit', color: 'var(--text-primary)' }}>Original MEPCO Bill</h3>
-                  <button 
-                    onClick={() => setShowWapdaHtml(false)}
-                    style={{ background: 'var(--danger-light)', color: 'var(--danger)', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
-                  >
-                    Close
-                  </button>
+          {/* Clean Bill Modal — used from create mode & published bill "View WAPDA Bill" */}
+          {(showWapdaHtml || wapdaViewModalHtml) && (() => {
+            const rawHtml = wapdaViewModalHtml || wapdaBillDetails?.rawHtml;
+            const closeModal = () => { setShowWapdaHtml(false); setWapdaViewModalHtml(null); };
+            if (!rawHtml) return null;
+
+            // Build clean bill HTML with DOMParser extraction
+            let cleanSrc = rawHtml;
+            try {
+              const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
+
+              // Strategy 1: known class/id selectors
+              let billContainer =
+                doc.querySelector('.duplicate-bill') ||
+                doc.querySelector('#duplicateBill') ||
+                doc.querySelector('.bill-content') ||
+                doc.querySelector('#billContent') ||
+                doc.querySelector('.main-bill') ||
+                doc.querySelector('.bill-wrapper') ||
+                doc.querySelector('#billWrapper') ||
+                doc.querySelector('.print-area') ||
+                doc.querySelector('#printArea') ||
+                doc.querySelector('.tab-pane.active') ||
+                doc.querySelector('.tab-pane:first-child');
+
+              // Strategy 2: smallest div containing bill header + payable amount
+              if (!billContainer) {
+                const allDivs = Array.from(doc.querySelectorAll('div'));
+                let bestContainer = null;
+                let bestSize = Infinity;
+                for (const div of allDivs) {
+                  const hasBillHeader = div.textContent.includes('ELECTRICITY CONSUMER BILL') ||
+                                        div.textContent.includes('CONSUMER BILL') ||
+                                        div.textContent.includes('MULTAN ELECTRIC POWER');
+                  const hasAmount = div.querySelector('.payable-card-amount') ||
+                                    div.textContent.includes('PAYABLE WITHIN DUE DATE');
+                  if (hasBillHeader && hasAmount) {
+                    const size = div.outerHTML.length;
+                    if (size < bestSize) { bestSize = size; bestContainer = div; }
+                  }
+                }
+                billContainer = bestContainer;
+              }
+
+              const container = billContainer || doc.body;
+              const styleBlocks = Array.from(doc.querySelectorAll('style, link[rel="stylesheet"]')).map(s => s.outerHTML).join('\n');
+              const scriptBlocks = Array.from(doc.querySelectorAll('script')).map(s => s.outerHTML).join('\n');
+              cleanSrc = `<!DOCTYPE html><html><head><meta charset="utf-8"><base href="http://bill.pitc.com.pk/mepcobill/" /><meta name="referrer" content="no-referrer" />${styleBlocks}<style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0!important;padding:0!important;background:#fff!important;overflow-x:hidden!important}body{display:flex;justify-content:center}body>*{flex-shrink:0}#loader-container{display:none!important}</style></head><body>${container.outerHTML}${scriptBlocks}<script>window.addEventListener('load',function(){var b=document.body.firstElementChild;if(!b)return;var bw=b.scrollWidth,vw=window.innerWidth;if(bw>vw)document.body.style.zoom=vw/bw;});<\/script></body></html>`;
+            } catch(e) { /* use rawHtml as fallback */ }
+
+            return (
+              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', flexDirection: 'column', padding: '20px' }}>
+                <div style={{ background: 'var(--bg-card)', borderRadius: '12px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', maxWidth: '960px', width: '100%', margin: '0 auto' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0, fontFamily: 'Outfit', color: 'var(--text-primary)', fontSize: '16px' }}>MEPCO Bill</h3>
+                    <button
+                      onClick={closeModal}
+                      style={{ background: 'var(--danger-light)', color: 'var(--danger)', border: 'none', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <iframe
+                    srcDoc={cleanSrc}
+                    style={{ flex: 1, border: 'none', width: '100%', backgroundColor: '#fff' }}
+                    title="MEPCO Bill"
+                    sandbox="allow-scripts allow-same-origin"
+                  />
                 </div>
-                <iframe 
-                  srcDoc={wapdaBillDetails.rawHtml}
-                  style={{ flex: 1, border: 'none', width: '100%', backgroundColor: '#fff' }}
-                  title="MEPCO Bill"
-                />
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <ConfirmModal
             isOpen={!!billToDelete}

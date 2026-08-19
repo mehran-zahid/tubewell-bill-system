@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarClock, Users, LogOut, Shield, BookText, Calculator } from './Icons';
+import { CalendarClock, Users, LogOut, BookText, Calculator } from './Icons';
 import { Camera, Send } from 'lucide-react';
 import Logo from './Logo';
 
