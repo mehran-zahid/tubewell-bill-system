@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { autoRechainSchedule, format12Hour } from '../utils/scheduleLogic';
 import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, GripVertical, CalendarClock } from '../components/Icons';
-import { Settings2 } from 'lucide-react';
+import { Settings2, Lock, Unlock } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonMemberCard, SkeletonMembersTable } from '../components/Skeleton';
@@ -37,6 +37,7 @@ export default function MembersTab({ isAdmin }) {
   // Drag and Drop State
   const [dragItemIndex, setDragItemIndex] = useState(null);
   const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
+  const [isMovementLocked, setIsMovementLocked] = useState(true);
   const [scheduleAnchor, setScheduleAnchor] = useState(null);
   
   // Smooth scroll ref
@@ -540,7 +541,7 @@ export default function MembersTab({ isAdmin }) {
             <div 
               key={member.id} 
               className="card"
-              draggable={isAdmin}
+              draggable={isAdmin && !isMovementLocked}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragEnter={(e) => handleDragEnter(e, index)}
               onDragOver={(e) => {
@@ -572,7 +573,7 @@ export default function MembersTab({ isAdmin }) {
                 transform: dragOverItemIndex === index ? 'scale(1.02)' : 'scale(1)',
                 border: dragOverItemIndex === index ? '2px dashed var(--primary)' : '1px solid var(--border-default)',
                 transition: 'all 0.2s ease',
-                cursor: isAdmin ? 'grab' : 'default'
+                cursor: (isAdmin && !isMovementLocked) ? 'grab' : 'default'
               }}
             >
               
@@ -609,7 +610,7 @@ export default function MembersTab({ isAdmin }) {
 
               {/* Card Header with Avatar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 'var(--space-4)', paddingRight: isAdmin ? '40px' : '0' }}>
-                {isAdmin && (
+                {(isAdmin && !isMovementLocked) && (
                   <div style={{ color: 'var(--text-tertiary)', cursor: 'grab', marginRight: '-8px' }}>
                     <GripVertical size={20} />
                   </div>
@@ -1007,6 +1008,14 @@ export default function MembersTab({ isAdmin }) {
                     onClick={() => { openAnchorModal(); setIsAddMenuOpen(false); }}
                   >
                     <CalendarClock size={20} style={{ marginRight: '12px' }} /> Change Start Time
+                  </button>
+                  <button 
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start', padding: '16px' }}
+                    onClick={() => { setIsMovementLocked(!isMovementLocked); setIsAddMenuOpen(false); }}
+                  >
+                    {isMovementLocked ? <Unlock size={20} style={{ marginRight: '12px' }} /> : <Lock size={20} style={{ marginRight: '12px' }} />} 
+                    {isMovementLocked ? 'Unlock Card Movement' : 'Lock Card Movement'}
                   </button>
                   
                 </div>
