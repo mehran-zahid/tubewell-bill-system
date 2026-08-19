@@ -4,7 +4,7 @@ import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2 } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2, ExternalLink } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
@@ -59,7 +59,7 @@ export default function BillingTab({ isAdmin }) {
   const [endDate, setEndDate] = useState('');
   const [cycleStartReading, setCycleStartReading] = useState('');
   const [cycleEndReading, setCycleEndReading] = useState('');
-  const [fixedExpenses, setFixedExpenses] = useState([{ id: 1, title: 'Operator Salary', amount: '' }]);
+  const [fixedExpenses, setFixedExpenses] = useState([]);
 
   // Clears all form inputs and localStorage after a bill is published
   const resetForm = (latestBills = savedBills) => {
@@ -88,7 +88,7 @@ export default function BillingTab({ isAdmin }) {
     setWapdaBill('');
     setWapdaRefNo('');
     setWapdaBillDetails(null);
-    setFixedExpenses([{ id: 1, title: 'Operator Salary', amount: '' }]);
+    setFixedExpenses([]);
     setBillingResult(null);
     setIsResultStale(false);
   };
@@ -958,6 +958,18 @@ export default function BillingTab({ isAdmin }) {
                   />
                 </div>
               </div>
+              
+              {startDate && endDate && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => window.open(`/?tab=register&start=${startDate}&end=${endDate}`, '_blank')}
+                    style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent' }}
+                  >
+                    View Readings for this Range <ExternalLink size={14} />
+                  </button>
+                </div>
+              )}
               
               <div className="billing-form-row" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
                 <div className="form-group" style={{ flex: 1, minWidth: 0 }}>

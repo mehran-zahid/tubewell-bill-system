@@ -13,7 +13,10 @@ import { OCRProvider } from './context/OCRContext';
 import { initFirebaseAsync } from './config/firebase';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('schedule');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'schedule';
+  });
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

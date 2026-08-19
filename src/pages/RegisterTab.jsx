@@ -18,9 +18,18 @@ export default function RegisterTab({ isAdmin }) {
   const [latestEndReading, setLatestEndReading] = useState(null);
 
   // Filter States
-  const [timeframe, setTimeframe] = useState('30_days');
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
+  const [timeframe, setTimeframe] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return (params.get('start') || params.get('end')) ? 'custom' : '30_days';
+  });
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('start') || '';
+  });
+  const [customEndDate, setCustomEndDate] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('end') || '';
+  });
   const [selectedMember, setSelectedMember] = useState('all');
 
   // Edit Mode States
