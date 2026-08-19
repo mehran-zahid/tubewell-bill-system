@@ -118,26 +118,12 @@ export async function fetchBillFromAPI(refNo) {
     throw new Error("Invalid Reference Number (must be at least 14 digits)");
   }
 
-  let html;
-
-  if (window.__TUBEWELL_EXT_INSTALLED__) {
-    // Use Chrome Extension (fast, Pakistani IP, no CORS)
-    html = await fetchBillViaExtension(cleanRef);
-  } else {
-    // Fallback: old server proxy (may be on trial/expired)
-    const res = await fetch(`/api/fetch-bill?refno=${cleanRef}&t=${Date.now()}`);
-    if (!res.ok) {
-      let errMsg = 'Failed to fetch bill.';
-      try {
-        const errData = await res.json();
-        errMsg = errData.error || errMsg;
-      } catch (e) {
-        console.warn('Could not parse error response json:', e);
-      }
-      throw new Error(errMsg);
-    }
-    html = await res.text();
+  if (!window.__TUBEWELL_EXT_INSTALLED__) {
+    throw new Error("AquaBill Extension is required to fetch bills. Please install the extension first.");
   }
+
+  // Use Chrome Extension (fast, Pakistani IP, no CORS)
+  const html = await fetchBillViaExtension(cleanRef);
 
   if (html.includes('anti-forgery')) {
     throw new Error('PITC anti-forgery validation failed — token mismatch.');

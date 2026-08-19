@@ -1039,7 +1039,10 @@ export default function BillingTab({ isAdmin }) {
                 {/* Extension not installed warning */}
                 {!isExtInstalled && !isWapdaManualMode && (
                   <div style={{ fontSize: '12px', color: 'var(--warning-dark)', background: 'var(--warning-light)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', marginBottom: '12px', border: '1px solid var(--warning)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '1px' }} /> Chrome Extension required to auto-fetch WAPDA bills. Install it from <code>chrome://extensions</code> then reload this page, or use <strong>Edit Manually</strong> to enter the bill amount.
+                    <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '1px' }} /> 
+                    <span>
+                      Chrome Extension required to auto-fetch WAPDA bills. Install it from <code>chrome://extensions</code> then reload this page, or use <strong>Edit Manually</strong> to enter the bill amount.
+                    </span>
                   </div>
                 )}
 
@@ -1108,7 +1111,10 @@ export default function BillingTab({ isAdmin }) {
                     {wapdaMonthSuggestion && !wapdaBillDetails?.isManualOverride && (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--primary-light)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)', gap: '12px' }}>
                         <span style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Lightbulb size={14} /> WAPDA billing month is <strong>{wapdaMonthSuggestion.normalized}</strong> — use this as your billing title?
+                          <Lightbulb size={14} /> 
+                          <span>
+                            WAPDA billing month is <strong>{wapdaMonthSuggestion.normalized}</strong> — use this as your billing title?
+                          </span>
                         </span>
                         <button
                           className="btn btn-primary"
