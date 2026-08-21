@@ -1353,7 +1353,7 @@ export default function BillingTab({ isAdmin }) {
                 <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Rs. {billingResult.roundedWapdaBill ? billingResult.roundedWapdaBill.toLocaleString() : (billingResult.wapdaBill ? billingResult.wapdaBill.toLocaleString() : '0')}
                 </div>
-                {billingResult.wapdaRoundUpSurplus > 0 && (
+                {isAdmin && billingResult.wapdaRoundUpSurplus > 0 && (
                   <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                     Actual: Rs. {billingResult.wapdaBill.toLocaleString()}
                   </div>
@@ -1413,7 +1413,7 @@ export default function BillingTab({ isAdmin }) {
               </div>
 
               {/* Surplus Collection */}
-              {billingResult.totalSurplus !== undefined && (
+              {isAdmin && billingResult.totalSurplus !== undefined && (
                 <div className="billing-stat-item billing-stat-surplus">
                   <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--success-dark)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     <div style={{ marginTop: '1px' }}><TrendingUp size={16} /></div> 

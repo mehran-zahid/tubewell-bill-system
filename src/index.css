@@ -567,7 +567,7 @@ select option {
   
   .billing-stat-fixed { 
     grid-column: 2 / 3; 
-    grid-row: 1 / span 3; 
+    grid-row: 1 / 2; 
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -593,20 +593,20 @@ select option {
   }
   
   .billing-stat-surplus { 
-    grid-column: 3 / 4; 
+    grid-column: 2 / 3; 
     grid-row: 2 / 3; 
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    text-align: right;
+    align-items: center;
+    text-align: center;
   }
   .billing-stat-surplus > div:first-child {
-    flex-direction: row-reverse;
+    justify-content: center;
   }
   
   .billing-stat-total-cost { 
     grid-column: 3 / 4; 
-    grid-row: 3 / 4; 
+    grid-row: 2 / 3; 
     display: flex;
     flex-direction: column;
     align-items: flex-end;
