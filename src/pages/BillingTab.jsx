@@ -4,7 +4,7 @@ import { initFirebaseAsync } from '../config/firebase';
 import { getRegisterEntries } from '../services/registerService';
 import { calculateBilling } from '../utils/billingCalculator';
 import { Calculator } from '../components/Icons';
-import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2, ExternalLink, Zap, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Edit3, Save, Trash2, Plus, Calendar, Gauge, Receipt, LayoutGrid, List, Lightbulb, Wrench, Coins, Tag, Download, Copy, Share2, ExternalLink, Zap, ShieldAlert, AlertTriangle, TrendingUp, Loader2 } from 'lucide-react';
 import { getWapdaSettings, updateWapdaSettings, getWapdaBillByMonth, saveWapdaBill, fetchBillFromAPI, normalizeWapdaMonth } from '../services/wapdaService';
 import { saveGeneratedBill, getAllGeneratedBills, deleteGeneratedBill } from '../services/billingService';
 import CustomDropdown from '../components/CustomDropdown';
@@ -43,6 +43,8 @@ export default function BillingTab({ isAdmin }) {
   const offScreenOverallReceiptRef = useRef(null);
 
   const [wapdaBill, setWapdaBill] = useState('');
+  const [wapdaRoundUpAmount, setWapdaRoundUpAmount] = useState(0);
+  const [customFinalWapdaAmount, setCustomFinalWapdaAmount] = useState('');
   const [wapdaRefNo, setWapdaRefNo] = useState('');
   const [isWapdaManualMode, setIsWapdaManualMode] = useState(false);
   const [isFetchingWapda, setIsFetchingWapda] = useState(false);
@@ -89,6 +91,8 @@ export default function BillingTab({ isAdmin }) {
     setCycleStartReading(defaultCycleStartReading);
     setCycleEndReading('');
     setWapdaBill('');
+    setWapdaRoundUpAmount(0);
+    setCustomFinalWapdaAmount('');
     setWapdaRefNo('');
     setWapdaBillDetails(null);
     setFixedExpenses([]);
@@ -104,7 +108,7 @@ export default function BillingTab({ isAdmin }) {
       setIsResultStale(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wapdaBill, fixedExpenses, startDate, endDate, cycleStartReading, cycleEndReading]);
+  }, [wapdaBill, fixedExpenses, startDate, endDate, cycleStartReading, cycleEndReading, customFinalWapdaAmount]);
 
   // Load Saved Bills on Mount
   useEffect(() => {
@@ -390,7 +394,7 @@ export default function BillingTab({ isAdmin }) {
 
       setEntries(fetchedEntries);
 
-      const result = calculateBilling(members, fetchedEntries, wapdaBill, fixedExpenses);
+      const result = calculateBilling(members, fetchedEntries, wapdaBill, fixedExpenses, wapdaRoundUpAmount, customFinalWapdaAmount);
       
       let discrepancyWarnings = [];
 
@@ -770,6 +774,8 @@ export default function BillingTab({ isAdmin }) {
         cycleStartReading: parseFloat(cycleStartReading) || 0,
         cycleEndReading: parseFloat(cycleEndReading) || 0,
         wapdaBill: parseFloat(wapdaBill) || 0,
+        wapdaRoundUpAmount: parseInt(wapdaRoundUpAmount, 10) || 0,
+        customFinalWapdaAmount: customFinalWapdaAmount ? parseFloat(customFinalWapdaAmount) : null,
         wapdaRefNo,
         wapdaBillDetails,
         fixedExpenses,
@@ -829,6 +835,8 @@ export default function BillingTab({ isAdmin }) {
     setCycleStartReading(billToEdit.cycleStartReading || '');
     setCycleEndReading(billToEdit.cycleEndReading || '');
     setWapdaBill(billToEdit.wapdaBill || '');
+    setWapdaRoundUpAmount(billToEdit.wapdaRoundUpAmount || 0);
+    setCustomFinalWapdaAmount(billToEdit.customFinalWapdaAmount || '');
     setWapdaRefNo(billToEdit.wapdaRefNo || '');
     setWapdaBillDetails(billToEdit.wapdaBillDetails || null);
     setFixedExpenses(billToEdit.fixedExpenses || []);
@@ -936,7 +944,15 @@ export default function BillingTab({ isAdmin }) {
                   value={billingTitle}
                   onChange={(e) => setBillingTitle(e.target.value)}
                   placeholder="e.g. August 2026"
+                  style={{
+                    borderColor: savedBills.some(b => b.billingTitle.toLowerCase().trim() === billingTitle.toLowerCase().trim() && b.id !== editingBillId) ? 'var(--warning)' : 'var(--border-default)'
+                  }}
                 />
+                {savedBills.some(b => b.billingTitle.toLowerCase().trim() === billingTitle.toLowerCase().trim() && b.id !== editingBillId) && (
+                  <div style={{ fontSize: '12px', color: 'var(--warning-dark)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <AlertTriangle size={12} /> A bill for "{billingTitle}" already exists. Saving will create a duplicate.
+                  </div>
+                )}
               </div>
 
               <div className="billing-form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
@@ -1131,6 +1147,54 @@ export default function BillingTab({ isAdmin }) {
                   </div>
                 )}
               </div>
+              
+              <div style={{ marginTop: '16px' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <TrendingUp size={14} /> WAPDA Bill Round-Up Increment (Surplus)
+                </label>
+                <CustomDropdown 
+                  value={wapdaRoundUpAmount}
+                  onChange={(val) => setWapdaRoundUpAmount(val)}
+                  options={[
+                    { 
+                      label: `Exact Bill ${parseFloat(wapdaBill) ? `(Rs. ${parseFloat(wapdaBill).toLocaleString()})` : '(No Surplus)'}`, 
+                      value: 0 
+                    },
+                    ...[500, 1000, 1500, 2000, 2500, 3000].map(inc => {
+                      const base = parseFloat(wapdaBill) || 0;
+                      const finalAmount = base > 0 ? Math.ceil(base / inc) * inc : 0;
+                      return {
+                        label: `Next Rs. ${inc} ${base > 0 ? `(Final: Rs. ${finalAmount.toLocaleString()})` : ''}`,
+                        value: inc
+                      };
+                    }),
+                    {
+                      label: 'Custom Final Amount',
+                      value: -1
+                    }
+                  ]}
+                />
+                
+                {parseInt(wapdaRoundUpAmount, 10) === -1 && (
+                  <div style={{ marginTop: '12px' }}>
+                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      Enter Custom Final Amount
+                    </label>
+                    <input
+                      type="number"
+                      className="input-field"
+                      placeholder={`e.g. ${parseFloat(wapdaBill) ? Math.ceil(parseFloat(wapdaBill) / 100) * 100 : '1000'}`}
+                      value={customFinalWapdaAmount}
+                      onChange={(e) => setCustomFinalWapdaAmount(e.target.value)}
+                    />
+                    {parseFloat(customFinalWapdaAmount) < parseFloat(wapdaBill) && parseFloat(wapdaBill) > 0 && (
+                      <div style={{ fontSize: '12px', color: 'var(--warning-dark)', marginTop: '6px' }}>
+                        Custom amount cannot be less than actual WAPDA bill.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right Column - Fixed Expenses */}
@@ -1204,12 +1268,12 @@ export default function BillingTab({ isAdmin }) {
                   )}
                   <button 
                     className="btn btn-success" 
-                    style={{ width: '100%', justifyContent: 'center', marginTop: '4px', background: isResultStale ? 'var(--text-tertiary)' : 'var(--success)', color: 'white', border: 'none', cursor: isResultStale ? 'not-allowed' : 'pointer' }}
+                    style={{ width: '100%', justifyContent: 'center', marginTop: '4px', background: isResultStale ? 'var(--text-tertiary)' : 'var(--success)', color: 'white', border: 'none', cursor: isResultStale ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onClick={handleSaveAndPublish}
                     disabled={isSaving || isResultStale}
                     title={isResultStale ? 'Please click Generate Bills first' : ''}
                   >
-                    <CheckCircle2 size={18} />
+                    {isSaving ? <Loader2 className="spinner" size={18} /> : <CheckCircle2 size={18} />}
                     {isSaving ? 'Saving...' : 'Save & Publish Bill'}
                   </button>
                 </div>
@@ -1284,11 +1348,16 @@ export default function BillingTab({ isAdmin }) {
               <div className="billing-stat-item billing-stat-wapda">
                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   <div style={{ marginTop: '1px' }}><Lightbulb size={16} /></div> 
-                  <div>WAPDA Electricity<br/>Bill</div>
+                  <div>WAPDA Electricity<br/>Bill (Rounded)</div>
                 </div>
                 <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  Rs. {billingResult.wapdaBill ? billingResult.wapdaBill.toLocaleString() : '0'}
+                  Rs. {billingResult.roundedWapdaBill ? billingResult.roundedWapdaBill.toLocaleString() : (billingResult.wapdaBill ? billingResult.wapdaBill.toLocaleString() : '0')}
                 </div>
+                {billingResult.wapdaRoundUpSurplus > 0 && (
+                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                    Actual: Rs. {billingResult.wapdaBill.toLocaleString()}
+                  </div>
+                )}
               </div>
               
               {/* Stat 2: Fixed Expenses & Breakdown (The '1' spanning full width) */}
@@ -1342,6 +1411,19 @@ export default function BillingTab({ isAdmin }) {
                   Rs. {billingResult.grandTotalBilled ? billingResult.grandTotalBilled.toLocaleString() : '0'}
                 </div>
               </div>
+
+              {/* Surplus Collection */}
+              {billingResult.totalSurplus !== undefined && (
+                <div className="billing-stat-item billing-stat-surplus">
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--success-dark)', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ marginTop: '1px' }}><TrendingUp size={16} /></div> 
+                    <div>Surplus / Extra<br/>Collection</div>
+                  </div>
+                  <div className="billing-stat-value" style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 700, color: 'var(--success-dark)' }}>
+                    Rs. {billingResult.totalSurplus > 0 ? billingResult.totalSurplus.toLocaleString() : '0'}
+                  </div>
+                </div>
+              )}
 
               {/* Stat 4: Electricity Rate */}
               <div className="billing-stat-item billing-stat-rate">

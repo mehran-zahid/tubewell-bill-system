@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarClock, Users, LogOut, BookText, Calculator } from './Icons';
-import { Camera, Send, Shield } from 'lucide-react';
+import { Camera, Send, Shield, Wallet } from 'lucide-react';
 import Logo from './Logo';
 
 export default function MainLayout({ 
@@ -19,7 +19,8 @@ export default function MainLayout({
     { id: 'billing', label: 'Billing', icon: Calculator },
     ...(isAdmin ? [
       { id: 'ocr', label: 'Scan Register', icon: Camera },
-      { id: 'bulkshare', label: 'Bulk Share', icon: Send }
+      { id: 'bulkshare', label: 'Bulk Share', icon: Send },
+      { id: 'fund', label: 'Tubewell Fund', icon: Wallet }
     ] : [])
   ];
 

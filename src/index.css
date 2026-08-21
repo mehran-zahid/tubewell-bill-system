@@ -557,7 +557,7 @@ select option {
   .billing-stats-master-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto;
     gap: 24px;
     align-items: start;
   }
@@ -567,7 +567,7 @@ select option {
   
   .billing-stat-fixed { 
     grid-column: 2 / 3; 
-    grid-row: 1 / span 2; 
+    grid-row: 1 / span 3; 
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -592,9 +592,21 @@ select option {
     flex-direction: row-reverse;
   }
   
-  .billing-stat-total-cost { 
+  .billing-stat-surplus { 
     grid-column: 3 / 4; 
     grid-row: 2 / 3; 
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .billing-stat-surplus > div:first-child {
+    flex-direction: row-reverse;
+  }
+  
+  .billing-stat-total-cost { 
+    grid-column: 3 / 4; 
+    grid-row: 3 / 4; 
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -973,8 +985,9 @@ select option {
   }
   .billing-stat-wapda { order: 1; }
   .billing-stat-collection { order: 2; }
+  .billing-stat-surplus { order: 3; }
   .billing-stat-fixed { 
-    order: 3; 
+    order: 4; 
     grid-column: 1 / -1 !important; 
   }
   .billing-stat-fixed > div:first-child,
@@ -985,8 +998,8 @@ select option {
   .billing-stat-fixed > div:first-child {
     justify-content: center !important;
   }
-  .billing-stat-rate { order: 4; }
-  .billing-stat-total-cost { order: 5; }
+  .billing-stat-rate { order: 5; }
+  .billing-stat-total-cost { order: 6; }
 
   /* Create mode card */
   .billing-create-card {

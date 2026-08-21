@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
+import { Loader2 } from 'lucide-react';
 
 export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, members, latestEndReading }) {
   const { showToast } = useToast();
@@ -7,6 +8,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
   const [memberId, setMemberId] = useState('');
   const [startReading, setStartReading] = useState('');
   const [endReading, setEndReading] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Auto-fill start reading when modal opens or latestEndReading changes
   useEffect(() => {
@@ -15,12 +17,13 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
       setDate(new Date().toISOString().split('T')[0]); // Reset date to today
       setMemberId('');
       setEndReading('');
+      setIsSaving(false);
     }
   }, [isOpen, latestEndReading]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!date || !memberId || !startReading || !endReading) {
       showToast("Please fill all fields.", "warning");
@@ -34,14 +37,19 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
 
     const selectedMember = members.find(m => m.id === memberId);
 
-    onSubmit({
-      date,
-      memberId,
-      memberName: selectedMember ? selectedMember.nameEn : 'Unknown',
-      userCode: selectedMember ? selectedMember.userCode : '',
-      startReading,
-      endReading
-    });
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        date,
+        memberId,
+        memberName: selectedMember ? selectedMember.nameEn : 'Unknown',
+        userCode: selectedMember ? selectedMember.userCode : '',
+        startReading,
+        endReading
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -63,6 +71,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
           <button 
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '4px' }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -82,6 +91,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
               value={date} 
               onChange={(e) => setDate(e.target.value)}
               className="input-field"
+              disabled={isSaving}
               required
             />
           </div>
@@ -94,6 +104,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
               value={memberId} 
               onChange={(e) => setMemberId(e.target.value)}
               className="input-field"
+              disabled={isSaving}
               required
             >
               <option value="" disabled>Select Member</option>
@@ -115,6 +126,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
                 onChange={(e) => setStartReading(e.target.value)}
                 className="input-field"
                 placeholder="e.g. 10240"
+                disabled={isSaving}
                 required
               />
             </div>
@@ -130,6 +142,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
                 onChange={(e) => setEndReading(e.target.value)}
                 className="input-field"
                 placeholder="e.g. 10255"
+                disabled={isSaving}
                 required
               />
             </div>
@@ -139,6 +152,7 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
             <button 
               type="button"
               onClick={onClose}
+              disabled={isSaving}
               style={{
                 padding: '10px 20px', background: 'var(--bg-muted)', color: 'var(--text-secondary)',
                 border: 'none', borderRadius: 'var(--radius-md)', fontFamily: 'Inter', fontWeight: 600,
@@ -150,13 +164,16 @@ export default function NewRegisterEntryModal({ isOpen, onClose, onSubmit, membe
             <button 
               type="submit"
               className="btn btn-primary"
+              disabled={isSaving}
               style={{
                 padding: '10px 20px', background: 'var(--primary)', color: 'var(--text-inverse)',
                 border: 'none', borderRadius: 'var(--radius-md)', fontFamily: 'Inter', fontWeight: 600,
-                fontSize: '14px', cursor: 'pointer', boxShadow: '0 1px 3px rgba(37, 99, 235, 0.3)'
+                fontSize: '14px', cursor: 'pointer', boxShadow: '0 1px 3px rgba(37, 99, 235, 0.3)',
+                display: 'flex', alignItems: 'center', gap: '8px'
               }}
             >
-              Add Entry
+              {isSaving && <Loader2 className="spinner" size={16} />}
+              {isSaving ? 'Adding...' : 'Add Entry'}
             </button>
           </div>
         </form>

@@ -1,7 +1,27 @@
 // Billing Calculator Utility
 
-export function calculateBilling(members, entries, wapdaBill, fixedExpensesList) {
-  const totalWapda = Math.max(0, parseFloat(wapdaBill) || 0);
+// Round up to a custom increment (e.g., 500, 1000)
+function roundUpTo(amount, increment) {
+  if (amount <= 0) return 0;
+  if (!increment || increment <= 0) return amount; // Exact bill
+  return Math.ceil(amount / increment) * increment;
+}
+
+// Round up to the nearest 50
+function roundUpTo50(amount) {
+  if (amount <= 0) return 0;
+  return Math.ceil(amount / 50) * 50;
+}
+
+export function calculateBilling(members, entries, wapdaBill, fixedExpensesList, wapdaRoundUpAmount = 0, customFinalWapdaAmount = null) {
+  const actualWapda = Math.max(0, parseFloat(wapdaBill) || 0);
+  
+  let totalWapda = actualWapda;
+  if (parseInt(wapdaRoundUpAmount, 10) === -1 && customFinalWapdaAmount !== null) {
+    totalWapda = Math.max(actualWapda, parseFloat(customFinalWapdaAmount) || 0);
+  } else {
+    totalWapda = roundUpTo(actualWapda, parseInt(wapdaRoundUpAmount, 10)); // Use rounded WAPDA bill for rate calculation
+  }
   const totalFixed = fixedExpensesList.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
   // 1. Map all members and tenants to a flat structure, calculating their effective hours
@@ -112,38 +132,31 @@ export function calculateBilling(members, entries, wapdaBill, fixedExpensesList)
       ...stats,
       usageShare: Math.round(usageShare),
       fixedShare: Math.round(fixedShare),
-      totalBill: Math.round(totalBill)
+      totalBill: roundUpTo50(totalBill)
     });
 
-    grandTotalBilled += Math.round(totalBill);
+    grandTotalBilled += roundUpTo50(totalBill);
   }
 
   // Sort by Total Bill (Descending)
   breakdowns.sort((a, b) => b.totalBill - a.totalBill);
 
-  // Reconcile rounding differences to ensure the sum of individual bills matches the exact total
-  const exactTotal = Math.round(totalWapda + totalFixed);
-  const roundingDiff = exactTotal - grandTotalBilled;
-  
-  if (roundingDiff !== 0 && breakdowns.length > 0) {
-    breakdowns[0].totalBill += roundingDiff;
-    // Absorb the difference in the usage share to keep the math consistent
-    breakdowns[0].usageShare += roundingDiff;
-    grandTotalBilled += roundingDiff;
-  }
-
   // Total Hourly Rate including fixed expenses
   const totalHourlyRate = totalConsumedHours > 0 ? ((totalWapda + totalFixed) / totalConsumedHours) : 0;
+  const totalSurplus = grandTotalBilled - (actualWapda + totalFixed);
 
   return {
-    wapdaBill: totalWapda,
+    wapdaBill: actualWapda,
+    roundedWapdaBill: totalWapda,
+    wapdaRoundUpSurplus: totalWapda - actualWapda,
     totalFixedExpenses: totalFixed,
-    grandTotalSystem: totalWapda + totalFixed,
+    grandTotalSystem: actualWapda + totalFixed,
     totalConsumedHours,
     wapdaHourlyRate,
     totalHourlyRate,
     totalEffectiveHours,
     grandTotalBilled,
+    totalSurplus,
     breakdowns
   };
 }

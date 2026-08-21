@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { initFirebaseAsync } from '../config/firebase';
 import { autoRechainSchedule, format12Hour } from '../utils/scheduleLogic';
 import { Edit2, Trash2, Plus, X, MoreVertical, ChevronDown, GripVertical, CalendarClock } from '../components/Icons';
-import { Settings2, Lock, Unlock } from 'lucide-react';
+import { Settings2, Lock, Unlock, Loader2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonMemberCard, SkeletonMembersTable } from '../components/Skeleton';
@@ -18,6 +18,8 @@ export default function MembersTab({ isAdmin }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [formData, setFormData] = useState(getEmptyForm());
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingAnchor, setIsSavingAnchor] = useState(false);
   
   // Confirm Delete Modal State
   const [memberToDelete, setMemberToDelete] = useState(null);
@@ -252,6 +254,7 @@ export default function MembersTab({ isAdmin }) {
     }
     // -------------------------------
 
+    setIsSaving(true);
     try {
       const { db, firebase } = await initFirebaseAsync();
       
@@ -313,6 +316,8 @@ export default function MembersTab({ isAdmin }) {
     } catch (e) {
       console.error("Error saving member", e);
       showToast("Failed to save member.", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -324,6 +329,7 @@ export default function MembersTab({ isAdmin }) {
   };
 
   const handleSaveAnchor = async (anchorDate) => {
+    setIsSavingAnchor(true);
     try {
       const { db, firebase } = await initFirebaseAsync();
       const metaRef = firebase.doc(db, 'metadata', 'scheduleAnchor');
@@ -349,6 +355,8 @@ export default function MembersTab({ isAdmin }) {
     } catch (e) {
       console.error("Error saving schedule anchor", e);
       showToast("Failed to save schedule anchor.", "error");
+    } finally {
+      setIsSavingAnchor(false);
     }
   };
 
@@ -876,8 +884,11 @@ export default function MembersTab({ isAdmin }) {
               )}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Member & Schedule</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {isSaving && <Loader2 className="spinner" size={16} />}
+                  {isSaving ? 'Saving...' : 'Save Member & Schedule'}
+                </button>
               </div>
             </form>
           </div>
@@ -983,8 +994,11 @@ export default function MembersTab({ isAdmin }) {
                 </p>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsAnchorModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Anchor</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsAnchorModalOpen(false)} disabled={isSavingAnchor}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSavingAnchor} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {isSavingAnchor && <Loader2 className="spinner" size={16} />}
+                  {isSavingAnchor ? 'Saving...' : 'Save Anchor'}
+                </button>
               </div>
             </form>
           </div>
